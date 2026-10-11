@@ -1,16 +1,81 @@
+import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 export function GoogleTasksIcon({ className }: { className?: string }) {
+  const rawId = useId();
+  const id = rawId.replace(/:/g, "");
+  const clipA = `gtasks-clipa-${id}`;
+  const clipF = `gtasks-clipf-${id}`;
+  const gradE = `gtasks-grade-${id}`;
+  const filtB = `gtasks-filtb-${id}`;
+  const maskD = `gtasks-maskd-${id}`;
+
   return (
-    <svg className={cn("w-4 h-4 shrink-0", className)} viewBox="0 0 528 500" fill="none">
-      <polygon
-        fill="#0066DA"
-        points="410.4,58.3 368.8,81.2 348.2,120.6 368.8,168.8 407.8,211 450,187.5 475.9,142.8 450,87.5"
-      />
-      <path
-        fill="#2684FC"
-        d="M249.3,219.4l98.9-98.9c29.1,22.1,50.5,53.8,59.6,90.4L272.1,346.7c-12.2,12.2-32,12.2-44.2,0l-91.5-91.5c-9.8-9.8-9.8-25.6,0-35.3l39-39c9.8-9.8,25.6-9.8,35.3,0L249.3,219.4z M519.8,63.6l-39.7-39.7c-9.7-9.7-25.6-9.7-35.3,0l-34.4,34.4c27.5,23,49.9,51.8,65.5,84.5l43.9-43.9C529.6,89.2,529.6,73.3,519.8,63.6z M412.5,250c0,89.8-72.8,162.5-162.5,162.5S87.5,339.8,87.5,250S160.2,87.5,250,87.5c36.9,0,70.9,12.3,98.2,33.1l62.2-62.2C367,21.9,311.1,0,250,0C111.9,0,0,111.9,0,250s111.9,250,250,250s250-111.9,250-250c0-38.3-8.7-74.7-24.1-107.2L407.8,211C410.8,223.5,412.5,236.6,412.5,250z"
-      />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 192 192"
+      fill="none"
+      className={cn("w-4 h-4 shrink-0", className)}
+    >
+      <defs>
+        <clipPath id={clipA}>
+          <path fill="#fff" d="M0 0h192v192H0z" />
+        </clipPath>
+        <clipPath id={clipF}>
+          <path fill="#fff" d="M44 38h104v104H44z" />
+        </clipPath>
+        <linearGradient
+          id={gradE}
+          x1="96"
+          x2="100.64"
+          y1="166.9"
+          y2="67.25"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset=".01" stopColor="#a9a8ff" />
+          <stop offset=".79" stopColor="#a9a8ff" stopOpacity={0} />
+        </linearGradient>
+        <filter
+          id={filtB}
+          width="176"
+          height="154"
+          x="8"
+          y="40"
+          colorInterpolationFilters="sRGB"
+          filterUnits="userSpaceOnUse"
+        >
+          <feFlood floodOpacity={0} result="BackgroundImageFix" />
+          <feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
+          <feGaussianBlur result="effect1_foregroundBlur_37601_9976" stdDeviation={6} />
+        </filter>
+      </defs>
+      <g clipPath={`url(#${clipA})`}>
+        <rect width="152" height="130" x="20" y="52" fill="#bbe2ff" rx="65" />
+        <rect width="172" height="152" x="10" y="14" fill="#3186ff" rx="74" />
+        <mask
+          id={maskD}
+          width="172"
+          height="152"
+          x="10"
+          y="14"
+          maskUnits="userSpaceOnUse"
+          style={{ maskType: "alpha" }}
+        >
+          <rect width="172" height="152" x="10" y="14" fill="#3c90ff" rx="74" />
+        </mask>
+        <g filter={`url(#${filtB})`} mask={`url(#${maskD})`}>
+          <rect width="152" height="130" x="20" y="52" fill={`url(#${gradE})`} rx="65" />
+        </g>
+        <g clipPath={`url(#${clipF})`}>
+          <path
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={12}
+            d="m61 90 22.172 22.172a4 4 0 0 0 5.656 0L138 63"
+          />
+        </g>
+      </g>
     </svg>
   );
 }

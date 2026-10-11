@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star, GoogleIcon } from "@/components/icons";
+import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star, GoogleContactsIcon } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
@@ -328,7 +328,7 @@ export function ContactsSidebar({
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
                   onClick={() => { setShowMenu(false); onImportGoogle(); }}
                 >
-                  <GoogleIcon className="w-4 h-4" />
+                  <GoogleContactsIcon className="w-4 h-4" />
                   {t("import.import_google")}
                 </button>
               )}
@@ -886,7 +886,7 @@ function AddressBookItem({
       style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
     >
       {book.id.startsWith('google:') ? (
-        <GoogleIcon className="w-4 h-4 flex-shrink-0" />
+        <GoogleContactsIcon className="w-4 h-4 flex-shrink-0" />
       ) : (
         <Book className="w-4 h-4 flex-shrink-0" />
       )}

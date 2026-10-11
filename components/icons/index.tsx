@@ -20,6 +20,8 @@ export { GoogleDriveIcon } from './google-drive-icon';
 export { GoogleCalendarIcon } from './google-calendar-icon';
 export { GoogleTasksIcon } from './google-tasks-icon';
 export { GoogleContactsIcon } from './google-contacts-icon';
+export { GmailIcon } from './gmail-icon';
+
 
 // Tabler Icons
 import {

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Upload, FileText, AlertTriangle, X, Check, RefreshCw, GoogleIcon } from "@/components/icons";
+import { Upload, FileText, AlertTriangle, X, Check, RefreshCw, GoogleIcon, GoogleContactsIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { parseVCard, detectDuplicates } from "@/lib/vcard";
@@ -194,7 +194,7 @@ export function ContactImportDialog({
           <h2 className="text-lg font-semibold">{t("import.title")}</h2>
           {importSource === "google" && (
             <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-medium">
-              <GoogleIcon className="w-3 h-3" />
+              <GoogleContactsIcon className="w-3.5 h-3.5" />
               Google
             </span>
           )}
@@ -237,7 +237,7 @@ export function ContactImportDialog({
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <GoogleIcon className="w-4 h-4 shrink-0" />
+                <GoogleContactsIcon className="w-4 h-4 shrink-0" />
                 <span>{t("import.source_google")}</span>
               </button>
               <button
@@ -276,7 +276,7 @@ export function ContactImportDialog({
                 ) : !googleStatus?.connected ? (
                   <div className="py-6 flex flex-col items-center space-y-4 max-w-sm">
                     <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm border border-border flex items-center justify-center">
-                      <GoogleIcon className="w-8 h-8" />
+                      <GoogleContactsIcon className="w-8 h-8" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-base text-foreground">
@@ -299,7 +299,7 @@ export function ContactImportDialog({
                 ) : (
                   <div className="py-6 flex flex-col items-center space-y-4 w-full max-w-sm">
                     <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 shadow-sm border border-border flex items-center justify-center">
-                      <GoogleIcon className="w-8 h-8" />
+                      <GoogleContactsIcon className="w-8 h-8" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-base text-foreground">
