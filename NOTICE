@@ -36,3 +36,11 @@ SOFTWARE.
 See THIRD_PARTY_NOTICES.md for the full third-party component list
 (Bulwark, Stalwart Mail Server, and fork lineage) with licenses and
 source links.
+
+Third-party artwork:
+
+- Flag icons in components/ui/flag-icons.tsx are from Twemoji
+  (https://github.com/jdecked/twemoji), Copyright 2019 Twitter, Inc and
+  other contributors, licensed under CC-BY 4.0
+  (https://creativecommons.org/licenses/by/4.0/).
+

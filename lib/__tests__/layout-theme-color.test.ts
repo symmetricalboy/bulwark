@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 // for rendering; stub them so the test can import generateViewport in isolation.
 // globals.css would otherwise drag Tailwind's PostCSS pipeline into vitest.
 vi.mock('@/app/globals.css', () => ({}));
+vi.mock('material-symbols/outlined.css', () => ({}));
 vi.mock('next/font/google', () => ({
   Atkinson_Hyperlegible: () => ({ variable: '--comail-font-body' }),
   Geist: () => ({ variable: '--font-geist-sans' }),

@@ -40,6 +40,12 @@ interface ClipboardState {
   sourcePath: string;
 }
 
+/** How a batch upload ended: files that made it, and whether the user cancelled. */
+export interface UploadResult {
+  uploaded: number;
+  canceled: boolean;
+}
+
 interface UndoAction {
   type: 'rename' | 'move';
   entries: { id: string; from: Partial<Pick<FileNode, 'name' | 'parentId'>>; to: Partial<Pick<FileNode, 'name' | 'parentId'>> }[];
@@ -68,6 +74,14 @@ interface FileState {
   lastAction: UndoAction | null;
   /** Top-level FileNodes shared with the user by other principals ("Shared with me"). */
   sharedRoots: FileResource[];
+  /**
+   * Every folder known from the last listing, for the folder tree. Each
+   * listing already fetches the whole drive, so the tree is derived from it
+   * instead of fetching again, and is current after every change.
+   */
+  allFolders: FileResource[];
+  /** False until the first listing for the attached account has finished. */
+  hasListed: boolean;
 
   // Actions
   initClient: (client: IJMAPClient, accountId?: string | null) => void;
@@ -87,8 +101,8 @@ interface FileState {
   refresh: () => Promise<void>;
   createDirectory: (name: string) => Promise<void>;
   uploadFile: (file: File) => Promise<void>;
-  uploadFiles: (files: File[]) => Promise<void>;
-  uploadFolder: (files: File[]) => Promise<void>;
+  uploadFiles: (files: File[]) => Promise<UploadResult>;
+  uploadFolder: (files: File[]) => Promise<UploadResult>;
   cancelUpload: () => void;
   deleteResource: (name: string) => Promise<void>;
   deleteResources: (names: string[]) => Promise<void>;
@@ -101,6 +115,8 @@ interface FileState {
   duplicateResource: (name: string) => Promise<void>;
   moveToFolder: (names: string[], targetFolder: string) => Promise<void>;
   moveToParent: (names: string[]) => Promise<void>;
+  /** Move listed items into any folder by id (null = the root), e.g. a tree or breadcrumb drop. */
+  moveToFolderId: (names: string[], targetId: string | null) => Promise<void>;
   cutResources: (names: string[]) => void;
   copyResources: (names: string[]) => void;
   pasteResources: () => Promise<void>;
@@ -113,6 +129,15 @@ interface FileState {
   listByParentId: (parentId: string | null) => Promise<FileResource[]>;
   toggleFavorite: (path: string) => void;
   addRecentFile: (name: string, id: string) => void;
+  /** Open the folder holding a node and return the node's name, or null when it is gone. */
+  revealNode: (id: string) => Promise<string | null>;
+  /** Rename any node by id, e.g. a folder in the tree that is not listed. */
+  renameNode: (id: string, newName: string) => Promise<void>;
+  /** Delete any node by id; leaves the folder on screen if it was inside it. */
+  deleteNode: (id: string) => Promise<void>;
+  /** Download a file by id, wherever it lives. */
+  downloadNode: (id: string) => Promise<void>;
+  removeRecentFile: (id: string) => void;
   undoLastAction: () => Promise<void>;
   /** Add, update (rights), or remove (rights=null) a principal's share on a node. */
   shareResource: (id: string, principalId: string, rights: FileNodeRights | null) => Promise<void>;
@@ -235,6 +260,21 @@ function getUniqueName(name: string, existingNames: Set<string>): string {
   return `${base} (${counter})${ext}`;
 }
 
+// Display path of a folder ("/A/B") from the folder list, or null if unknown.
+function folderPath(folders: FileResource[], id: string): string | null {
+  const byId = new Map(folders.map(f => [f.id, f]));
+  const names: string[] = [];
+  for (let cur = byId.get(id); cur; cur = cur.parentId ? byId.get(cur.parentId) : undefined) {
+    names.unshift(cur.name);
+    if (names.length > 256) return null;
+  }
+  return names.length > 0 ? '/' + names.join('/') : null;
+}
+
+function isUnder(path: string, base: string): boolean {
+  return path === base || path.startsWith(base + '/');
+}
+
 function buildPathFromStack(stack: { id: string | null; name: string }[]): string {
   if (stack.length <= 1) return '/';
   return '/' + stack.slice(1).map(s => s.name).join('/');
@@ -257,6 +297,8 @@ export const useFileStore = create<FileState>((set, get) => ({
   uploadAbortController: null,
   lastAction: null,
   sharedRoots: [],
+  allFolders: [],
+  hasListed: false,
   favorites: (() => {
     try { return JSON.parse(localStorage.getItem('files-favorites') || '[]'); } catch { return []; }
   })(),
@@ -279,6 +321,8 @@ export const useFileStore = create<FileState>((set, get) => ({
       currentPath: '/',
       currentParentId: null,
       resources: [],
+      allFolders: [],
+      hasListed: false,
       selectedResources: new Set<string>(),
       error: null,
       isLoading: false,
@@ -531,6 +575,7 @@ export const useFileStore = create<FileState>((set, get) => ({
         ? await client.listAllFileNodesAcrossAccounts()
         : await client.listAllFileNodes();
       const resources = sortResources(childrenOf(allNodes, parentId).map(nodeToResource));
+      const allFolders = allNodes.filter(isFolder).map(nodeToResource);
 
       // Prune recent files whose backing node no longer exists on the server
       const { recentFiles } = get();
@@ -538,13 +583,14 @@ export const useFileStore = create<FileState>((set, get) => ({
       const prunedRecent = recentFiles.filter(r => existingIds.has(r.id));
       if (prunedRecent.length !== recentFiles.length) {
         try { localStorage.setItem('files-recent-files', JSON.stringify(prunedRecent)); } catch { /* ignore */ }
-        set({ resources, recentFiles: prunedRecent, isLoading: false });
+        set({ resources, allFolders, recentFiles: prunedRecent, isLoading: false, hasListed: true });
       } else {
-        set({ resources, isLoading: false });
+        set({ resources, allFolders, isLoading: false, hasListed: true });
       }
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to list directory',
+        hasListed: true,
         isLoading: false,
         resources: [],
       });
@@ -631,7 +677,8 @@ export const useFileStore = create<FileState>((set, get) => ({
 
   uploadFiles: async (files: File[]) => {
     const { client, currentParentId, resources } = get();
-    if (!client) return;
+    if (!client) return { uploaded: 0, canceled: false };
+    let uploaded = 0;
 
     const abortController = new AbortController();
     set({ uploadAbortController: abortController });
@@ -656,6 +703,7 @@ export const useFileStore = create<FileState>((set, get) => ({
         if (abortController.signal.aborted) break;
         set({ uploadProgress: { name: file.name, loaded: file.size, total: file.size, current: i + 1, totalFiles } });
         await client.createFileNode(uniqueName, blobId, type || file.type || 'application/octet-stream', file.size, currentParentId);
+        uploaded++;
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') break;
         set({ uploadProgress: null, uploadAbortController: null });
@@ -664,6 +712,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
     set({ uploadProgress: null, uploadAbortController: null });
     await get().refresh();
+    return { uploaded, canceled: abortController.signal.aborted };
   },
 
   cancelUpload: () => {
@@ -676,7 +725,8 @@ export const useFileStore = create<FileState>((set, get) => ({
 
   uploadFolder: async (files: File[]) => {
     const { client, currentParentId } = get();
-    if (!client || files.length === 0) return;
+    if (!client || files.length === 0) return { uploaded: 0, canceled: false };
+    let uploaded = 0;
 
     const abortController = new AbortController();
     set({ uploadAbortController: abortController });
@@ -726,10 +776,17 @@ export const useFileStore = create<FileState>((set, get) => ({
       set({ uploadProgress: { name: relativePath, loaded: 0, total: file.size, current: i + 1, totalFiles } });
 
       try {
-        const { blobId, type } = await client.uploadBlob(file);
+        const idx = i;
+        const { blobId, type } = await client.uploadBlob(file, {
+          signal: abortController.signal,
+          onProgress: (loaded, total) => {
+            set({ uploadProgress: { name: relativePath, loaded, total, current: idx + 1, totalFiles } });
+          },
+        });
         if (abortController.signal.aborted) break;
         set({ uploadProgress: { name: relativePath, loaded: file.size, total: file.size, current: i + 1, totalFiles } });
         await client.createFileNode(file.name, blobId, type || file.type || 'application/octet-stream', file.size, parentId);
+        uploaded++;
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') break;
         set({ uploadProgress: null, uploadAbortController: null });
@@ -738,6 +795,7 @@ export const useFileStore = create<FileState>((set, get) => ({
     }
     set({ uploadProgress: null, uploadAbortController: null });
     await get().refresh();
+    return { uploaded, canceled: abortController.signal.aborted };
   },
 
   deleteResource: async (name: string) => {
@@ -908,6 +966,34 @@ export const useFileStore = create<FileState>((set, get) => ({
     await refresh();
   },
 
+  moveToFolderId: async (names: string[], targetId: string | null) => {
+    const { client, resources, currentParentId, allFolders, refresh } = get();
+    if (!client || targetId === currentParentId) return;
+
+    // A folder must not move into itself or anything below it.
+    const parentOf = new Map(allFolders.map(f => [f.id, f.parentId ?? null]));
+    const isInside = (folderId: string | null, ancestorId: string) => {
+      for (let id = folderId; id != null; id = parentOf.get(id) ?? null) {
+        if (id === ancestorId) return true;
+      }
+      return false;
+    };
+
+    const entries: UndoAction['entries'] = [];
+    for (const name of names) {
+      const resource = resources.find(r => r.name === name);
+      if (!resource) continue;
+      if (resource.isDirectory && isInside(targetId, resource.id)) continue;
+      await client.updateFileNode(resource.id, { parentId: targetId });
+      entries.push({ id: resource.id, from: { parentId: resource.parentId }, to: { parentId: targetId } });
+    }
+    set({
+      selectedResources: new Set(),
+      lastAction: entries.length > 0 ? { type: 'move', entries, sourceParentId: null } : get().lastAction,
+    });
+    await refresh();
+  },
+
   cutResources: (names: string[]) => {
     const { currentPath, currentParentId, resources } = get();
     const ids = names.map(n => resources.find(r => r.name === n)?.id).filter(Boolean) as string[];
@@ -1016,6 +1102,109 @@ export const useFileStore = create<FileState>((set, get) => ({
     const entry = { name, id, timestamp: Date.now() };
     const filtered = recentFiles.filter(r => r.id !== id);
     const next = [entry, ...filtered].slice(0, 20);
+    set({ recentFiles: next });
+    try { localStorage.setItem('files-recent-files', JSON.stringify(next)); } catch { /* ignore */ }
+  },
+
+  revealNode: async (id: string) => {
+    const { client, navigate } = get();
+    if (!client) return null;
+    let nodes: FileNode[];
+    try {
+      nodes = isCrossAccountId(id)
+        ? await client.listAllFileNodesAcrossAccounts()
+        : await client.listAllFileNodes();
+    } catch {
+      return null;
+    }
+    const byId = new Map(nodes.map(n => [n.id, n]));
+    const node = byId.get(id);
+    if (!node) return null;
+
+    // Rebuild the breadcrumb trail so navigate() lands on the right path.
+    const stack: { id: string | null; name: string }[] = [];
+    for (let p = node.parentId ?? null; p != null; p = byId.get(p)?.parentId ?? null) {
+      const parent = byId.get(p);
+      if (!parent) break;
+      stack.unshift({ id: parent.id, name: parent.name });
+    }
+    stack.unshift({ id: null, name: '' });
+    set({ pathStack: stack });
+    const parentEntry = stack[stack.length - 1];
+    await navigate(parentEntry.id, parentEntry.name);
+    set({ selectedResources: new Set([node.name]) });
+    return node.name;
+  },
+
+  renameNode: async (id: string, newName: string) => {
+    const { client, allFolders, favorites, refresh } = get();
+    if (!client) return;
+    const node = allFolders.find(f => f.id === id);
+    const oldPath = folderPath(allFolders, id);
+    await client.updateFileNode(id, { name: newName });
+    // Starred folders are kept by path: follow the rename.
+    if (oldPath) {
+      const newPath = oldPath.slice(0, oldPath.lastIndexOf('/') + 1) + newName;
+      const next = favorites.map(f => (isUnder(f, oldPath) ? newPath + f.slice(oldPath.length) : f));
+      if (next.some((f, i) => f !== favorites[i])) {
+        set({ favorites: next });
+        try { localStorage.setItem('files-favorites', JSON.stringify(next)); } catch { /* ignore */ }
+      }
+    }
+    set({
+      lastAction: node
+        ? { type: 'rename', entries: [{ id, from: { name: node.name }, to: { name: newName } }], sourceParentId: null }
+        : get().lastAction,
+    });
+    // A renamed ancestor changes the path on screen; rebuild it from the ids.
+    const { pathStack } = get();
+    if (pathStack.some(s => s.id === id)) {
+      set({ pathStack: pathStack.map(s => (s.id === id ? { ...s, name: newName } : s)) });
+      set({ currentPath: buildPathFromStack(get().pathStack) });
+    }
+    await refresh();
+  },
+
+  deleteNode: async (id: string) => {
+    const { client, allFolders, favorites, recentFiles, pathStack, navigate, refresh } = get();
+    if (!client) return;
+    const path = folderPath(allFolders, id);
+    await client.destroyFileNodes([id]);
+
+    const nextFavorites = path ? favorites.filter(f => !isUnder(f, path)) : favorites;
+    // Recent files only know their own id; drop the one deleted, the rest are
+    // pruned by the next listing.
+    const nextRecent = recentFiles.filter(r => r.id !== id);
+    set({ favorites: nextFavorites, recentFiles: nextRecent });
+    try {
+      localStorage.setItem('files-favorites', JSON.stringify(nextFavorites));
+      localStorage.setItem('files-recent-files', JSON.stringify(nextRecent));
+    } catch { /* ignore */ }
+
+    // Standing in the deleted folder or below it: step out to its parent.
+    const idx = pathStack.findIndex(s => s.id === id);
+    if (idx > 0) {
+      const parent = pathStack[idx - 1];
+      set({ pathStack: pathStack.slice(0, idx) });
+      await navigate(parent.id, parent.name);
+      return;
+    }
+    await refresh();
+  },
+
+  downloadNode: async (id: string) => {
+    const { client } = get();
+    if (!client) return;
+    const nodes = isCrossAccountId(id)
+      ? await client.listAllFileNodesAcrossAccounts()
+      : await client.listAllFileNodes();
+    const node = nodes.find(n => n.id === id);
+    if (!node?.blobId) throw new Error('File not found');
+    await client.downloadBlob(node.blobId, node.name, node.type);
+  },
+
+  removeRecentFile: (id: string) => {
+    const next = get().recentFiles.filter(r => r.id !== id);
     set({ recentFiles: next });
     try { localStorage.setItem('files-recent-files', JSON.stringify(next)); } catch { /* ignore */ }
   },

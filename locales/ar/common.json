@@ -147,6 +147,8 @@
     "show_all_tags": "إظهار الكل ({count})",
     "show_fewer_tags": "إظهار أقل",
     "folders": "المجلدات",
+    "show_more": "المزيد",
+    "show_fewer": "أقل",
     "shared": "مشترك",
     "mail": "البريد",
     "nav_label": "التنقل",
@@ -243,6 +245,7 @@
     "replied": "تم الرد عليها",
     "forwarded": "تمت إعادة توجيهها",
     "has_attachment": "تحتوي على مرفق",
+    "conversations_range": "{from}–{to, number} من {total, number}",
     "conversations_count": "{count} من {total} محادثة",
     "conversations_count_plus": "{count}+ محادثة",
     "conversations_count_simple": "{count} محادثة",
@@ -578,6 +581,8 @@
     "more": "المزيد",
     "scheduled_banner": "مجدولة للإرسال في {date}",
     "scheduled_send_created": "تمت جدولة الرسالة للإرسال",
+    "sending_in": "الإرسال خلال {seconds} ث",
+    "undo_send_failed": "تعذّر التراجع. ربما أُرسلت الرسالة بالفعل.",
     "cancel_scheduled_send": "إلغاء الإرسال",
     "reschedule_send": "إعادة الجدولة",
     "cancel_and_edit": "إلغاء والتعديل",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "إيصال القراءة مطلوب (انقر للتعطيل)",
-    "read_receipt_off": "طلب إيصال قراءة",
-    "dsn_on": "تم طلب إشعار التسليم (انقر للتعطيل)",
-    "dsn_off": "طلب إشعار بالتسليم",
-    "format_plain_text": "التبديل إلى نص عادي",
-    "format_rich_text": "التبديل إلى نص منسق (HTML)",
-    "require_tls_on": "التسليم المشفّر مطلوب (انقر للتعطيل)",
-    "require_tls_off": "اشتراط التسليم المشفّر (TLS)",
+    "minimize": "تصغير",
+    "maximize": "ملء الشاشة",
+    "restore": "استعادة",
     "new_message": "رسالة جديدة",
     "signature_edit_hint": "انقر نقرًا مزدوجًا لتحرير التوقيع",
     "reply": "رد",
@@ -648,6 +648,7 @@
     "discard": "تجاهل",
     "discard_draft_title": "تجاهل المسودة؟",
     "discard_draft_confirm": "لديك تغييرات غير محفوظة. هل تريد تجاهل هذه المسودة؟",
+    "discard_draft_message": "ستُحذف المسودة.",
     "saving": "جارٍ الحفظ...",
     "sending": "جارٍ الإرسال...",
     "add_link": "إضافة رابط",
@@ -687,11 +688,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "إذا لم يقبل خادمك هذا العنوان كمرسل للمغلف، فسيُستخدم {identity} بدلاً منه، ويمكن للمستلمين رؤيته في ترويسة Return-Path."
     },
-    "use_template": "قالب",
     "save_as_template": "حفظ كقالب",
+    "attach_from_device": "رفع من هذا الجهاز",
+    "templates_menu": "القوالب",
+    "insert_template": "إدراج قالب",
+    "options": "الخيارات",
+    "option_plain_text": "نص عادي",
+    "option_plain_text_hint": "إرسال بدون تنسيق",
+    "option_read_receipt": "طلب إشعار القراءة",
+    "option_read_receipt_hint": "اطلب من المستلم تأكيد فتح الرسالة",
+    "option_dsn": "إشعار التسليم",
+    "option_dsn_hint": "احصل على تقرير عندما يسلّمها الخادم",
+    "option_require_tls": "اشتراط التسليم المشفّر",
+    "option_require_tls_hint": "التسليم عبر TLS فقط، وإلا تُرفض",
     "validation": {
       "recipient_required": "أضف مستلمًا للإرسال",
       "body_required": "اكتب رسالة أو أرفق ملفًا",
+      "invalid_recipients": "لم يُرسل - تحقق من هذه العناوين: {addresses}",
       "attachments_uploading": "المرفقات لا تزال قيد الرفع — سيتم الإرسال فور انتهائها",
       "attachment_upload_failed": "لم يتم الإرسال — فشل رفع أحد المرفقات. أزله وحاول مرة أخرى."
     },
@@ -704,7 +717,10 @@
     "show_less": "إظهار أقل",
     "send_failed": "فشل إرسال الرسالة",
     "send_timeout": "توقف الخادم عن الاستجابة. تحقق من مجلد المُرسَل قبل إعادة الإرسال — فقد تكون الرسالة قد أُرسلت بالفعل.",
+    "send_offline": "يبدو أنك غير متصل. الرسالة ما زالت هنا، أرسلها مجددًا عند عودة الاتصال.",
+    "formatting": "التنسيق",
     "send_recipients_rejected": "لم تُرسل الرسالة - رفض الخادم جميع المستلمين.",
+    "send_plugin_failed": "لم يُرسل - فشلت إضافة تتولى الإرسال أو استغرقت وقتًا طويلًا. تحقق من مجلد المرسل قبل الإرسال مرة أخرى.",
     "send_some_recipients_rejected": "أُرسلت الرسالة، لكن ليس إلى هؤلاء المستلمين - رفضهم الخادم.",
     "continue_draft": "متابعة المسودة",
     "close_draft_title": "حفظ المسودة أم تجاهلها؟",
@@ -733,6 +749,11 @@
     },
     "schedule_send": "جدولة الإرسال",
     "schedule_send_description": "اختر متى يجب على الخادم إرسال هذه الرسالة.",
+    "schedule_preset": {
+      "tomorrow_morning": "صباح الغد",
+      "tomorrow_afternoon": "ظهر الغد",
+      "monday_morning": "صباح الاثنين"
+    },
     "schedule_send_required": "اختر تاريخًا ووقتًا.",
     "schedule_send_invalid": "أدخل تاريخًا ووقتًا صالحين.",
     "schedule_send_future": "اختر تاريخًا ووقتًا في المستقبل.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "تعديل الاسم المعروض",
     "recipient_email_placeholder": "عنوان البريد الإلكتروني",
     "recipient_name_placeholder": "الاسم المعروض",
+    "invalid_recipient": "ليس عنوان بريد إلكتروني صالحًا",
     "autocomplete_search_server": "البحث في الخادم",
     "autocomplete_searching": "جارٍ البحث...",
     "mention_recipients": "المستلمون",
@@ -785,6 +807,15 @@
       "remove_background_color": "إزالة لون الخلفية"
     },
     "send_filing_warning": "تم الإرسال - لكن التنظيف بعد الإرسال فشل، وقد تبقى مسودة قديمة.",
+    "read_receipt_on": "إيصال القراءة مطلوب (انقر للتعطيل)",
+    "read_receipt_off": "طلب إيصال قراءة",
+    "dsn_on": "تم طلب إشعار التسليم (انقر للتعطيل)",
+    "dsn_off": "طلب إشعار بالتسليم",
+    "format_plain_text": "التبديل إلى نص عادي",
+    "format_rich_text": "التبديل إلى نص منسق (HTML)",
+    "require_tls_on": "التسليم المشفّر مطلوب (انقر للتعطيل)",
+    "require_tls_off": "اشتراط التسليم المشفّر (TLS)",
+    "use_template": "قالب",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1078,6 +1109,13 @@
       },
       "title": "المظهر",
       "description": "تخصيص شكل ومظهر البريد الإلكتروني على الويب",
+      "theme": {
+        "label": "السمة",
+        "description": "اختر نظام الألوان المفضل لديك",
+        "light": "فاتح",
+        "dark": "داكن",
+        "system": "النظام"
+      },
       "language": {
         "label": "اللغة",
         "description": "اختر لغتك المفضلة"
@@ -1096,6 +1134,12 @@
         "compact": "مضغوط",
         "regular": "عادي",
         "comfortable": "مريح"
+      },
+      "interface_layout": {
+        "label": "تخطيط الواجهة",
+        "description": "موضع البحث والتنقل وأشرطة الأدوات",
+        "default": "افتراضي",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "تفعيل الحركات",
@@ -1280,6 +1324,18 @@
         "confirm_revoke_title": "إلغاء تسجيل هذا الجهاز؟",
         "confirm_revoke_message": "سيتوقّف فورًا عن تلقّي الإشعارات في الخلفية. تفعيل الدفع مجددًا على ذلك الجهاز سيسجّله من جديد.",
         "confirm_revoke_message_this": "سيتوقّف هذا الجهاز فورًا عن تلقّي الإشعارات في الخلفية."
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "صوت الإشعار",
@@ -1691,6 +1747,33 @@
         "drag_handle": "اسحب لإعادة الترتيب",
         "add": "إضافة حساب"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "مشترك معي",
         "description": "الحسابات الجماعية والمشتركة التي يمكنك إدارتها. اختر واحدًا لتعديل مرشحاته، والرد التلقائي أثناء الغياب، والتقويمات، وجهات الاتصال.",
@@ -1733,7 +1816,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "scoped": {
       "back": "العودة إلى حسابي",
@@ -2278,6 +2364,7 @@
       "forward_placeholder": "email@example.com",
       "forward_keep_copy": "الاحتفاظ بنسخة",
       "forward_limit": "حد إعادة التوجيه لكل رسالة على هذا الخادم: {count}. يتم تخطي عمليات إعادة التوجيه الإضافية.",
+      "forward_unavailable": "لا يسمح هذا الخادم بإعادة التوجيه. إجراءات إعادة التوجيه في قواعد التصفية ليس لها أي تأثير.",
       "reject_message": "رسالة الرفض",
       "reject_placeholder": "تم رفض رسالتك",
       "label_name": "اسم الوسم",
@@ -2404,12 +2491,6 @@
         "title": "العرض",
         "description": "إعداد كيفية عرض الملفات والمجلدات"
       },
-      "folder_layout": {
-        "label": "التنقل بين المجلدات",
-        "description": "اختر كيفية عرض المجلدات: ضمن الملفات أو في شجرة بالشريط الجانبي",
-        "inline": "ضمن الصفحة",
-        "sidebar": "الشريط الجانبي"
-      },
       "default_view": {
         "label": "العرض الافتراضي",
         "description": "اختر بين تخطيط الشبكة والقائمة",
@@ -2455,6 +2536,12 @@
       },
       "preview": {
         "label": "معاينة"
+      },
+      "folder_layout": {
+        "label": "التنقل بين المجلدات",
+        "description": "اختر كيفية عرض المجلدات: ضمن الملفات أو في شجرة بالشريط الجانبي",
+        "inline": "ضمن الصفحة",
+        "sidebar": "الشريط الجانبي"
       }
     },
     "byomc": {
@@ -2562,7 +2649,12 @@
       "manage": "إدارة القواعد",
       "senders_count": "{count, plural, one {مرسل واحد} two {مرسلَين} few {# مرسلين} many {# مرسلًا} other {# مرسل}}",
       "cross_account": "حدد رسائل من حساب واحد",
-      "opaque_hint": "تم تعديل مرشحاتك يدويًا. افتح إعدادات المرشحات"
+      "opaque_hint": "تم تعديل مرشحاتك يدويًا. افتح إعدادات المرشحات",
+      "loading": "جارٍ تحميل القواعد…",
+      "load_failed": "تعذّر تحميل القواعد",
+      "none": "لا توجد قواعد بعد",
+      "new_mail_only": "للرسائل الجديدة فقط",
+      "running": "جارٍ تشغيل «{name}» على {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "الرسالة التالية",
       "previous_email": "الرسالة السابقة",
       "open_email": "فتح الرسالة",
-      "close_email": "إغلاق / إلغاء التحديد"
+      "close_email": "إغلاق / إلغاء التحديد",
+      "go_to_folder": "الانتقال إلى المجلد"
     },
     "actions": {
       "reply": "رد",
@@ -2643,7 +2736,8 @@
       "global_search": "البحث في كل شيء"
     },
     "threads": {
-      "expand_collapse": "توسيع/طي المحادثة"
+      "expand_collapse": "توسيع/طي المحادثة",
+      "select_mountain_view": "تحديد المحادثة"
     },
     "composer": {
       "send": "إرسال الرسالة",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "عنوان الحدث الجديد",
-      "aria_label": "إنشاء حدث سريع"
+      "aria_label": "إنشاء حدث سريع",
+      "add_title": "أضف عنوانًا",
+      "more_options": "خيارات أخرى"
     },
     "nav_prev": "السابق",
     "nav_next": "التالي",
@@ -3574,7 +3670,13 @@
       "due_today": "اليوم",
       "due_tomorrow": "غدًا",
       "overdue": "متأخرة"
-    }
+    },
+    "toolbar": {
+      "more": "إجراءات أخرى",
+      "select_view": "تغيير العرض، الحالي: {view}"
+    },
+    "other_calendars": "تقويمات أخرى",
+    "calendar_options": "خيارات {name}"
   },
   "calendar_event_notifications": {
     "someone": "شخص ما",
@@ -3663,6 +3765,8 @@
     "tip_shortcuts": "اضغط ؟ لعرض جميع اختصارات لوحة المفاتيح",
     "tip_sidebar": "ستجد التقويم وجهات الاتصال والإعدادات في قائمة الشريط الجانبي",
     "tip_settings": "خصّص تجربتك من الإعدادات",
+    "tip_compose_touch": "اضغط زر القلم لكتابة رسالة جديدة",
+    "tip_sidebar_touch": "ستجد التقويم وجهات الاتصال والإعدادات في الشريط السفلي",
     "got_it": "فهمت",
     "settings": "الإعدادات",
     "dismiss": "تجاهل",
@@ -3686,8 +3790,6 @@
     "title": "الملفات",
     "search_placeholder": "بحث في الملفات...",
     "empty_state_title": "لا توجد ملفات بعد",
-    "empty_state_description": "ارفع ملفات أو أنشئ مجلدات للبدء",
-    "upload": "رفع",
     "upload_files": "رفع الملفات",
     "new_folder": "مجلد جديد",
     "new_folder_name": "اسم المجلد",
@@ -3706,13 +3808,11 @@
     "type": "النوع",
     "folder": "مجلد",
     "file": "ملف",
-    "parent_directory": "المجلد الأصل",
-    "breadcrumb_root": "الرئيسية",
-    "other_accounts": "حسابات أخرى",
     "no_accounts": "لا توجد حسابات متصلة.",
-    "drop_files_here": "أفلت الملفات أو المجلدات هنا للرفع",
     "uploading": "جارٍ الرفع...",
     "upload_success": "{count, plural, one {تم رفع ملف واحد} other {تم رفع # ملف}}",
+    "upload_canceled": "تم إلغاء الرفع",
+    "upload_canceled_partial": "{count, plural, zero {لم يُرفع أي ملف} one {تم رفع ملف واحد} two {تم رفع ملفين} few {تم رفع # ملفات} many {تم رفع # ملفًا} other {تم رفع # ملف}} قبل الإلغاء",
     "upload_error": "فشل رفع الملف",
     "create_folder_success": "تم إنشاء المجلد",
     "create_folder_error": "فشل إنشاء المجلد",
@@ -3745,7 +3845,6 @@
     "file_name": "اسم الملف",
     "retry": "إعادة المحاولة",
     "refresh": "تحديث",
-    "toggle_favorite": "تبديل المفضّلة",
     "duplicate": "تكرار",
     "duplicate_success": "تم التكرار بنجاح",
     "duplicate_error": "فشل التكرار",
@@ -3757,8 +3856,8 @@
     "create_file_error": "فشل إنشاء الملف",
     "favorites": "المفضّلة",
     "recent": "الأخيرة",
-    "properties": "الخصائص",
-    "open_folder": "فتح المجلد",
+    "show_in_folder": "إظهار في المجلد",
+    "remove_from_recent": "إزالة من الأخيرة",
     "upload_folder": "رفع مجلد",
     "file_too_large": "\"{name}\" يتجاوز الحد الأقصى لحجم الملف ({max})",
     "undo": "تراجع",
@@ -3768,6 +3867,66 @@
     "open_folder_tree": "فتح شجرة المجلدات",
     "file_list": "الملفات والمجلدات",
     "context_menu": "الإجراءات",
+    "settings_ascending": "تصاعدي",
+    "settings_descending": "تنازلي",
+    "disabled_title": "ميزة الملفات معطّلة بواسطة المسؤول",
+    "disabled_description": "قد تتسبب عمليات رفع الملفات الكبيرة عبر WebDAV في زعزعة استقرار Stalwart/RocksDB، بما في ذلك انهيارات نفاد الذاكرة واستخدام غير قابل للاسترجاع لمساحة القرص. قد لا تُحذف الملفات المحذوفة فورًا من مخزن الكائنات الثنائية. لا يُنصح بهذه الميزة لبيئات الإنتاج.",
+    "migration_title": "جارٍ تحديث ملفاتك…",
+    "migration_description": "جارٍ تنظيم المجلدات والملفات في هيكلها الصحيح. يحدث هذا مرة واحدة فقط.",
+    "new": "جديد",
+    "my_files": "ملفاتي",
+    "folders": "المجلدات",
+    "files_heading": "الملفات",
+    "open": "فتح",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "توسيع {name}",
+    "collapse_folder": "طي {name}",
+    "sidebar_hint": "تظهر هنا المجلدات المفضّلة والملفات التي فتحتها.",
+    "breadcrumbs": "مسار المجلد",
+    "show_path": "إظهار المجلدات المخفية في المسار",
+    "selection_actions": "إجراءات العناصر المحددة",
+    "selected_count": "{count, plural, zero {لم يُحدد أي عنصر} one {تم تحديد عنصر واحد} two {تم تحديد عنصرين} few {تم تحديد # عناصر} many {تم تحديد # عنصرًا} other {تم تحديد # عنصر}}",
+    "clear_selection": "Clear selection",
+    "select_all": "تحديد الكل",
+    "select_item": "تحديد {name}",
+    "more_actions": "إجراءات أخرى لـ {name}",
+    "paste_here": "لصق في هذا المجلد",
+    "paste_count": "{count, plural, zero {لصق 0 عنصر} one {لصق عنصر واحد} two {لصق عنصرين} few {لصق # عناصر} many {لصق # عنصرًا} other {لصق # عنصر}}",
+    "sort_by": "ترتيب حسب",
+    "view_mode": "طريقة العرض",
+    "clear_search": "مسح البحث",
+    "no_results_for": "لا شيء في هذا المجلد يطابق \"{query}\"",
+    "download_count": "{count, plural, zero {تنزيل 0 ملف} one {تنزيل ملف واحد} two {تنزيل ملفين} few {تنزيل # ملفات} many {تنزيل # ملفًا} other {تنزيل # ملف}}",
+    "delete_count": "{count, plural, zero {حذف 0 عنصر} one {حذف عنصر واحد} two {حذف عنصرين} few {حذف # عناصر} many {حذف # عنصرًا} other {حذف # عنصر}}",
+    "close_details": "إغلاق التفاصيل",
+    "file_kind": "ملف {ext}",
+    "folder_summary": "{folders, plural, =0 {لا توجد مجلدات} zero {لا توجد مجلدات} one {مجلد واحد} two {مجلدان} few {# مجلدات} many {# مجلدًا} other {# مجلد}}، {files, plural, =0 {لا توجد ملفات} zero {لا توجد ملفات} one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفًا} other {# ملف}}",
+    "details_hint": "حدد ملفًا أو مجلدًا لعرض تفاصيله.",
+    "sharing": "المشاركة",
+    "shared_with_count": "{count, plural, zero {غير مشترك مع أحد} one {مشترك مع شخص واحد} two {مشترك مع شخصين} few {مشترك مع # أشخاص} many {مشترك مع # شخصًا} other {مشترك مع # شخص}}",
+    "only_you": "أنت فقط",
+    "empty_folder_title": "هذا المجلد فارغ",
+    "empty_folder_description": "أفلت الملفات هنا، أو ارفعها من جهازك.",
+    "empty_folder_read_only": "لا يمكنك إضافة ملفات إلى هذا المجلد.",
+    "choose_account": "اختر حسابًا",
+    "drop_to_upload": "أفلت للرفع إلى {folder}",
+    "uploading_count": "جارٍ رفع {current} من {total}",
+    "dismiss": "تجاهل",
+    "zoom_in": "تكبير",
+    "zoom_out": "تصغير",
+    "zoom_reset": "ملاءمة الشاشة",
+    "rotate": "تدوير",
+    "close_preview": "إغلاق",
+    "empty_state_description": "ارفع ملفات أو أنشئ مجلدات للبدء",
+    "upload": "رفع",
+    "parent_directory": "المجلد الأصل",
+    "breadcrumb_root": "الرئيسية",
+    "other_accounts": "حسابات أخرى",
+    "drop_files_here": "أفلت الملفات أو المجلدات هنا للرفع",
+    "toggle_favorite": "تبديل المفضّلة",
+    "properties": "الخصائص",
+    "open_folder": "فتح المجلد",
     "settings_title": "إعدادات الملفات",
     "settings_display": "العرض",
     "settings_default_view": "العرض الافتراضي",
@@ -3776,8 +3935,6 @@
     "settings_default_sort_desc": "اختر الترتيب الافتراضي للملفات",
     "settings_sort_direction": "اتجاه الترتيب",
     "settings_sort_direction_desc": "اختر ترتيبًا تصاعديًا أو تنازليًا",
-    "settings_ascending": "تصاعدي",
-    "settings_descending": "تنازلي",
     "settings_icons": "الأيقونات",
     "settings_show_icons": "إظهار أيقونات الملفات",
     "settings_show_icons_desc": "عرض أيقونات بجانب الملفات والمجلدات",
@@ -3792,11 +3949,7 @@
     "settings_folder_layout_desc": "اختر كيفية عرض المجلدات: ضمن الملفات أو في شجرة بالشريط الجانبي",
     "settings_folder_layout_inline": "ضمن الصفحة",
     "settings_folder_layout_sidebar": "الشريط الجانبي",
-    "disabled_title": "ميزة الملفات معطّلة بواسطة المسؤول",
-    "disabled_description": "قد تتسبب عمليات رفع الملفات الكبيرة عبر WebDAV في زعزعة استقرار Stalwart/RocksDB، بما في ذلك انهيارات نفاد الذاكرة واستخدام غير قابل للاسترجاع لمساحة القرص. قد لا تُحذف الملفات المحذوفة فورًا من مخزن الكائنات الثنائية. لا يُنصح بهذه الميزة لبيئات الإنتاج.",
     "stability_warning": "قد تتسبب عمليات رفع الملفات الكبيرة في زعزعة استقرار الخادم. قد لا تُحذف الملفات المحذوفة فورًا من التخزين. استخدمها بحذر.",
-    "migration_title": "جارٍ تحديث ملفاتك…",
-    "migration_description": "جارٍ تنظيم المجلدات والملفات في هيكلها الصحيح. يحدث هذا مرة واحدة فقط.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3806,13 +3959,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

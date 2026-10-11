@@ -147,6 +147,8 @@
     "show_all_tags": "Показати всі ({count})",
     "show_fewer_tags": "Показати менше",
     "folders": "Папки",
+    "show_more": "Більше",
+    "show_fewer": "Менше",
     "mail": "Пошта",
     "nav_label": "Навігація",
     "add_app": "програми",
@@ -243,6 +245,7 @@
     "replied": "Відповіли",
     "forwarded": "Переслано",
     "has_attachment": "З вкладенням",
+    "conversations_range": "{from}–{to, number} з {total, number}",
     "conversations_count": "{count} з {total} розмов",
     "conversations_count_plus": "{count}+ розмов",
     "conversations_count_simple": "{count} розмов",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "Заплановано на надсилання {date}",
     "scheduled_send_created": "Лист заплановано до надсилання",
+    "sending_in": "Надсилання через {seconds} с",
+    "undo_send_failed": "Не вдалося скасувати. Можливо, повідомлення вже надіслано.",
     "cancel_scheduled_send": "Скасувати надсилання",
     "reschedule_send": "Перенести",
     "cancel_and_edit": "Скасувати й редагувати",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Запитано сповіщення про прочитання (натисніть, щоб вимкнути)",
-    "read_receipt_off": "Запитати сповіщення про прочитання",
-    "dsn_on": "Запитано сповіщення про доставку (натисніть, щоб вимкнути)",
-    "dsn_off": "Запитати сповіщення про доставку",
-    "format_plain_text": "Перемкнути на простий текст",
-    "format_rich_text": "Перемкнути на форматований текст (HTML)",
-    "require_tls_on": "Потрібна зашифрована доставка (натисніть, щоб вимкнути)",
-    "require_tls_off": "Вимагати зашифровану доставку (TLS)",
+    "minimize": "Згорнути",
+    "maximize": "На весь екран",
+    "restore": "Відновити",
     "new_message": "Нове повідомлення",
     "signature_edit_hint": "Двічі клацніть, щоб редагувати підпис",
     "reply": "Відповісти",
@@ -648,6 +648,7 @@
     "discard": "Відкинути",
     "discard_draft_title": "Відхилити чернетку?",
     "discard_draft_confirm": "У вас є незбережені зміни. Ви хочете відхилити цю чернетку?",
+    "discard_draft_message": "Чернетку буде видалено.",
     "saving": "Збереження...",
     "draft_saved": "Чернетку збережено",
     "save_failed": "Не вдалося зберегти",
@@ -684,11 +685,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Якщо ваш сервер не приймає цю адресу як відправника конверта, замість неї використовується {identity}, і одержувачі бачитимуть її в заголовку Return-Path."
     },
-    "use_template": "Шаблон",
     "save_as_template": "Зберегти як шаблон",
+    "attach_from_device": "Завантажити з цього пристрою",
+    "templates_menu": "Шаблони",
+    "insert_template": "Вставити шаблон",
+    "options": "Параметри",
+    "option_plain_text": "Звичайний текст",
+    "option_plain_text_hint": "Надіслати без форматування",
+    "option_read_receipt": "Запросити сповіщення про прочитання",
+    "option_read_receipt_hint": "Попросити одержувача підтвердити відкриття",
+    "option_dsn": "Сповіщення про доставку",
+    "option_dsn_hint": "Отримати звіт, коли сервер доставить лист",
+    "option_require_tls": "Вимагати шифровану доставку",
+    "option_require_tls_hint": "Доставляти лише через TLS, інакше повернути",
     "validation": {
       "recipient_required": "Додайте одержувача для надсилання",
       "body_required": "Напишіть повідомлення або прикріпіть файл",
+      "invalid_recipients": "Не надіслано - перевірте ці адреси: {addresses}",
       "attachments_uploading": "Вкладення ще завантажуються — надсилання почнеться після завершення",
       "attachment_upload_failed": "Не надіслано — не вдалося завантажити вкладення. Видаліть його та спробуйте ще раз."
     },
@@ -701,7 +714,10 @@
     "show_less": "Показувати менше",
     "send_failed": "Не вдалося надіслати електронний лист",
     "send_timeout": "Сервер перестав відповідати. Перш ніж надсилати знову, перевірте теку «Надіслані» — лист міг уже піти.",
+    "send_offline": "Схоже, ви не в мережі. Повідомлення збережено, надішліть його знову, коли з'явиться зв'язок.",
+    "formatting": "Форматування",
     "send_recipients_rejected": "Не надіслано — сервер відхилив усіх одержувачів.",
+    "send_plugin_failed": "Не надіслано: плагін, який відповідає за надсилання, завершився з помилкою або працював задовго. Перевірте папку «Надіслані», перш ніж надсилати знову.",
     "send_some_recipients_rejected": "Надіслано, але не цим одержувачам — сервер їх відхилив.",
     "continue_draft": "Продовжити чернетку",
     "close_draft_title": "Зберегти чи видалити чернетку?",
@@ -733,6 +749,11 @@
     "sending": "Надсилання...",
     "schedule_send": "Запланувати надсилання",
     "schedule_send_description": "Виберіть, коли сервер має надіслати це повідомлення.",
+    "schedule_preset": {
+      "tomorrow_morning": "Завтра вранці",
+      "tomorrow_afternoon": "Завтра вдень",
+      "monday_morning": "У понеділок вранці"
+    },
     "schedule_send_required": "Виберіть дату й час.",
     "schedule_send_invalid": "Введіть дійсні дату й час.",
     "schedule_send_future": "Виберіть дату й час у майбутньому.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Змінити відображуване ім'я",
     "recipient_email_placeholder": "Адреса ел. пошти",
     "recipient_name_placeholder": "Відображуване ім'я",
+    "invalid_recipient": "Недійсна адреса електронної пошти",
     "autocomplete_search_server": "Шукати на сервері",
     "autocomplete_searching": "Пошук...",
     "mention_recipients": "Одержувачі",
@@ -785,6 +807,15 @@
       "remove_background_color": "Прибрати колір фону"
     },
     "send_filing_warning": "Надіслано - але подальше очищення не вдалося, може залишитися застаріла чернетка.",
+    "read_receipt_on": "Запитано сповіщення про прочитання (натисніть, щоб вимкнути)",
+    "read_receipt_off": "Запитати сповіщення про прочитання",
+    "dsn_on": "Запитано сповіщення про доставку (натисніть, щоб вимкнути)",
+    "dsn_off": "Запитати сповіщення про доставку",
+    "format_plain_text": "Перемкнути на простий текст",
+    "format_rich_text": "Перемкнути на форматований текст (HTML)",
+    "require_tls_on": "Потрібна зашифрована доставка (натисніть, щоб вимкнути)",
+    "require_tls_off": "Вимагати зашифровану доставку (TLS)",
+    "use_template": "Шаблон",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Зовнішній вигляд",
       "description": "Налаштуйте зовнішній вигляд вашої веб-пошти",
+      "theme": {
+        "label": "Тема",
+        "description": "Виберіть бажану колірну схему",
+        "light": "світло",
+        "dark": "Темний",
+        "system": "система"
+      },
       "language": {
         "label": "Мова",
         "description": "Виберіть бажану мову"
@@ -1093,6 +1131,12 @@
         "compact": "Компактний",
         "regular": "Регулярний",
         "comfortable": "Комфортно"
+      },
+      "interface_layout": {
+        "label": "Макет інтерфейсу",
+        "description": "Де розташовані пошук, навігація та панелі інструментів",
+        "default": "За замовчуванням",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Увімкнути анімацію",
@@ -1241,6 +1285,18 @@
         "swift": "Швидкий жест",
         "relax": "Розслабтеся",
         "beep": "Звуковий сигнал"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Звук сповіщення",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Перетягніть, щоб змінити порядок",
         "add": "Додати обліковий запис"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Доступні мені",
         "description": "Групові та спільні облікові записи, якими ви можете керувати. Виберіть один, щоб змінити його фільтри, автовідповідач, календарі та контакти.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Безпека облікового запису",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "email@example.com",
       "forward_keep_copy": "Зберегти копію",
       "forward_limit": "Ліміт пересилань на один лист на цьому сервері: {count}. Зайві пересилання пропускаються.",
+      "forward_unavailable": "Цей сервер не дозволяє пересилання. Дії пересилання в правилах фільтрів не спрацюють.",
       "reject_message": "Повідомлення про відмову",
       "reject_placeholder": "Ваш лист було відхилено",
       "label_name": "Назва мітки",
@@ -2397,12 +2484,6 @@
         "title": "Дисплей",
         "description": "Налаштувати спосіб відображення файлів і папок"
       },
-      "folder_layout": {
-        "label": "Навігація по папках",
-        "description": "Виберіть спосіб відображення папок: у рядку з файлами чи в дереві бічної панелі",
-        "inline": "Вбудований",
-        "sidebar": "Бічна панель"
-      },
       "default_view": {
         "label": "Перегляд за умовчанням",
         "description": "Вибір між сіткою та списком",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Попередній перегляд"
+      },
+      "folder_layout": {
+        "label": "Навігація по папках",
+        "description": "Виберіть спосіб відображення папок: у рядку з файлами чи в дереві бічної панелі",
+        "inline": "Вбудований",
+        "sidebar": "Бічна панель"
       }
     },
     "search_placeholder": "Пошук у налаштуваннях",
@@ -2562,7 +2649,12 @@
       "manage": "Керувати правилами",
       "senders_count": "{count, plural, one {# відправника} few {# відправників} many {# відправників} other {# відправника}}",
       "cross_account": "Виберіть листи з одного облікового запису",
-      "opaque_hint": "Ваші фільтри відредаговано вручну. Відкрийте налаштування фільтрів"
+      "opaque_hint": "Ваші фільтри відредаговано вручну. Відкрийте налаштування фільтрів",
+      "loading": "Завантаження правил…",
+      "load_failed": "Не вдалося завантажити правила",
+      "none": "Правил поки немає",
+      "new_mail_only": "Лише для нових листів",
+      "running": "Виконується «{name}» у теці {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Наступний електронний лист",
       "previous_email": "Попередній електронний лист",
       "open_email": "Відкрийте електронну пошту",
-      "close_email": "Закрити / Скасувати вибір"
+      "close_email": "Закрити / Скасувати вибір",
+      "go_to_folder": "Перейти до теки"
     },
     "actions": {
       "reply": "Відповісти",
@@ -2643,7 +2736,8 @@
       "global_search": "Шукати скрізь"
     },
     "threads": {
-      "expand_collapse": "Розгорнути/згорнути ланцюжок"
+      "expand_collapse": "Розгорнути/згорнути ланцюжок",
+      "select_mountain_view": "Вибрати листування"
     },
     "composer": {
       "send": "Надіслати лист",
@@ -3389,7 +3483,9 @@
     },
     "quick_create": {
       "placeholder": "Нова назва події",
-      "aria_label": "Швидке створення події"
+      "aria_label": "Швидке створення події",
+      "add_title": "Додайте назву",
+      "more_options": "Більше параметрів"
     },
     "nav_prev": "Попередній",
     "nav_next": "Далі",
@@ -3574,7 +3670,13 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Відкрити меню"
+    "nav_open_menu": "Відкрити меню",
+    "toolbar": {
+      "more": "Інші дії",
+      "select_view": "Змінити вигляд, зараз {view}"
+    },
+    "other_calendars": "Інші календарі",
+    "calendar_options": "Параметри: {name}"
   },
   "advanced_search": {
     "title": "Розширений пошук",
@@ -3620,6 +3722,8 @@
     "tip_shortcuts": "Натисніть ? щоб побачити всі комбінації клавіш",
     "tip_sidebar": "Знайдіть Календар, Контакти та Налаштування в меню бічної панелі",
     "tip_settings": "Налаштуйте свій досвід у налаштуваннях",
+    "tip_compose_touch": "Торкніться кнопки з олівцем, щоб написати новий лист",
+    "tip_sidebar_touch": "Календар, Контакти й Налаштування є на нижній панелі",
     "got_it": "зрозумів",
     "settings": "Налаштування",
     "dismiss": "Відхилити",
@@ -3643,8 +3747,6 @@
     "title": "Файли",
     "search_placeholder": "Пошук файлів...",
     "empty_state_title": "Файлів ще немає",
-    "empty_state_description": "Щоб почати, завантажте файли або створіть папки",
-    "upload": "Завантажити",
     "upload_files": "Завантажити файли",
     "new_folder": "Нова папка",
     "new_folder_name": "Назва папки",
@@ -3663,11 +3765,10 @@
     "type": "Тип",
     "folder": "Папка",
     "file": "Файл",
-    "parent_directory": "Батьківський каталог",
-    "breadcrumb_root": "додому",
-    "drop_files_here": "Перетягніть файли або папки сюди, щоб завантажити",
     "uploading": "Завантаження...",
     "upload_success": "{count, plural, one {1 файл завантажено} few {# файли завантажено} many {# файлів завантажено} other {# файлів завантажено}}",
+    "upload_canceled": "Завантаження скасовано",
+    "upload_canceled_partial": "{count, plural, one {# файл було завантажено} few {# файли було завантажено} many {# файлів було завантажено} other {# файлу було завантажено}} до скасування",
     "upload_error": "Не вдалося завантажити файл",
     "create_folder_success": "Папка створена",
     "create_folder_error": "Не вдалося створити папку",
@@ -3700,7 +3801,6 @@
     "file_name": "Ім'я файлу",
     "retry": "Повторіть спробу",
     "refresh": "Оновити",
-    "toggle_favorite": "Перемкнути улюблене",
     "duplicate": "дублікат",
     "duplicate_success": "Продубльовано успішно",
     "duplicate_error": "Не вдалося скопіювати",
@@ -3712,8 +3812,8 @@
     "create_file_error": "Не вдалося створити файл",
     "favorites": "Вибране",
     "recent": "Останні",
-    "properties": "Властивості",
-    "open_folder": "Відкрити папку",
+    "show_in_folder": "Показати в папці",
+    "remove_from_recent": "Прибрати з останніх",
     "upload_folder": "Завантажити папку",
     "file_too_large": "\"{name}\" перевищує максимальний розмір файлу ({max})",
     "undo": "Скасувати",
@@ -3722,6 +3822,67 @@
     "toolbar": "Дії з файлами",
     "file_list": "Файли та папки",
     "context_menu": "Дії",
+    "settings_ascending": "Висхідний",
+    "settings_descending": "Спускається",
+    "disabled_title": "Функцію файлів вимкнено вашим адміністратором",
+    "disabled_description": "Завантаження великих файлів через WebDAV може спричинити нестабільність Stalwart/RocksDB, зокрема збої через брак пам’яті та невідновне використання диска. Видалені файли не можуть бути негайно очищені зі сховища BLOB-об’єктів. Ця функція не рекомендована для робочих середовищ.",
+    "no_accounts": "Немає підключених облікових записів.",
+    "open_folder_tree": "Відкрити дерево тек",
+    "migration_title": "Оновлення ваших файлів…",
+    "migration_description": "Папки та файли впорядковуються у правильну структуру. Це відбувається лише один раз.",
+    "new": "Створити",
+    "my_files": "Мої файли",
+    "folders": "Папки",
+    "files_heading": "Файли",
+    "open": "Відкрити",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Розгорнути {name}",
+    "collapse_folder": "Згорнути {name}",
+    "sidebar_hint": "Додавайте папки до вибраного й відкривайте файли, щоб знаходити їх тут.",
+    "breadcrumbs": "Шлях до папки",
+    "show_path": "Показати приховані папки в шляху",
+    "selection_actions": "Дії з вибраними елементами",
+    "selected_count": "{count, plural, one {Вибрано # елемент} few {Вибрано # елементи} many {Вибрано # елементів} other {Вибрано # елемента}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Вибрати все",
+    "select_item": "Вибрати {name}",
+    "more_actions": "Інші дії для {name}",
+    "paste_here": "Вставити в цю папку",
+    "paste_count": "{count, plural, one {Вставити # елемент} few {Вставити # елементи} many {Вставити # елементів} other {Вставити # елемента}}",
+    "sort_by": "Сортування",
+    "view_mode": "Вигляд",
+    "clear_search": "Очистити пошук",
+    "no_results_for": "У цій папці нічого не знайдено за запитом «{query}»",
+    "download_count": "{count, plural, one {Завантажити # файл} few {Завантажити # файли} many {Завантажити # файлів} other {Завантажити # файлу}}",
+    "delete_count": "{count, plural, one {Видалити # елемент} few {Видалити # елементи} many {Видалити # елементів} other {Видалити # елемента}}",
+    "close_details": "Закрити подробиці",
+    "file_kind": "Файл {ext}",
+    "folder_summary": "{folders, plural, =0 {Немає папок} one {# папка} few {# папки} many {# папок} other {# папки}}, {files, plural, =0 {немає файлів} one {# файл} few {# файли} many {# файлів} other {# файлу}}",
+    "details_hint": "Виберіть файл або папку, щоб переглянути подробиці.",
+    "sharing": "Спільний доступ",
+    "shared_with_count": "{count, plural, one {Доступ надано # особі} few {Доступ надано # особам} many {Доступ надано # особам} other {Доступ надано # особи}}",
+    "only_you": "Лише ви",
+    "empty_folder_title": "Ця папка порожня",
+    "empty_folder_description": "Перетягніть файли сюди або завантажте їх зі свого пристрою.",
+    "empty_folder_read_only": "Ви не можете додавати файли до цієї папки.",
+    "choose_account": "Виберіть обліковий запис",
+    "drop_to_upload": "Відпустіть, щоб завантажити в {folder}",
+    "uploading_count": "Завантаження {current} з {total}",
+    "dismiss": "Закрити",
+    "zoom_in": "Збільшити",
+    "zoom_out": "Зменшити",
+    "zoom_reset": "За розміром екрана",
+    "rotate": "Повернути",
+    "close_preview": "Закрити",
+    "empty_state_description": "Щоб почати, завантажте файли або створіть папки",
+    "upload": "Завантажити",
+    "parent_directory": "Батьківський каталог",
+    "breadcrumb_root": "додому",
+    "drop_files_here": "Перетягніть файли або папки сюди, щоб завантажити",
+    "toggle_favorite": "Перемкнути улюблене",
+    "properties": "Властивості",
+    "open_folder": "Відкрити папку",
     "settings_title": "Параметри файлу",
     "settings_display": "Дисплей",
     "settings_default_view": "Перегляд за умовчанням",
@@ -3730,8 +3891,6 @@
     "settings_default_sort_desc": "Виберіть стандартне сортування для файлів",
     "settings_sort_direction": "Напрямок сортування",
     "settings_sort_direction_desc": "Виберіть порядок зростання або спадання",
-    "settings_ascending": "Висхідний",
-    "settings_descending": "Спускається",
     "settings_icons": "Ікони",
     "settings_show_icons": "Показати значки файлів",
     "settings_show_icons_desc": "Відображення піктограм біля файлів і папок",
@@ -3746,14 +3905,8 @@
     "settings_folder_layout_desc": "Виберіть спосіб відображення папок: у рядку з файлами чи в дереві бічної панелі",
     "settings_folder_layout_inline": "Вбудований",
     "settings_folder_layout_sidebar": "Бічна панель",
-    "disabled_title": "Функцію файлів вимкнено вашим адміністратором",
-    "disabled_description": "Завантаження великих файлів через WebDAV може спричинити нестабільність Stalwart/RocksDB, зокрема збої через брак пам’яті та невідновне використання диска. Видалені файли не можуть бути негайно очищені зі сховища BLOB-об’єктів. Ця функція не рекомендована для робочих середовищ.",
     "stability_warning": "Завантаження великих файлів може спричинити нестабільність сервера. Видалені файли не можуть бути негайно видалені зі сховища. Використовуйте з обережністю.",
-    "no_accounts": "Немає підключених облікових записів.",
-    "open_folder_tree": "Відкрити дерево тек",
     "other_accounts": "Інші облікові записи",
-    "migration_title": "Оновлення ваших файлів…",
-    "migration_description": "Папки та файли впорядковуються у правильну структуру. Це відбувається лише один раз.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3763,13 +3916,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
-import { ArrowLeft } from "@/components/icons";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useAccountStore } from "@/stores/account-store";
 import { useEmailStore } from "@/stores/email-store";
-import { useFileStore, resourceServerRef } from "@/stores/file-store";
+import { useFileStore, resourceServerRef, type UploadResult } from "@/stores/file-store";
 import { toast } from "@/stores/toast-store";
 import { cn, formatFileSize } from "@/lib/utils";
 import { NavigationRail } from "@/components/layout/navigation-rail";
@@ -29,20 +28,21 @@ import { ImagePreviewModal } from "@/components/files/image-preview-modal";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
-import { loadFilesSettings } from "@/components/files/files-settings-dialog";
-import type { FolderLayout } from "@/components/files/files-settings-dialog";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { AlertTriangle, Loader2, GoogleDriveIcon, HardDrive, ChevronDown, Check, Plus } from "@/components/icons";
+import { AlertTriangle, Loader2, GoogleDriveIcon, HardDrive, ChevronDown, Check, Plus, ArrowLeft } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { GoogleDriveBrowser } from "@/components/files/google-drive-browser";
 import { getGoogleStatus, type GoogleAccountStatus } from "@/lib/google/google-drive-client";
 import { isFilePreviewable } from "@/lib/file-preview";
+import { isImageFile } from "@/components/files/file-icons";
 import { appPath, buildFilesPath, parseFilesPath, type FilesDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
 import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { MvTopBar } from "@/components/layout/mv-top-bar";
+import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 
 export interface FilesAppProps {
   /** Path segments after `/files` - the folder path, one segment per level. */
@@ -50,9 +50,9 @@ export interface FilesAppProps {
 }
 
 export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
+  const router = useRouter();
   // Static Lite build: the route params are empty, read the link from the URL.
   const linkSegments = useLiteLinkSegments('files', routeSegments);
-  const router = useRouter();
   const t = useTranslations("files");
   const tSidebar = useTranslations("sidebar");
   useDocumentTitle(tSidebar("files"));
@@ -96,22 +96,22 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     createTextFile,
     duplicateResource,
     downloadResources,
-    moveToFolder,
-    moveToParent,
+    moveToFolderId,
     cutResources,
     copyResources,
     pasteResources,
-    selectResource,
     toggleSelect,
-    selectAll,
     clearSelection,
     setSelection,
-    listPath,
-    listByParentId,
     favorites,
     recentFiles,
     toggleFavorite,
     addRecentFile,
+    revealNode,
+    renameNode,
+    deleteNode,
+    downloadNode,
+    removeRecentFile,
     cancelUpload,
     undoLastAction,
     lastAction,
@@ -120,24 +120,14 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const isMobile = useIsMobile();
   const isEmbedded = useIsEmbedded();
-  const [folderLayout, setFolderLayout] = useState<FolderLayout>(() => loadFilesSettings().folderLayout);
+  // Mountain View's desktop chrome: its top bar in place of the left rail.
+  const mvShell = useMountainViewShell(isEmbedded);
   // The account the files client was last initialised for (`undefined` = never).
   // Tracked so a Pro-shell account switch re-initialises instead of showing the
   // previous account's files until a manual Home click.
   const initedAccountRef = useRef<string | null | undefined>(undefined);
   const filesBootstrapRef = useRef(false);
 
-  // Sync folderLayout when settings change
-  useEffect(() => {
-    const reload = () => setFolderLayout(loadFilesSettings().folderLayout);
-    const handleStorage = (e: StorageEvent) => { if (e.key === "files-settings") reload(); };
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("files-settings-changed", reload);
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("files-settings-changed", reload);
-    };
-  }, []);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<string | null>(null);
@@ -145,8 +135,6 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const [editFile, setEditFile] = useState<string | null>(null);
   const wopiStatus = useWopiStatus(filesEnabled);
   const isOfficeEditable = useCallback((name: string) => canWopiOpen(wopiStatus, name), [wopiStatus]);
-  const [showDetails, setShowDetails] = useState(false);
-  const [detailName, setDetailName] = useState<string | null>(null);
   const [storageSource, setStorageSource] = useState<'jmap' | 'google-drive'>('jmap');
   const [googleStatus, setGoogleStatus] = useState<GoogleAccountStatus | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -182,8 +170,6 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       }
     });
   }, []);
-
-  const detailResource = detailName ? resources.find(r => r.name === detailName) || null : null;
 
   // Check auth on mount – skip when already authenticated so that navigating
   // between routes doesn't retrigger checkAuth's transient `{ client: null,
@@ -365,6 +351,14 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   const maxSizeUpload = client?.getMaxSizeUpload?.() || 0;
 
+  const showUploadResult = useCallback(({ uploaded, canceled }: UploadResult) => {
+    if (canceled) {
+      toast.info(t("upload_canceled"), uploaded > 0 ? t("upload_canceled_partial", { count: uploaded }) : undefined);
+    } else if (uploaded > 0) {
+      toast.success(t("upload_success", { count: uploaded }));
+    }
+  }, [t]);
+
   const handleUploadFiles = useCallback(async (files: File[]) => {
     if (maxSizeUpload > 0) {
       const oversized = files.filter(f => f.size > maxSizeUpload);
@@ -375,13 +369,12 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (files.length === 0) return;
     try {
-      await uploadFiles(files);
-      toast.success(t("upload_success", { count: files.length }));
+      showUploadResult(await uploadFiles(files));
     } catch (err) {
       console.error("Failed to upload files:", err);
       toast.error(t("upload_error"));
     }
-  }, [uploadFiles, t, maxSizeUpload]);
+  }, [uploadFiles, t, maxSizeUpload, showUploadResult]);
 
   const handleUploadFolder = useCallback(async (files: File[]) => {
     if (maxSizeUpload > 0) {
@@ -393,13 +386,12 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
     if (files.length === 0) return;
     try {
-      await uploadFolder(files);
-      toast.success(t("upload_success", { count: files.length }));
+      showUploadResult(await uploadFolder(files));
     } catch (err) {
       console.error("Failed to upload folder:", err);
       toast.error(t("upload_error"));
     }
-  }, [uploadFolder, t, maxSizeUpload]);
+  }, [uploadFolder, t, maxSizeUpload, showUploadResult]);
 
   const handleDelete = useCallback(async (name: string) => {
     const confirmed = await confirmDialog({
@@ -503,9 +495,9 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
   }, [duplicateResource, t]);
 
-  const handleMoveToFolder = useCallback(async (names: string[], targetFolder: string) => {
+  const handleMoveTo = useCallback(async (names: string[], targetId: string | null) => {
     try {
-      await moveToFolder(names, targetFolder);
+      await moveToFolderId(names, targetId);
       toast.success(t("move_success", { count: names.length }), {
         action: { label: t("undo"), onClick: handleUndo },
       });
@@ -513,19 +505,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       console.error("Failed to move:", err);
       toast.error(t("move_error"));
     }
-  }, [moveToFolder, t, handleUndo]);
-
-  const handleMoveToParent = useCallback(async (names: string[]) => {
-    try {
-      await moveToParent(names);
-      toast.success(t("move_success", { count: names.length }), {
-        action: { label: t("undo"), onClick: handleUndo },
-      });
-    } catch (err) {
-      console.error("Failed to move:", err);
-      toast.error(t("move_error"));
-    }
-  }, [moveToParent, t, handleUndo]);
+  }, [moveToFolderId, t, handleUndo]);
 
   const handlePaste = useCallback(async () => {
     try {
@@ -549,10 +529,60 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     addRecentFile(name, findResourceId(name));
   }, [addRecentFile, findResourceId]);
 
-  const handleShowDetails = useCallback((name: string) => {
-    setDetailName(name);
-    setShowDetails(true);
-  }, []);
+  const handleRenameNode = useCallback(async (id: string, newName: string) => {
+    try {
+      await renameNode(id, newName);
+      toast.success(t("rename_success"), {
+        action: { label: t("undo"), onClick: handleUndo },
+      });
+    } catch (err) {
+      console.error("Failed to rename:", err);
+      toast.error(t("rename_error"));
+    }
+  }, [renameNode, t, handleUndo]);
+
+  const handleDeleteNode = useCallback(async (id: string, name: string) => {
+    const confirmed = await confirmDialog({
+      title: t("delete_confirm_title"),
+      message: t("delete_confirm_message", { name }),
+      confirmText: t("delete"),
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+    try {
+      await deleteNode(id);
+      toast.success(t("delete_success"));
+    } catch (err) {
+      console.error("Failed to delete:", err);
+      toast.error(t("delete_error"));
+    }
+  }, [deleteNode, confirmDialog, t]);
+
+  const handleDownloadNode = useCallback(async (id: string) => {
+    try {
+      await downloadNode(id);
+    } catch (err) {
+      console.error("Failed to download:", err);
+      toast.error(t("download_error"));
+    }
+  }, [downloadNode, t]);
+
+  const handleRevealNode = useCallback(async (id: string) => {
+    if (!await revealNode(id)) toast.error(tDeepLink("file_not_found"));
+  }, [revealNode, tDeepLink]);
+
+  // Recent files can live in any folder: open that folder, then the file.
+  const handleOpenRecent = useCallback(async (id: string) => {
+    const name = await revealNode(id);
+    if (!name) {
+      toast.error(tDeepLink("file_not_found"));
+      return;
+    }
+    addRecentFile(name, id);
+    if (isOfficeEditable(name)) setEditFile(name);
+    else if (isImageFile(name)) setPreviewImage(name);
+    else if (isFilePreviewable(name)) setPreviewFile(name);
+  }, [revealNode, addRecentFile, isOfficeEditable, tDeepLink]);
 
   // The permalink for the folder on screen. In the Pro shell only the focused
   // tab writes the address bar; the standard instance that renders while Pro
@@ -565,10 +595,6 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       ? (isFocusedProTab ? filesLinkPath : null)
       : proInterfaceActive ? null : filesLinkPath,
   );
-
-  const handleToggleDetails = useCallback(() => {
-    setShowDetails(v => !v);
-  }, []);
 
   const currentFilesAccountId = useFileStore((s) => s.currentAccountId);
 
@@ -639,8 +665,17 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     <div className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
       <AppTopBannerSlot />
       {refreshIndicator}
+      {mvShell && (
+        <MvTopBar
+          showMenuButton={false}
+          onManageApps={handleManageApps}
+          onInlineApp={handleInlineApp}
+          onCloseInlineApp={closeInlineApp}
+          activeAppId={inlineApp?.id ?? null}
+        />
+      )}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-      {!isMobile && !isEmbedded && (
+      {!isMobile && !isEmbedded && !mvShell && (
         <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
           <NavigationRail
             collapsed
@@ -844,80 +879,76 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
               </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-              {storageSource === 'google-drive' ? (
+              {storageSource === 'google-drive' && (
                 <GoogleDriveBrowser onBackToBulwarkFiles={() => setStorageSource('jmap')} />
-              ) : supportsFiles === false ? (
-                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-4">{t("not_available")}</p>
-                  <Button
-                    onClick={() => setStorageSource('google-drive')}
-                    className="gap-2"
-                  >
-                    <GoogleDriveIcon className="w-4 h-4" />
-                    <span>{t("open_google_drive")}</span>
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col flex-1 min-h-0">
-                  <div className="mx-4 mt-3 mb-1 flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 px-3 py-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-yellow-700 dark:text-yellow-400">{t("stability_warning")}</p>
-                  </div>
-                <FileBrowser
-                  currentPath={currentPath}
-                  resources={resources}
-                  isLoading={isLoading}
-                  error={error}
-                  selectedResources={selectedResources}
-                  uploadProgress={uploadProgress}
-                  clipboard={clipboard}
-                  onNavigate={handleNavigate}
-                  onCreateFolder={handleCreateFolder}
-                  onUploadFiles={handleUploadFiles}
-                  onUploadFolder={handleUploadFolder}
-                  onCancelUpload={cancelUpload}
-                  onDelete={handleDelete}
-                  onBatchDelete={handleBatchDelete}
-                  onRename={handleRename}
-                  onDownload={handleDownload}
-                  onBatchDownload={handleBatchDownload}
-                  onRefresh={refresh}
-                  onSelectResource={selectResource}
-                  onToggleSelect={toggleSelect}
-                  onSelectAll={selectAll}
-                  onClearSelection={clearSelection}
-                  onSetSelection={setSelection}
-                  onCut={cutResources}
-                  onCopy={copyResources}
-                  onPaste={handlePaste}
-                  onMoveToFolder={handleMoveToFolder}
-                  onMoveToParent={handleMoveToParent}
-                  onPreviewImage={handlePreviewImage}
-                  onPreviewFile={handlePreviewFile}
-                  isOfficeEditable={isOfficeEditable}
-                  onEditFile={setEditFile}
-                  onShowDetails={handleShowDetails}
-                  onCreateTextFile={handleCreateTextFile}
-                  onDuplicate={handleDuplicate}
-                  getImageUrl={getImageUrl}
-                  listPath={listPath}
-                  listByParentId={listByParentId}
-                  favorites={favorites}
-                  recentFiles={recentFiles}
-                  onToggleFavorite={toggleFavorite}
-                  showDetails={showDetails}
-                  onToggleDetails={handleToggleDetails}
-                  detailResource={detailResource}
-                  accountFolders={allAccountFolders}
-                  onSelectAccount={handleSelectAccount}
-                  accountPickerMode={isAccountPicker}
-                  accountLabel={currentAccountLabel}
-                  client={storeClient}
-                  ownAccountId={filesAccountId}
-                  sharingEnabled={sharingEnabled}
-                  onShare={handleShare}
-                />
-                </div>
+              )}
+              {storageSource !== 'google-drive' && (
+                <>
+                  {supportsFiles === false ? (
+                    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                      <p className="text-sm text-muted-foreground mb-4">{t("not_available")}</p>
+                      <Button
+                        onClick={() => setStorageSource('google-drive')}
+                        className="gap-2"
+                      >
+                        <GoogleDriveIcon className="w-4 h-4" />
+                        <span>{t("open_google_drive")}</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <FileBrowser
+                      currentPath={currentPath}
+                      resources={resources}
+                      isLoading={isLoading}
+                      error={error}
+                      selectedResources={selectedResources}
+                      uploadProgress={uploadProgress}
+                      clipboard={clipboard}
+                      onNavigate={handleNavigate}
+                      onCreateFolder={handleCreateFolder}
+                      onUploadFiles={handleUploadFiles}
+                      onUploadFolder={handleUploadFolder}
+                      onCancelUpload={cancelUpload}
+                      onDelete={handleDelete}
+                      onBatchDelete={handleBatchDelete}
+                      onRename={handleRename}
+                      onDownload={handleDownload}
+                      onBatchDownload={handleBatchDownload}
+                      onRefresh={refresh}
+                      onToggleSelect={toggleSelect}
+                      onClearSelection={clearSelection}
+                      onSetSelection={setSelection}
+                      onCut={cutResources}
+                      onCopy={copyResources}
+                      onPaste={handlePaste}
+                      onMoveTo={handleMoveTo}
+                      onPreviewImage={handlePreviewImage}
+                      onPreviewFile={handlePreviewFile}
+                      isOfficeEditable={isOfficeEditable}
+                      onEditFile={setEditFile}
+                      onCreateTextFile={handleCreateTextFile}
+                      onDuplicate={handleDuplicate}
+                      getImageUrl={getImageUrl}
+                      favorites={favorites}
+                      recentFiles={recentFiles}
+                      onToggleFavorite={toggleFavorite}
+                      onOpenRecent={handleOpenRecent}
+                      onRenameNode={handleRenameNode}
+                      onDeleteNode={handleDeleteNode}
+                      onDownloadNode={handleDownloadNode}
+                      onRevealNode={handleRevealNode}
+                      onRemoveRecent={removeRecentFile}
+                      accountFolders={allAccountFolders}
+                      onSelectAccount={handleSelectAccount}
+                      accountPickerMode={isAccountPicker}
+                      accountLabel={currentAccountLabel}
+                      client={storeClient}
+                      ownAccountId={filesAccountId}
+                      sharingEnabled={sharingEnabled}
+                      onShare={handleShare}
+                    />
+                  )}
+                </>
               )}
             </div>
           </div>

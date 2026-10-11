@@ -5,7 +5,7 @@ import type { UnifiedMailboxRole } from "./jmap/types";
 import { debug } from "./debug";
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { useSettingsStore } from "@/stores/settings-store";
-import type { DateLocale } from "@/stores/settings-store";
+import type { DateFormat, DateLocale } from "@/stores/settings-store";
 import { getEffectiveTimeZone, getWallClock } from "./timezone";
 
 export function cn(...inputs: ClassValue[]) {
@@ -94,7 +94,11 @@ function resolveDateLocale<T extends string | undefined>(
  * bucketing - a browser pinned to UTC for anti-fingerprinting must not
  * roll a 00:30 local mail into "yesterday" (#755).
  */
-export function formatDate(date: Date | string): string {
+export function formatDate(
+  date: Date | string,
+  // Settings preview: render as if these were picked, without saving them.
+  overrides?: { dateFormat?: DateFormat; dateLocale?: DateLocale },
+): string {
   const d = typeof date === "string" ? new Date(date) : date;
   // An unparsable receivedAt (e.g. a 5-digit year) makes Intl throw
   // "RangeError: Invalid time value" and takes the whole list down with it.
@@ -107,7 +111,7 @@ export function formatDate(date: Date | string): string {
   // en-US in Intl; everything else uses the language subtag as-is and lets
   // the runtime pick a sensible default region.
   const uiLocale = locale === "en" ? "en-US" : locale;
-  const { dateFormat, dateLocale, timeFormat } = useSettingsStore.getState();
+  const { dateFormat, dateLocale, timeFormat } = { ...useSettingsStore.getState(), ...overrides };
   // Numeric dates additionally honour the regional `dateLocale` override
   // (defaults to `auto` = the UI language, preserving prior behaviour). (#456)
   const numericLocale = resolveDateLocale(dateLocale, uiLocale);
@@ -297,14 +301,27 @@ export function truncateText(text: string, maxLength: number): string {
   return text.substring(0, maxLength).trim() + "...";
 }
 
+/**
+ * A size people can read at a glance: whole numbers from 10 up ("67 KB"),
+ * one decimal below that ("2.1 MB"), never a trailing ".0".
+ */
 export function formatFileSize(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 Bytes';
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(k)));
+  let value = bytes / Math.pow(k, i);
+  if (i === 0) return `${Math.round(bytes)} B`;
 
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  let rounded = value < 10 ? Math.round(value * 10) / 10 : Math.round(value);
+  // 1023.6 KB rounds to 1024 KB: show it as 1 MB instead.
+  if (rounded >= k && i < units.length - 1) {
+    i += 1;
+    value /= k;
+    rounded = Math.round(value * 10) / 10;
+  }
+  return `${rounded} ${units[i]}`;
 }
 
 // Types for mailbox tree

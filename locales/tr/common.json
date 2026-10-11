@@ -147,6 +147,8 @@
     "show_all_tags": "Tümünü göster ({count})",
     "show_fewer_tags": "Daha az göster",
     "folders": "Klasörler",
+    "show_more": "Diğer",
+    "show_fewer": "Daha az",
     "shared": "Paylaşılan",
     "mail": "Posta",
     "nav_label": "Gezinme",
@@ -243,6 +245,7 @@
     "replied": "Yanıtlandı",
     "forwarded": "İletildi",
     "has_attachment": "Ek içeriyor",
+    "conversations_range": "{total, number} içinde {from}–{to, number}",
     "conversations_count": "{total} konuşmadan {count} tanesi",
     "conversations_count_plus": "{count}+ konuşma",
     "conversations_count_simple": "{count} konuşma",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "{date} tarihinde gönderilmek üzere zamanlandı",
     "scheduled_send_created": "E-posta gönderim için zamanlandı",
+    "sending_in": "{seconds} sn içinde gönderilecek",
+    "undo_send_failed": "Geri alınamadı. İleti zaten gönderilmiş olabilir.",
     "cancel_scheduled_send": "Göndermeyi iptal et",
     "reschedule_send": "Yeniden zamanla",
     "cancel_and_edit": "İptal et ve düzenle",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Okundu bilgisi istendi (devre dışı bırakmak için tıklayın)",
-    "read_receipt_off": "Okundu bilgisi iste",
-    "dsn_on": "Teslimat bildirimi istendi (kapatmak için tıklayın)",
-    "dsn_off": "Teslimat bildirimi iste",
-    "format_plain_text": "Düz metne geç",
-    "format_rich_text": "Zengin metne (HTML) geç",
-    "require_tls_on": "Şifreli teslimat zorunlu (kapatmak için tıklayın)",
-    "require_tls_off": "Şifreli teslimat zorunlu kıl (TLS)",
+    "minimize": "Simge durumuna küçült",
+    "maximize": "Tam ekran",
+    "restore": "Geri yükle",
     "new_message": "Yeni İleti",
     "signature_edit_hint": "İmzayı düzenlemek için çift tıklayın",
     "reply": "Yanıtla",
@@ -648,6 +648,7 @@
     "discard": "Vazgeç",
     "discard_draft_title": "Taslaktan vazgeçilsin mi?",
     "discard_draft_confirm": "Kaydedilmemiş değişiklikleriniz var. Bu taslaktan vazgeçmek istiyor musunuz?",
+    "discard_draft_message": "Taslak silinecek.",
     "saving": "Kaydediliyor...",
     "sending": "Gönderiliyor...",
     "add_link": "Bağlantı ekle",
@@ -687,11 +688,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Sunucunuz bu adresi zarf göndereni olarak kabul etmezse yerine {identity} kullanılır ve alıcılar bunu Return-Path başlığında görebilir."
     },
-    "use_template": "Şablon",
     "save_as_template": "Şablon Olarak Kaydet",
+    "attach_from_device": "Bu cihazdan yükle",
+    "templates_menu": "Şablonlar",
+    "insert_template": "Şablon ekle",
+    "options": "Seçenekler",
+    "option_plain_text": "Düz metin",
+    "option_plain_text_hint": "Biçimlendirmeden gönder",
+    "option_read_receipt": "Okundu bilgisi iste",
+    "option_read_receipt_hint": "Alıcıdan açtığını onaylamasını iste",
+    "option_dsn": "Teslim bildirimi",
+    "option_dsn_hint": "Sunucu teslim ettiğinde rapor al",
+    "option_require_tls": "Şifreli teslimat zorunlu",
+    "option_require_tls_hint": "Yalnızca TLS ile teslim et, yoksa geri çevir",
     "validation": {
       "recipient_required": "Göndermek için bir alıcı ekleyin",
       "body_required": "Bir ileti yazın veya dosya ekleyin",
+      "invalid_recipients": "Gönderilmedi - şu adresleri kontrol edin: {addresses}",
       "attachments_uploading": "Ekler hâlâ yükleniyor — yükleme bitince gönderilecek",
       "attachment_upload_failed": "Gönderilmedi - bir ek yüklenemedi. Eki kaldırıp tekrar deneyin."
     },
@@ -704,7 +717,10 @@
     "show_less": "Daha az göster",
     "send_failed": "E-posta gönderilemedi",
     "send_timeout": "Sunucu yanıt vermeyi bıraktı. Yeniden göndermeden önce Gönderilenler klasörünü kontrol edin — ileti gönderilmiş olabilir.",
+    "send_offline": "Çevrimdışı görünüyorsunuz. İleti hâlâ burada; yeniden çevrimiçi olduğunuzda tekrar gönderin.",
+    "formatting": "Biçimlendirme",
     "send_recipients_rejected": "Gönderilmedi - sunucu tüm alıcıları reddetti.",
+    "send_plugin_failed": "Gönderilmedi - gönderimi üstlenen bir eklenti başarısız oldu ya da çok uzun sürdü. Yeniden göndermeden önce Gönderilenler klasörünü kontrol edin.",
     "send_some_recipients_rejected": "Gönderildi, ancak bu alıcılara değil - sunucu onları reddetti.",
     "continue_draft": "Taslağa devam et",
     "close_draft_title": "Taslak kaydedilsin mi yoksa silinsin mi?",
@@ -733,6 +749,11 @@
     },
     "schedule_send": "Göndermeyi zamanla",
     "schedule_send_description": "Sunucunun bu iletiyi ne zaman göndereceğini seçin.",
+    "schedule_preset": {
+      "tomorrow_morning": "Yarın sabah",
+      "tomorrow_afternoon": "Yarın öğleden sonra",
+      "monday_morning": "Pazartesi sabah"
+    },
     "schedule_send_required": "Bir tarih ve saat seçin.",
     "schedule_send_invalid": "Geçerli bir tarih ve saat girin.",
     "schedule_send_future": "Gelecekte bir tarih ve saat seçin.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Görünen adı düzenle",
     "recipient_email_placeholder": "E-posta adresi",
     "recipient_name_placeholder": "Görünen ad",
+    "invalid_recipient": "Geçerli bir e-posta adresi değil",
     "autocomplete_search_server": "Sunucuda ara",
     "autocomplete_searching": "Aranıyor...",
     "mention_recipients": "Alıcılar",
@@ -785,6 +807,15 @@
       "remove_background_color": "Arka plan rengini kaldır"
     },
     "send_filing_warning": "Gönderildi - ancak sonrasındaki temizleme başarısız oldu, eski bir taslak kalabilir.",
+    "read_receipt_on": "Okundu bilgisi istendi (devre dışı bırakmak için tıklayın)",
+    "read_receipt_off": "Okundu bilgisi iste",
+    "dsn_on": "Teslimat bildirimi istendi (kapatmak için tıklayın)",
+    "dsn_off": "Teslimat bildirimi iste",
+    "format_plain_text": "Düz metne geç",
+    "format_rich_text": "Zengin metne (HTML) geç",
+    "require_tls_on": "Şifreli teslimat zorunlu (kapatmak için tıklayın)",
+    "require_tls_off": "Şifreli teslimat zorunlu kıl (TLS)",
+    "use_template": "Şablon",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Görünüm",
       "description": "Web postanızın görünümünü özelleştirin",
+      "theme": {
+        "label": "Tema",
+        "description": "Tercih ettiğiniz renk şemasını seçin",
+        "light": "Açık",
+        "dark": "Koyu",
+        "system": "Sistem"
+      },
       "language": {
         "label": "Dil",
         "description": "Tercih ettiğiniz dili seçin"
@@ -1093,6 +1131,12 @@
         "compact": "Sıkışık",
         "regular": "Normal",
         "comfortable": "Rahat"
+      },
+      "interface_layout": {
+        "label": "Arayüz düzeni",
+        "description": "Arama, gezinme ve araç çubuklarının konumu",
+        "default": "Varsayılan",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Animasyonları Etkinleştir",
@@ -1241,6 +1285,18 @@
         "swift": "Hızlı Jest",
         "relax": "Rahatla",
         "beep": "Bip"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Bildirim Sesi",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Sıralamak için sürükleyin",
         "add": "Hesap ekle"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Benimle paylaşılanlar",
         "description": "Yönetebileceğiniz grup ve paylaşılan hesaplar. Filtrelerini, tatil yanıtlayıcısını, takvimlerini ve kişilerini düzenlemek için birini seçin.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Hesap Güvenliği",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "email@example.com",
       "forward_keep_copy": "Bir kopyasını sakla",
       "forward_limit": "Bu sunucuda ileti başına yönlendirme sınırı: {count}. Fazla yönlendirmeler atlanır.",
+      "forward_unavailable": "Bu sunucu yönlendirmeye izin vermiyor. Filtre kurallarındaki yönlendirme eylemlerinin hiçbir etkisi olmaz.",
       "reject_message": "Reddetme iletisi",
       "reject_placeholder": "E-postanız reddedildi",
       "label_name": "Etiket adı",
@@ -2397,12 +2484,6 @@
         "title": "Görüntüleme",
         "description": "Dosya ve klasörlerin nasıl görüntüleneceğini yapılandırın"
       },
-      "folder_layout": {
-        "label": "Klasör Gezinmesi",
-        "description": "Klasörlerin nasıl görüntüleneceğini seçin: dosyalarla birlikte satır içi veya kenar çubuğu ağacında",
-        "inline": "Satır içi",
-        "sidebar": "Kenar Çubuğu"
-      },
       "default_view": {
         "label": "Varsayılan Görünüm",
         "description": "Izgara ve liste düzeni arasında seçin",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Önizleme"
+      },
+      "folder_layout": {
+        "label": "Klasör Gezinmesi",
+        "description": "Klasörlerin nasıl görüntüleneceğini seçin: dosyalarla birlikte satır içi veya kenar çubuğu ağacında",
+        "inline": "Satır içi",
+        "sidebar": "Kenar Çubuğu"
       }
     },
     "search_placeholder": "Ayarlarda ara",
@@ -2562,7 +2649,12 @@
       "manage": "Kuralları yönet",
       "senders_count": "{count, plural, one {# gönderen} other {# gönderen}}",
       "cross_account": "Tek bir hesaptan iletiler seçin",
-      "opaque_hint": "Filtreleriniz elle düzenlenmiş. Filtre ayarlarını açın"
+      "opaque_hint": "Filtreleriniz elle düzenlenmiş. Filtre ayarlarını açın",
+      "loading": "Kurallar yükleniyor…",
+      "load_failed": "Kurallar yüklenemedi",
+      "none": "Henüz kural yok",
+      "new_mail_only": "Yalnızca yeni iletiler için",
+      "running": "\"{name}\" {folder} klasöründe çalıştırılıyor…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Sonraki e-posta",
       "previous_email": "Önceki e-posta",
       "open_email": "E-postayı aç",
-      "close_email": "Kapat / Seçimi kaldır"
+      "close_email": "Kapat / Seçimi kaldır",
+      "go_to_folder": "Klasöre git"
     },
     "actions": {
       "reply": "Yanıtla",
@@ -2643,7 +2736,8 @@
       "global_search": "Her yerde ara"
     },
     "threads": {
-      "expand_collapse": "İleti dizisini genişlet/daralt"
+      "expand_collapse": "İleti dizisini genişlet/daralt",
+      "select_mountain_view": "Konuşmayı seç"
     },
     "composer": {
       "send": "E-posta gönder",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "Yeni etkinlik başlığı",
-      "aria_label": "Hızlı etkinlik oluştur"
+      "aria_label": "Hızlı etkinlik oluştur",
+      "add_title": "Başlık ekle",
+      "more_options": "Diğer seçenekler"
     },
     "nav_prev": "Önceki",
     "nav_next": "Sonraki",
@@ -3574,7 +3670,13 @@
       "due_tomorrow": "Yarın",
       "overdue": "Gecikmiş"
     },
-    "nav_open_menu": "Menüyü aç"
+    "nav_open_menu": "Menüyü aç",
+    "toolbar": {
+      "more": "Diğer işlemler",
+      "select_view": "Görünümü değiştir, şu an {view}"
+    },
+    "other_calendars": "Diğer takvimler",
+    "calendar_options": "{name} seçenekleri"
   },
   "calendar_event_notifications": {
     "someone": "Birisi",
@@ -3663,6 +3765,8 @@
     "tip_shortcuts": "Tüm klavye kısayollarını görmek için ? tuşuna basın",
     "tip_sidebar": "Takvim, Kişiler ve Ayarlar'ı kenar çubuğu menüsünde bulabilirsiniz",
     "tip_settings": "Deneyiminizi Ayarlar'dan özelleştirin",
+    "tip_compose_touch": "Yeni bir e-posta yazmak için kalem düğmesine dokunun",
+    "tip_sidebar_touch": "Takvim, Kişiler ve Ayarlar alttaki çubukta",
     "got_it": "Anladım",
     "settings": "Ayarlar",
     "dismiss": "Kapat",
@@ -3686,8 +3790,6 @@
     "title": "Dosyalar",
     "search_placeholder": "Dosyalarda ara...",
     "empty_state_title": "Henüz dosya yok",
-    "empty_state_description": "Başlamak için dosya yükleyin veya klasör oluşturun",
-    "upload": "Yükle",
     "upload_files": "Dosya Yükle",
     "new_folder": "Yeni Klasör",
     "new_folder_name": "Klasör adı",
@@ -3706,11 +3808,10 @@
     "type": "Tür",
     "folder": "Klasör",
     "file": "Dosya",
-    "parent_directory": "Üst dizin",
-    "breadcrumb_root": "Ana Sayfa",
-    "drop_files_here": "Yüklemek için dosya veya klasörleri buraya bırakın",
     "uploading": "Yükleniyor...",
     "upload_success": "{count, plural, one {1 dosya yüklendi} other {# dosya yüklendi}}",
+    "upload_canceled": "Yükleme iptal edildi",
+    "upload_canceled_partial": "İptal etmeden önce {count, plural, one {1 dosya} other {# dosya}} yüklendi",
     "upload_error": "Dosya yüklenemedi",
     "create_folder_success": "Klasör oluşturuldu",
     "create_folder_error": "Klasör oluşturulamadı",
@@ -3743,7 +3844,6 @@
     "file_name": "Dosya adı",
     "retry": "Yeniden dene",
     "refresh": "Yenile",
-    "toggle_favorite": "Favoriye ekle/çıkar",
     "duplicate": "Çoğalt",
     "duplicate_success": "Başarıyla çoğaltıldı",
     "duplicate_error": "Çoğaltılamadı",
@@ -3755,8 +3855,8 @@
     "create_file_error": "Dosya oluşturulamadı",
     "favorites": "Favoriler",
     "recent": "Son Kullanılan",
-    "properties": "Özellikler",
-    "open_folder": "Klasörü aç",
+    "show_in_folder": "Klasörde göster",
+    "remove_from_recent": "Son kullanılanlardan kaldır",
     "upload_folder": "Klasör Yükle",
     "file_too_large": "\"{name}\" maksimum dosya boyutunu ({max}) aşıyor",
     "undo": "Geri Al",
@@ -3765,6 +3865,67 @@
     "toolbar": "Dosya işlemleri",
     "file_list": "Dosyalar ve klasörler",
     "context_menu": "İşlemler",
+    "settings_ascending": "Artan",
+    "settings_descending": "Azalan",
+    "disabled_title": "Dosyalar özelliği yöneticiniz tarafından devre dışı bırakıldı",
+    "disabled_description": "WebDAV üzerinden büyük dosya yüklemeleri Stalwart/RocksDB kararsızlığına yol açabilir; bellek yetersizliği çöküşleri ve kurtarılamaz disk kullanımı dahil. Silinen dosyalar blob depolamadan hemen temizlenmeyebilir. Bu özellik üretim ortamları için önerilmez.",
+    "no_accounts": "Bağlı hesap yok.",
+    "open_folder_tree": "Klasör ağacını aç",
+    "migration_title": "Dosyalarınız güncelleniyor…",
+    "migration_description": "Klasörler ve dosyalar doğru yapıya göre düzenleniyor. Bu yalnızca bir kez gerçekleşir.",
+    "new": "Yeni",
+    "my_files": "Dosyalarım",
+    "folders": "Klasörler",
+    "files_heading": "Dosyalar",
+    "open": "Aç",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Genişlet: {name}",
+    "collapse_folder": "Daralt: {name}",
+    "sidebar_hint": "Klasörleri favorilere ekleyin ve dosyaları açın, burada bulabilirsiniz.",
+    "breadcrumbs": "Klasör yolu",
+    "show_path": "Yoldaki gizli klasörleri göster",
+    "selection_actions": "Seçili ögeler için işlemler",
+    "selected_count": "{count, plural, one {1 seçili} other {# seçili}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Tümünü seç",
+    "select_item": "Seç: {name}",
+    "more_actions": "Diğer işlemler: {name}",
+    "paste_here": "Bu klasöre yapıştır",
+    "paste_count": "{count, plural, one {1 ögeyi yapıştır} other {# ögeyi yapıştır}}",
+    "sort_by": "Sırala",
+    "view_mode": "Görünüm",
+    "clear_search": "Aramayı temizle",
+    "no_results_for": "Bu klasörde \"{query}\" ile eşleşen bir şey yok",
+    "download_count": "{count, plural, one {1 dosyayı indir} other {# dosyayı indir}}",
+    "delete_count": "{count, plural, one {1 ögeyi sil} other {# ögeyi sil}}",
+    "close_details": "Ayrıntıları kapat",
+    "file_kind": "{ext} dosyası",
+    "folder_summary": "{folders, plural, =0 {Klasör yok} one {1 klasör} other {# klasör}}, {files, plural, =0 {dosya yok} one {1 dosya} other {# dosya}}",
+    "details_hint": "Ayrıntılarını görmek için bir dosya veya klasör seçin.",
+    "sharing": "Paylaşım",
+    "shared_with_count": "{count, plural, one {1 kişiyle paylaşıldı} other {# kişiyle paylaşıldı}}",
+    "only_you": "Yalnızca siz",
+    "empty_folder_title": "Bu klasör boş",
+    "empty_folder_description": "Dosyaları buraya bırakın veya cihazınızdan yükleyin.",
+    "empty_folder_read_only": "Bu klasöre dosya ekleyemezsiniz.",
+    "choose_account": "Bir hesap seçin",
+    "drop_to_upload": "Yüklemek için bırakın: {folder}",
+    "uploading_count": "{current}/{total} yükleniyor",
+    "dismiss": "Kapat",
+    "zoom_in": "Yakınlaştır",
+    "zoom_out": "Uzaklaştır",
+    "zoom_reset": "Ekrana sığdır",
+    "rotate": "Döndür",
+    "close_preview": "Kapat",
+    "empty_state_description": "Başlamak için dosya yükleyin veya klasör oluşturun",
+    "upload": "Yükle",
+    "parent_directory": "Üst dizin",
+    "breadcrumb_root": "Ana Sayfa",
+    "drop_files_here": "Yüklemek için dosya veya klasörleri buraya bırakın",
+    "toggle_favorite": "Favoriye ekle/çıkar",
+    "properties": "Özellikler",
+    "open_folder": "Klasörü aç",
     "settings_title": "Dosya Ayarları",
     "settings_display": "Görüntüleme",
     "settings_default_view": "Varsayılan Görünüm",
@@ -3773,8 +3934,6 @@
     "settings_default_sort_desc": "Dosyalar için varsayılan sıralamayı seçin",
     "settings_sort_direction": "Sıralama Yönü",
     "settings_sort_direction_desc": "Artan veya azalan düzen seçin",
-    "settings_ascending": "Artan",
-    "settings_descending": "Azalan",
     "settings_icons": "Simgeler",
     "settings_show_icons": "Dosya Simgelerini Göster",
     "settings_show_icons_desc": "Dosyaların ve klasörlerin yanında simgeleri görüntüle",
@@ -3789,14 +3948,8 @@
     "settings_folder_layout_desc": "Klasörlerin nasıl görüntüleneceğini seçin: dosyalarla birlikte satır içi veya kenar çubuğu ağacında",
     "settings_folder_layout_inline": "Satır içi",
     "settings_folder_layout_sidebar": "Kenar Çubuğu",
-    "disabled_title": "Dosyalar özelliği yöneticiniz tarafından devre dışı bırakıldı",
-    "disabled_description": "WebDAV üzerinden büyük dosya yüklemeleri Stalwart/RocksDB kararsızlığına yol açabilir; bellek yetersizliği çöküşleri ve kurtarılamaz disk kullanımı dahil. Silinen dosyalar blob depolamadan hemen temizlenmeyebilir. Bu özellik üretim ortamları için önerilmez.",
     "stability_warning": "Büyük dosya yüklemeleri sunucu kararsızlığına neden olabilir. Silinen dosyalar depolamadan hemen temizlenmeyebilir. Dikkatli kullanın.",
-    "no_accounts": "Bağlı hesap yok.",
-    "open_folder_tree": "Klasör ağacını aç",
     "other_accounts": "Diğer hesaplar",
-    "migration_title": "Dosyalarınız güncelleniyor…",
-    "migration_description": "Klasörler ve dosyalar doğru yapıya göre düzenleniyor. Bu yalnızca bir kez gerçekleşir.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3806,13 +3959,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

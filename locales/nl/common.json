@@ -147,6 +147,8 @@
     "show_all_tags": "Alles tonen ({count})",
     "show_fewer_tags": "Minder tonen",
     "folders": "Mappen",
+    "show_more": "Meer",
+    "show_fewer": "Minder",
     "mail": "E-mail",
     "nav_label": "Navigatie",
     "add_app": "Apps",
@@ -243,6 +245,7 @@
     "replied": "Beantwoord",
     "forwarded": "Doorgestuurd",
     "has_attachment": "Met bijlage",
+    "conversations_range": "{from}–{to, number} van {total, number}",
     "conversations_count": "{count} van {total} gesprekken",
     "conversations_count_plus": "{count}+ gesprekken",
     "conversations_count_simple": "{count} gesprekken",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "Gepland om te verzenden op {date}",
     "scheduled_send_created": "E-mail gepland voor verzending",
+    "sending_in": "Wordt over {seconds} s verzonden",
+    "undo_send_failed": "Ongedaan maken lukte niet. Het bericht is misschien al verzonden.",
     "cancel_scheduled_send": "Verzenden annuleren",
     "reschedule_send": "Opnieuw plannen",
     "cancel_and_edit": "Annuleren en bewerken",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
-    "read_receipt_off": "Leesbevestiging aanvragen",
-    "dsn_on": "Bezorgmelding aangevraagd (klik om uit te schakelen)",
-    "dsn_off": "Bezorgmelding aanvragen",
-    "format_plain_text": "Overschakelen naar platte tekst",
-    "format_rich_text": "Overschakelen naar opgemaakte tekst (HTML)",
-    "require_tls_on": "Versleutelde bezorging vereist (klik om uit te schakelen)",
-    "require_tls_off": "Versleutelde bezorging vereisen (TLS)",
+    "minimize": "Minimaliseren",
+    "maximize": "Volledig scherm",
+    "restore": "Herstellen",
     "new_message": "Nieuw bericht",
     "signature_edit_hint": "Dubbelklik om de handtekening te bewerken",
     "reply": "Beantwoorden",
@@ -648,6 +648,7 @@
     "discard": "Verwijderen",
     "discard_draft_title": "Concept verwijderen?",
     "discard_draft_confirm": "Je hebt niet-opgeslagen wijzigingen. Wil je dit concept verwijderen?",
+    "discard_draft_message": "Het concept wordt verwijderd.",
     "saving": "Opslaan...",
     "draft_saved": "Concept opgeslagen",
     "save_failed": "Opslaan mislukt",
@@ -684,11 +685,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Als je server dit adres niet accepteert als envelopafzender, wordt daar {identity} gebruikt, en ontvangers kunnen dat zien in de Return-Path-header."
     },
-    "use_template": "Sjabloon",
     "save_as_template": "Opslaan als sjabloon",
+    "attach_from_device": "Uploaden vanaf dit apparaat",
+    "templates_menu": "Sjablonen",
+    "insert_template": "Sjabloon invoegen",
+    "options": "Opties",
+    "option_plain_text": "Platte tekst",
+    "option_plain_text_hint": "Verzenden zonder opmaak",
+    "option_read_receipt": "Leesbevestiging vragen",
+    "option_read_receipt_hint": "De ontvanger vragen te bevestigen dat die het opende",
+    "option_dsn": "Bezorgmelding",
+    "option_dsn_hint": "Een rapport krijgen zodra de server het bezorgt",
+    "option_require_tls": "Versleutelde bezorging vereisen",
+    "option_require_tls_hint": "Alleen via TLS bezorgen, anders terugsturen",
     "validation": {
       "recipient_required": "Voeg een ontvanger toe om te verzenden",
       "body_required": "Schrijf een bericht of voeg een bestand toe",
+      "invalid_recipients": "Niet verzonden - controleer deze adressen: {addresses}",
       "attachments_uploading": "Bijlagen worden nog geüpload — wordt verzonden zodra dit klaar is",
       "attachment_upload_failed": "Niet verzonden - een bijlage kon niet worden geüpload. Verwijder deze en probeer het opnieuw."
     },
@@ -708,7 +721,10 @@
     "smime_unlock_button": "Ontgrendelen",
     "smime_passphrase_placeholder": "S/MIME-wachtwoordzin",
     "send_timeout": "De server reageert niet meer. Controleer de map Verzonden voordat u opnieuw verstuurt — het bericht is mogelijk al verzonden.",
+    "send_offline": "Je lijkt offline te zijn. Het bericht staat er nog; verstuur het opnieuw zodra je weer online bent.",
+    "formatting": "Opmaak",
     "send_recipients_rejected": "Niet verzonden - de server heeft alle ontvangers geweigerd.",
+    "send_plugin_failed": "Niet verzonden - een plug-in die het verzenden afhandelt, is mislukt of duurde te lang. Controleer je map Verzonden voordat je opnieuw verzendt.",
     "send_some_recipients_rejected": "Verzonden, maar niet naar deze ontvangers - de server heeft ze geweigerd.",
     "continue_draft": "Concept voortzetten",
     "close_draft_title": "Concept opslaan of verwijderen?",
@@ -733,6 +749,11 @@
     "sending": "Bezig met verzenden...",
     "schedule_send": "Verzenden plannen",
     "schedule_send_description": "Kies wanneer de server dit bericht moet vrijgeven.",
+    "schedule_preset": {
+      "tomorrow_morning": "Morgenochtend",
+      "tomorrow_afternoon": "Morgenmiddag",
+      "monday_morning": "Maandagochtend"
+    },
     "schedule_send_required": "Kies een datum en tijd.",
     "schedule_send_invalid": "Voer een geldige datum en tijd in.",
     "schedule_send_future": "Kies een toekomstige datum en tijd.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Weergavenaam bewerken",
     "recipient_email_placeholder": "E-mailadres",
     "recipient_name_placeholder": "Weergavenaam",
+    "invalid_recipient": "Geen geldig e-mailadres",
     "autocomplete_search_server": "Op de server zoeken",
     "autocomplete_searching": "Bezig met zoeken...",
     "mention_recipients": "Ontvangers",
@@ -785,6 +807,15 @@
       "remove_background_color": "Achtergrondkleur verwijderen"
     },
     "send_filing_warning": "Verzonden - maar het opruimen daarna is mislukt, mogelijk blijft een oud concept staan.",
+    "read_receipt_on": "Leesbevestiging aangevraagd (klik om uit te schakelen)",
+    "read_receipt_off": "Leesbevestiging aanvragen",
+    "dsn_on": "Bezorgmelding aangevraagd (klik om uit te schakelen)",
+    "dsn_off": "Bezorgmelding aanvragen",
+    "format_plain_text": "Overschakelen naar platte tekst",
+    "format_rich_text": "Overschakelen naar opgemaakte tekst (HTML)",
+    "require_tls_on": "Versleutelde bezorging vereist (klik om uit te schakelen)",
+    "require_tls_off": "Versleutelde bezorging vereisen (TLS)",
+    "use_template": "Sjabloon",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Uiterlijk",
       "description": "Pas het uiterlijk van je webmail aan",
+      "theme": {
+        "label": "Thema",
+        "description": "Kies je voorkeurkleurenschema",
+        "light": "Licht",
+        "dark": "Donker",
+        "system": "Systeem"
+      },
       "language": {
         "label": "Taal",
         "description": "Kies je voorkeurstaal"
@@ -1093,6 +1131,12 @@
         "compact": "Compact",
         "regular": "Normaal",
         "comfortable": "Comfortabel"
+      },
+      "interface_layout": {
+        "label": "Interface-indeling",
+        "description": "Waar zoeken, navigatie en werkbalken staan",
+        "default": "Standaard",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Animaties inschakelen",
@@ -1241,6 +1285,18 @@
         "swift": "Snel gebaar",
         "relax": "Ontspannen",
         "beep": "Pieptoon"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Meldingsgeluid",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Sleep om volgorde aan te passen",
         "add": "Account toevoegen"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Gedeeld met mij",
         "description": "Groeps- en gedeelde accounts die u kunt beheren. Selecteer er een om de filters, afwezigheidsassistent, agenda's en contacten te bewerken.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Accountbeveiliging",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "email@voorbeeld.nl",
       "forward_keep_copy": "Kopie bewaren",
       "forward_limit": "Maximaal aantal doorsturingen per bericht op deze server: {count}. Extra doorsturingen worden overgeslagen.",
+      "forward_unavailable": "Deze server staat doorsturen niet toe. Doorstuuracties in filterregels hebben geen effect.",
       "reject_message": "Afwijzingsbericht",
       "reject_placeholder": "Uw e-mail is afgewezen",
       "label_name": "Labelnaam",
@@ -2397,12 +2484,6 @@
         "title": "Weergave",
         "description": "Configureer hoe bestanden en mappen worden weergegeven"
       },
-      "folder_layout": {
-        "label": "Mapnavigatie",
-        "description": "Kies hoe mappen worden weergegeven: inline bij bestanden of in een boomstructuur in de zijbalk",
-        "inline": "Inline",
-        "sidebar": "Zijbalk"
-      },
       "default_view": {
         "label": "Standaardweergave",
         "description": "Kies tussen raster- en lijstweergave",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Voorbeeld"
+      },
+      "folder_layout": {
+        "label": "Mapnavigatie",
+        "description": "Kies hoe mappen worden weergegeven: inline bij bestanden of in een boomstructuur in de zijbalk",
+        "inline": "Inline",
+        "sidebar": "Zijbalk"
       }
     },
     "search_placeholder": "Instellingen zoeken",
@@ -2562,7 +2649,12 @@
       "manage": "Regels beheren",
       "senders_count": "{count, plural, one {# afzender} other {# afzenders}}",
       "cross_account": "Selecteer berichten uit één account",
-      "opaque_hint": "Je filters zijn met de hand bewerkt. Open de filterinstellingen"
+      "opaque_hint": "Je filters zijn met de hand bewerkt. Open de filterinstellingen",
+      "loading": "Regels laden…",
+      "load_failed": "De regels konden niet worden geladen",
+      "none": "Nog geen regels",
+      "new_mail_only": "Alleen voor nieuwe berichten",
+      "running": "\"{name}\" wordt uitgevoerd op {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Volgende e-mail",
       "previous_email": "Vorige e-mail",
       "open_email": "E-mail openen",
-      "close_email": "Sluiten / Deselecteren"
+      "close_email": "Sluiten / Deselecteren",
+      "go_to_folder": "Ga naar map"
     },
     "actions": {
       "reply": "Beantwoorden",
@@ -2643,7 +2736,8 @@
       "global_search": "Alles doorzoeken"
     },
     "threads": {
-      "expand_collapse": "Gesprek uitklappen/inklappen"
+      "expand_collapse": "Gesprek uitklappen/inklappen",
+      "select_mountain_view": "Gesprek selecteren"
     },
     "composer": {
       "send": "E-mail verzenden",
@@ -3389,7 +3483,9 @@
     },
     "quick_create": {
       "placeholder": "Titel nieuw evenement",
-      "aria_label": "Snel evenement aanmaken"
+      "aria_label": "Snel evenement aanmaken",
+      "add_title": "Titel toevoegen",
+      "more_options": "Meer opties"
     },
     "nav_prev": "Vorige",
     "nav_next": "Volgende",
@@ -3574,7 +3670,13 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Menu openen"
+    "nav_open_menu": "Menu openen",
+    "toolbar": {
+      "more": "Meer acties",
+      "select_view": "Weergave wijzigen, nu {view}"
+    },
+    "other_calendars": "Andere agenda's",
+    "calendar_options": "Opties voor {name}"
   },
   "advanced_search": {
     "title": "Geavanceerd zoeken",
@@ -3620,6 +3722,8 @@
     "tip_shortcuts": "Druk op ? om alle sneltoetsen te bekijken",
     "tip_sidebar": "Vind Agenda, Contacten en Instellingen in het zijmenu",
     "tip_settings": "Pas uw ervaring aan in Instellingen",
+    "tip_compose_touch": "Tik op de potloodknop om een nieuwe e-mail te schrijven",
+    "tip_sidebar_touch": "Agenda, Contacten en Instellingen vind je in de balk onderaan",
     "got_it": "Begrepen",
     "settings": "Instellingen",
     "dismiss": "Sluiten",
@@ -3643,8 +3747,6 @@
     "title": "Bestanden",
     "search_placeholder": "Bestanden zoeken...",
     "empty_state_title": "Nog geen bestanden",
-    "empty_state_description": "Upload bestanden of maak mappen aan om te beginnen",
-    "upload": "Uploaden",
     "upload_files": "Bestanden uploaden",
     "new_folder": "Nieuwe map",
     "new_folder_name": "Mapnaam",
@@ -3663,11 +3765,10 @@
     "type": "Type",
     "folder": "Map",
     "file": "Bestand",
-    "parent_directory": "Bovenliggende map",
-    "breadcrumb_root": "Start",
-    "drop_files_here": "Sleep bestanden of mappen hierheen om te uploaden",
     "uploading": "Uploaden...",
     "upload_success": "{count, plural, one {1 bestand geüpload} other {# bestanden geüpload}}",
+    "upload_canceled": "Uploaden geannuleerd",
+    "upload_canceled_partial": "{count, plural, one {1 bestand was} other {# bestanden waren}} al geüpload voordat u annuleerde",
     "upload_error": "Bestand uploaden mislukt",
     "create_folder_success": "Map aangemaakt",
     "create_folder_error": "Map aanmaken mislukt",
@@ -3700,7 +3801,6 @@
     "file_name": "Bestandsnaam",
     "retry": "Opnieuw proberen",
     "refresh": "Vernieuwen",
-    "toggle_favorite": "Favoriet aan/uit",
     "duplicate": "Dupliceren",
     "duplicate_success": "Succesvol gedupliceerd",
     "duplicate_error": "Dupliceren mislukt",
@@ -3712,8 +3812,8 @@
     "create_file_error": "Bestand aanmaken mislukt",
     "favorites": "Favorieten",
     "recent": "Recent",
-    "properties": "Eigenschappen",
-    "open_folder": "Map openen",
+    "show_in_folder": "Weergeven in map",
+    "remove_from_recent": "Verwijderen uit recent",
     "upload_folder": "Map uploaden",
     "file_too_large": "\"{name}\" overschrijdt de maximale bestandsgrootte ({max})",
     "undo": "Ongedaan maken",
@@ -3722,6 +3822,67 @@
     "toolbar": "Bestandsacties",
     "file_list": "Bestanden en mappen",
     "context_menu": "Acties",
+    "settings_ascending": "Oplopend",
+    "settings_descending": "Aflopend",
+    "disabled_title": "De bestandsfunctie is uitgeschakeld door uw beheerder",
+    "disabled_description": "Grote bestandsuploads via WebDAV kunnen Stalwart/RocksDB-instabiliteit veroorzaken, waaronder geheugenfouten en onherstelbaar schijfgebruik. Verwijderde bestanden worden mogelijk niet onmiddellijk uit de opslag verwijderd. Deze functie wordt niet aanbevolen voor productieomgevingen.",
+    "no_accounts": "Geen gekoppelde accounts.",
+    "open_folder_tree": "Mappenstructuur openen",
+    "migration_title": "Je bestanden worden bijgewerkt…",
+    "migration_description": "Mappen en bestanden worden in de juiste structuur georganiseerd. Dit gebeurt slechts één keer.",
+    "new": "Nieuw",
+    "my_files": "Mijn bestanden",
+    "folders": "Mappen",
+    "files_heading": "Bestanden",
+    "open": "Openen",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "{name} uitvouwen",
+    "collapse_folder": "{name} samenvouwen",
+    "sidebar_hint": "Geef mappen een ster en open bestanden om ze hier terug te vinden.",
+    "breadcrumbs": "Mappad",
+    "show_path": "Verborgen mappen in het pad tonen",
+    "selection_actions": "Acties voor geselecteerde items",
+    "selected_count": "{count, plural, one {1 geselecteerd} other {# geselecteerd}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Alles selecteren",
+    "select_item": "{name} selecteren",
+    "more_actions": "Meer acties voor {name}",
+    "paste_here": "In deze map plakken",
+    "paste_count": "{count, plural, one {1 item plakken} other {# items plakken}}",
+    "sort_by": "Sorteren op",
+    "view_mode": "Indeling",
+    "clear_search": "Zoekopdracht wissen",
+    "no_results_for": "Niets in deze map komt overeen met \"{query}\"",
+    "download_count": "{count, plural, one {1 bestand downloaden} other {# bestanden downloaden}}",
+    "delete_count": "{count, plural, one {1 item verwijderen} other {# items verwijderen}}",
+    "close_details": "Details sluiten",
+    "file_kind": "{ext}-bestand",
+    "folder_summary": "{folders, plural, =0 {Geen mappen} one {1 map} other {# mappen}}, {files, plural, =0 {geen bestanden} one {1 bestand} other {# bestanden}}",
+    "details_hint": "Selecteer een bestand of map om de details te bekijken.",
+    "sharing": "Delen",
+    "shared_with_count": "{count, plural, one {Gedeeld met 1 persoon} other {Gedeeld met # personen}}",
+    "only_you": "Alleen u",
+    "empty_folder_title": "Deze map is leeg",
+    "empty_folder_description": "Sleep bestanden hierheen of upload ze vanaf uw apparaat.",
+    "empty_folder_read_only": "U kunt geen bestanden aan deze map toevoegen.",
+    "choose_account": "Kies een account",
+    "drop_to_upload": "Loslaten om te uploaden naar {folder}",
+    "uploading_count": "{current} van {total} uploaden",
+    "dismiss": "Sluiten",
+    "zoom_in": "Inzoomen",
+    "zoom_out": "Uitzoomen",
+    "zoom_reset": "Aanpassen aan scherm",
+    "rotate": "Draaien",
+    "close_preview": "Sluiten",
+    "empty_state_description": "Upload bestanden of maak mappen aan om te beginnen",
+    "upload": "Uploaden",
+    "parent_directory": "Bovenliggende map",
+    "breadcrumb_root": "Start",
+    "drop_files_here": "Sleep bestanden of mappen hierheen om te uploaden",
+    "toggle_favorite": "Favoriet aan/uit",
+    "properties": "Eigenschappen",
+    "open_folder": "Map openen",
     "settings_title": "Bestandsinstellingen",
     "settings_display": "Weergave",
     "settings_default_view": "Standaardweergave",
@@ -3730,8 +3891,6 @@
     "settings_default_sort_desc": "Kies de standaardsortering voor bestanden",
     "settings_sort_direction": "Sorteerrichting",
     "settings_sort_direction_desc": "Kies oplopende of aflopende volgorde",
-    "settings_ascending": "Oplopend",
-    "settings_descending": "Aflopend",
     "settings_icons": "Pictogrammen",
     "settings_show_icons": "Bestandspictogrammen tonen",
     "settings_show_icons_desc": "Pictogrammen naast bestanden en mappen weergeven",
@@ -3746,14 +3905,8 @@
     "settings_folder_layout_desc": "Kies hoe mappen worden weergegeven: inline bij bestanden of in een boomstructuur in de zijbalk",
     "settings_folder_layout_inline": "Inline",
     "settings_folder_layout_sidebar": "Zijbalk",
-    "disabled_title": "De bestandsfunctie is uitgeschakeld door uw beheerder",
-    "disabled_description": "Grote bestandsuploads via WebDAV kunnen Stalwart/RocksDB-instabiliteit veroorzaken, waaronder geheugenfouten en onherstelbaar schijfgebruik. Verwijderde bestanden worden mogelijk niet onmiddellijk uit de opslag verwijderd. Deze functie wordt niet aanbevolen voor productieomgevingen.",
     "stability_warning": "Grote bestandsuploads kunnen serverinstabiliteit veroorzaken. Verwijderde bestanden worden mogelijk niet onmiddellijk uit de opslag verwijderd. Gebruik met voorzichtigheid.",
-    "no_accounts": "Geen gekoppelde accounts.",
-    "open_folder_tree": "Mappenstructuur openen",
     "other_accounts": "Andere accounts",
-    "migration_title": "Je bestanden worden bijgewerkt…",
-    "migration_description": "Mappen en bestanden worden in de juiste structuur georganiseerd. Dit gebeurt slechts één keer.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3763,13 +3916,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

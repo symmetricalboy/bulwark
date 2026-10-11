@@ -147,6 +147,8 @@
     "show_all_tags": "Mostrar tudo ({count})",
     "show_fewer_tags": "Mostrar menos",
     "folders": "Pastas",
+    "show_more": "Mais",
+    "show_fewer": "Menos",
     "mail": "E-mail",
     "nav_label": "Navegação",
     "add_app": "Apps",
@@ -243,6 +245,7 @@
     "replied": "Respondido",
     "forwarded": "Encaminhado",
     "has_attachment": "Com anexo",
+    "conversations_range": "{from}–{to, number} de {total, number}",
     "conversations_count": "{count} de {total} conversas",
     "conversations_count_plus": "{count}+ conversas",
     "conversations_count_simple": "{count} conversas",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "Agendado para enviar em {date}",
     "scheduled_send_created": "E-mail agendado para envio",
+    "sending_in": "Enviando em {seconds} s",
+    "undo_send_failed": "Não foi possível desfazer. A mensagem pode já ter sido enviada.",
     "cancel_scheduled_send": "Cancelar envio",
     "reschedule_send": "Reagendar",
     "cancel_and_edit": "Cancelar e editar",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Confirmação de leitura solicitada (clique para desativar)",
-    "read_receipt_off": "Solicitar confirmação de leitura",
-    "dsn_on": "Notificação de entrega pedida (clique para desativar)",
-    "dsn_off": "Pedir notificação de entrega",
-    "format_plain_text": "Mudar para texto simples",
-    "format_rich_text": "Mudar para texto formatado (HTML)",
-    "require_tls_on": "Entrega cifrada obrigatória (clique para desativar)",
-    "require_tls_off": "Exigir entrega cifrada (TLS)",
+    "minimize": "Minimizar",
+    "maximize": "Ecrã inteiro",
+    "restore": "Restaurar",
     "new_message": "Nova Mensagem",
     "signature_edit_hint": "Clique duas vezes para editar a assinatura",
     "reply": "Responder",
@@ -648,6 +648,7 @@
     "discard": "Descartar",
     "discard_draft_title": "Descartar rascunho?",
     "discard_draft_confirm": "Você tem alterações não salvas. Deseja descartar este rascunho?",
+    "discard_draft_message": "O rascunho será excluído.",
     "saving": "Salvando...",
     "draft_saved": "Rascunho salvo",
     "save_failed": "Falha ao salvar",
@@ -684,11 +685,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Se o seu servidor não aceitar este endereço como remetente do envelope, {identity} é usado em seu lugar, e os destinatários podem vê-lo no cabeçalho Return-Path."
     },
-    "use_template": "Modelo",
     "save_as_template": "Salvar como modelo",
+    "attach_from_device": "Enviar deste dispositivo",
+    "templates_menu": "Modelos",
+    "insert_template": "Inserir modelo",
+    "options": "Opções",
+    "option_plain_text": "Texto simples",
+    "option_plain_text_hint": "Enviar sem formatação",
+    "option_read_receipt": "Pedir confirmação de leitura",
+    "option_read_receipt_hint": "Pedir ao destinatário que confirme a abertura",
+    "option_dsn": "Notificação de entrega",
+    "option_dsn_hint": "Receber um relatório quando o servidor entregar",
+    "option_require_tls": "Exigir entrega cifrada",
+    "option_require_tls_hint": "Entregar só via TLS; caso contrário, devolver",
     "validation": {
       "recipient_required": "Adicione um destinatário para enviar",
       "body_required": "Escreva uma mensagem ou anexe um arquivo",
+      "invalid_recipients": "Não enviado - verifique estes endereços: {addresses}",
       "attachments_uploading": "Os anexos ainda estão sendo enviados — será enviado assim que terminar",
       "attachment_upload_failed": "Não enviado - falha ao carregar um anexo. Remova-o e tente novamente."
     },
@@ -708,7 +721,10 @@
     "smime_unlock_button": "Desbloquear",
     "smime_passphrase_placeholder": "Frase secreta S/MIME",
     "send_timeout": "O servidor deixou de responder. Verifique a pasta Enviados antes de enviar novamente — a mensagem pode já ter saído.",
+    "send_offline": "Parece que você está offline. A mensagem continua aqui; envie novamente quando voltar a ficar online.",
+    "formatting": "Formatação",
     "send_recipients_rejected": "Não enviado: o servidor rejeitou todos os destinatários.",
+    "send_plugin_failed": "Não enviado: um plugin que trata do envio falhou ou demorou demasiado. Verifique a pasta Enviados antes de enviar novamente.",
     "send_some_recipients_rejected": "Enviado, mas não para estes destinatários, que foram rejeitados pelo servidor.",
     "continue_draft": "Continuar rascunho",
     "close_draft_title": "Salvar ou descartar rascunho?",
@@ -733,6 +749,11 @@
     "sending": "Enviando...",
     "schedule_send": "Agendar envio",
     "schedule_send_description": "Escolha quando o servidor deve liberar esta mensagem.",
+    "schedule_preset": {
+      "tomorrow_morning": "Amanhã de manhã",
+      "tomorrow_afternoon": "Amanhã à tarde",
+      "monday_morning": "Segunda de manhã"
+    },
     "schedule_send_required": "Escolha uma data e hora.",
     "schedule_send_invalid": "Informe uma data e hora válidas.",
     "schedule_send_future": "Escolha uma data e hora no futuro.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Editar nome de exibição",
     "recipient_email_placeholder": "Endereço de e-mail",
     "recipient_name_placeholder": "Nome de exibição",
+    "invalid_recipient": "Endereço de e-mail inválido",
     "autocomplete_search_server": "Pesquisar no servidor",
     "autocomplete_searching": "Pesquisando...",
     "mention_recipients": "Destinatários",
@@ -785,6 +807,15 @@
       "remove_background_color": "Remover cor de fundo"
     },
     "send_filing_warning": "Enviado - mas a limpeza posterior falhou, um rascunho antigo pode permanecer.",
+    "read_receipt_on": "Confirmação de leitura solicitada (clique para desativar)",
+    "read_receipt_off": "Solicitar confirmação de leitura",
+    "dsn_on": "Notificação de entrega pedida (clique para desativar)",
+    "dsn_off": "Pedir notificação de entrega",
+    "format_plain_text": "Mudar para texto simples",
+    "format_rich_text": "Mudar para texto formatado (HTML)",
+    "require_tls_on": "Entrega cifrada obrigatória (clique para desativar)",
+    "require_tls_off": "Exigir entrega cifrada (TLS)",
+    "use_template": "Modelo",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Aparência",
       "description": "Personalize a aparência do seu webmail",
+      "theme": {
+        "label": "Tema",
+        "description": "Escolha seu esquema de cores preferido",
+        "light": "Claro",
+        "dark": "Escuro",
+        "system": "Sistema"
+      },
       "language": {
         "label": "Idioma",
         "description": "Escolha seu idioma preferido"
@@ -1093,6 +1131,12 @@
         "compact": "Compacto",
         "regular": "Normal",
         "comfortable": "Confortável"
+      },
+      "interface_layout": {
+        "label": "Esquema da interface",
+        "description": "Onde ficam a pesquisa, a navegação e as barras de ferramentas",
+        "default": "Predefinido",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Habilitar Animações",
@@ -1241,6 +1285,18 @@
         "swift": "Gesto rápido",
         "relax": "Relaxante",
         "beep": "Bipe"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Som de notificação",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Arraste para reordenar",
         "add": "Adicionar conta"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Compartilhado comigo",
         "description": "Contas de grupo e compartilhadas que você pode gerenciar. Selecione uma para editar seus filtros, resposta de ausência, calendários e contatos.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Segurança da conta",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "email@exemplo.com",
       "forward_keep_copy": "Manter uma cópia",
       "forward_limit": "Limite de reencaminhamentos por mensagem neste servidor: {count}. Os restantes são ignorados.",
+      "forward_unavailable": "Este servidor não permite reencaminhar. As ações de reencaminhamento nas regras de filtro não têm efeito.",
       "reject_message": "Mensagem de rejeição",
       "reject_placeholder": "Seu e-mail foi rejeitado",
       "label_name": "Nome da etiqueta",
@@ -2397,12 +2484,6 @@
         "title": "Exibição",
         "description": "Configure como arquivos e pastas são exibidos"
       },
-      "folder_layout": {
-        "label": "Navegação de pastas",
-        "description": "Escolha como as pastas são apresentadas: integradas com os arquivos ou numa árvore na barra lateral",
-        "inline": "Integrado",
-        "sidebar": "Barra lateral"
-      },
       "default_view": {
         "label": "Visualização padrão",
         "description": "Escolha entre layout em grade e lista",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Visualização"
+      },
+      "folder_layout": {
+        "label": "Navegação de pastas",
+        "description": "Escolha como as pastas são apresentadas: integradas com os arquivos ou numa árvore na barra lateral",
+        "inline": "Integrado",
+        "sidebar": "Barra lateral"
       }
     },
     "search_placeholder": "Pesquisar configurações",
@@ -2562,7 +2649,12 @@
       "manage": "Gerenciar regras",
       "senders_count": "{count, plural, one {# remetente} other {# remetentes}}",
       "cross_account": "Selecione mensagens de uma única conta",
-      "opaque_hint": "Seus filtros foram editados manualmente. Abra as configurações de filtros"
+      "opaque_hint": "Seus filtros foram editados manualmente. Abra as configurações de filtros",
+      "loading": "A carregar regras…",
+      "load_failed": "Não foi possível carregar as regras",
+      "none": "Ainda não há regras",
+      "new_mail_only": "Apenas para mensagens novas",
+      "running": "A executar \"{name}\" em {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Próximo e-mail",
       "previous_email": "E-mail anterior",
       "open_email": "Abrir e-mail",
-      "close_email": "Fechar / Desselecionar"
+      "close_email": "Fechar / Desselecionar",
+      "go_to_folder": "Ir para a pasta"
     },
     "actions": {
       "reply": "Responder",
@@ -2643,7 +2736,8 @@
       "global_search": "Pesquisar em tudo"
     },
     "threads": {
-      "expand_collapse": "Expandir/recolher conversa"
+      "expand_collapse": "Expandir/recolher conversa",
+      "select_mountain_view": "Selecionar a conversa"
     },
     "composer": {
       "send": "Enviar e-mail",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "Título do novo evento",
-      "aria_label": "Criação rápida de evento"
+      "aria_label": "Criação rápida de evento",
+      "add_title": "Adicionar título",
+      "more_options": "Mais opções"
     },
     "nav_prev": "Anterior",
     "nav_next": "Próximo",
@@ -3574,7 +3670,13 @@
       "due_tomorrow": "Vence amanhã",
       "overdue": "Atrasada"
     },
-    "nav_open_menu": "Abrir menu"
+    "nav_open_menu": "Abrir menu",
+    "toolbar": {
+      "more": "Mais ações",
+      "select_view": "Mudar vista, atualmente {view}"
+    },
+    "other_calendars": "Outros calendários",
+    "calendar_options": "Opções de {name}"
   },
   "advanced_search": {
     "title": "Pesquisa avançada",
@@ -3620,6 +3722,8 @@
     "tip_shortcuts": "Pressione ? para ver todos os atalhos de teclado",
     "tip_sidebar": "Encontre Calendário, Contatos e Configurações no menu lateral",
     "tip_settings": "Personalize sua experiência nas Configurações",
+    "tip_compose_touch": "Toque no botão de lápis para escrever um novo e-mail",
+    "tip_sidebar_touch": "Calendário, Contatos e Configurações ficam na barra inferior",
     "got_it": "Entendi",
     "settings": "Configurações",
     "dismiss": "Fechar",
@@ -3643,8 +3747,6 @@
     "title": "Arquivos",
     "search_placeholder": "Pesquisar arquivos...",
     "empty_state_title": "Ainda não há arquivos",
-    "empty_state_description": "Carregue arquivos ou crie pastas para começar",
-    "upload": "Carregar",
     "upload_files": "Carregar arquivos",
     "new_folder": "Nova pasta",
     "new_folder_name": "Nome da pasta",
@@ -3663,11 +3765,10 @@
     "type": "Tipo",
     "folder": "Pasta",
     "file": "Arquivo",
-    "parent_directory": "Diretório superior",
-    "breadcrumb_root": "Início",
-    "drop_files_here": "Largue arquivos ou pastas aqui para carregar",
     "uploading": "A carregar...",
     "upload_success": "{count, plural, one {1 arquivo carregado} other {# arquivos carregados}}",
+    "upload_canceled": "Carregamento cancelado",
+    "upload_canceled_partial": "{count, plural, one {1 arquivo foi carregado} other {# arquivos foram carregados}} antes de cancelar",
     "upload_error": "Falha ao carregar o arquivo",
     "create_folder_success": "Pasta criada",
     "create_folder_error": "Falha ao criar a pasta",
@@ -3700,7 +3801,6 @@
     "file_name": "Nome do arquivo",
     "retry": "Tentar novamente",
     "refresh": "Atualizar",
-    "toggle_favorite": "Alternar favorito",
     "duplicate": "Duplicar",
     "duplicate_success": "Duplicado com sucesso",
     "duplicate_error": "Falha ao duplicar",
@@ -3712,8 +3812,8 @@
     "create_file_error": "Falha ao criar arquivo",
     "favorites": "Favoritos",
     "recent": "Recentes",
-    "properties": "Propriedades",
-    "open_folder": "Abrir pasta",
+    "show_in_folder": "Mostrar na pasta",
+    "remove_from_recent": "Remover dos recentes",
     "upload_folder": "Carregar pasta",
     "file_too_large": "\"{name}\" excede o tamanho máximo do arquivo ({max})",
     "undo": "Desfazer",
@@ -3722,6 +3822,67 @@
     "toolbar": "Ações de arquivo",
     "file_list": "Arquivos e pastas",
     "context_menu": "Ações",
+    "settings_ascending": "Crescente",
+    "settings_descending": "Decrescente",
+    "disabled_title": "O recurso de arquivos foi desativado pelo seu administrador",
+    "disabled_description": "Uploads de arquivos grandes via WebDAV podem causar instabilidade no Stalwart/RocksDB, incluindo falhas de memória e uso irrecuperável de disco. Arquivos excluídos podem não ser removidos imediatamente do armazenamento. Este recurso não é recomendado para ambientes de produção.",
+    "no_accounts": "Nenhuma conta conectada.",
+    "open_folder_tree": "Abrir árvore de pastas",
+    "migration_title": "Atualizando seus arquivos…",
+    "migration_description": "Organizando pastas e arquivos em sua estrutura adequada. Isso acontece apenas uma vez.",
+    "new": "Novo",
+    "my_files": "Meus arquivos",
+    "folders": "Pastas",
+    "files_heading": "Arquivos",
+    "open": "Abrir",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Expandir {name}",
+    "collapse_folder": "Recolher {name}",
+    "sidebar_hint": "Adicione estrelas a pastas e abra arquivos para encontrá-los aqui.",
+    "breadcrumbs": "Caminho da pasta",
+    "show_path": "Mostrar pastas ocultas no caminho",
+    "selection_actions": "Ações para os itens selecionados",
+    "selected_count": "{count, plural, one {1 selecionado} other {# selecionados}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Selecionar tudo",
+    "select_item": "Selecionar {name}",
+    "more_actions": "Mais ações para {name}",
+    "paste_here": "Colar nesta pasta",
+    "paste_count": "{count, plural, one {Colar 1 item} other {Colar # itens}}",
+    "sort_by": "Ordenar por",
+    "view_mode": "Layout",
+    "clear_search": "Limpar pesquisa",
+    "no_results_for": "Nada nesta pasta corresponde a \"{query}\"",
+    "download_count": "{count, plural, one {Transferir 1 arquivo} other {Transferir # arquivos}}",
+    "delete_count": "{count, plural, one {Eliminar 1 item} other {Eliminar # itens}}",
+    "close_details": "Fechar detalhes",
+    "file_kind": "Arquivo {ext}",
+    "folder_summary": "{folders, plural, =0 {Nenhuma pasta} one {1 pasta} other {# pastas}}, {files, plural, =0 {nenhum arquivo} one {1 arquivo} other {# arquivos}}",
+    "details_hint": "Selecione um arquivo ou uma pasta para ver os detalhes.",
+    "sharing": "Compartilhamento",
+    "shared_with_count": "{count, plural, one {Compartilhado com 1 pessoa} other {Compartilhado com # pessoas}}",
+    "only_you": "Apenas você",
+    "empty_folder_title": "Esta pasta está vazia",
+    "empty_folder_description": "Arraste arquivos para aqui ou carregue-os do seu dispositivo.",
+    "empty_folder_read_only": "Não pode adicionar arquivos a esta pasta.",
+    "choose_account": "Escolher uma conta",
+    "drop_to_upload": "Solte para carregar para {folder}",
+    "uploading_count": "A carregar {current} de {total}",
+    "dismiss": "Fechar",
+    "zoom_in": "Aumentar zoom",
+    "zoom_out": "Diminuir zoom",
+    "zoom_reset": "Ajustar ao ecrã",
+    "rotate": "Rodar",
+    "close_preview": "Fechar",
+    "empty_state_description": "Carregue arquivos ou crie pastas para começar",
+    "upload": "Carregar",
+    "parent_directory": "Diretório superior",
+    "breadcrumb_root": "Início",
+    "drop_files_here": "Largue arquivos ou pastas aqui para carregar",
+    "toggle_favorite": "Alternar favorito",
+    "properties": "Propriedades",
+    "open_folder": "Abrir pasta",
     "settings_title": "Configurações de arquivos",
     "settings_display": "Exibição",
     "settings_default_view": "Visualização padrão",
@@ -3730,8 +3891,6 @@
     "settings_default_sort_desc": "Escolha a ordenação padrão para os arquivos",
     "settings_sort_direction": "Direção da ordenação",
     "settings_sort_direction_desc": "Escolha ordem crescente ou decrescente",
-    "settings_ascending": "Crescente",
-    "settings_descending": "Decrescente",
     "settings_icons": "Ícones",
     "settings_show_icons": "Mostrar ícones de arquivos",
     "settings_show_icons_desc": "Exibir ícones ao lado de arquivos e pastas",
@@ -3746,14 +3905,8 @@
     "settings_folder_layout_desc": "Escolha como as pastas são apresentadas: integradas com os arquivos ou numa árvore na barra lateral",
     "settings_folder_layout_inline": "Integrado",
     "settings_folder_layout_sidebar": "Barra lateral",
-    "disabled_title": "O recurso de arquivos foi desativado pelo seu administrador",
-    "disabled_description": "Uploads de arquivos grandes via WebDAV podem causar instabilidade no Stalwart/RocksDB, incluindo falhas de memória e uso irrecuperável de disco. Arquivos excluídos podem não ser removidos imediatamente do armazenamento. Este recurso não é recomendado para ambientes de produção.",
     "stability_warning": "Uploads de arquivos grandes podem causar instabilidade no servidor. Arquivos excluídos podem não ser removidos imediatamente do armazenamento. Use com cautela.",
-    "no_accounts": "Nenhuma conta conectada.",
-    "open_folder_tree": "Abrir árvore de pastas",
     "other_accounts": "Outras contas",
-    "migration_title": "Atualizando seus arquivos…",
-    "migration_description": "Organizando pastas e arquivos em sua estrutura adequada. Isso acontece apenas uma vez.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3763,13 +3916,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

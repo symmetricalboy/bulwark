@@ -19,6 +19,7 @@ import { useTimeGridInteractions } from "@/hooks/use-time-grid-interactions";
 import { useScrollWindow, getScrollStart, setScrollStart, scrollToStart } from "@/hooks/use-scroll-window";
 import { dayKey, type ScrollWindowViewProps } from "@/lib/calendar-scroll-window";
 import type { PendingEventPreview } from "./event-modal";
+import { readableTextOn } from "@/lib/color-transform";
 
 interface CalendarDayViewProps extends ScrollWindowViewProps {
   selectedDate: Date;
@@ -313,13 +314,26 @@ export function CalendarDayView({
               const dayTasks = tasksByDay.get(key) ?? [];
               return (
                 <div key={key} data-day={key} className="min-w-0 border-e border-border last:border-e-0">
-                  <div className={cn("px-4 py-3", isMobile && "px-3 py-2")}>
-                    <h3 className={cn("font-semibold truncate", isMobile ? "text-base" : "text-lg", today && "text-primary")}>
-                      {isMobile
-                        ? intlFormatter.dateTime(day, { weekday: "short", month: "short", day: "numeric" })
-                        : intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" })
-                      }
-                    </h3>
+                  <div
+                    className={cn("flex flex-col items-start gap-0.5 px-3 pt-2 pb-1.5", isMobile && "px-2")}
+                    role="columnheader"
+                    aria-label={intlFormatter.dateTime(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                  >
+                    <div className={cn(
+                      "w-10 text-center text-[11px] font-medium uppercase tracking-wide",
+                      today ? "text-primary" : "text-muted-foreground",
+                    )}>
+                      {intlFormatter.dateTime(day, { weekday: "short" })}
+                    </div>
+                    <div
+                      aria-current={today ? "date" : undefined}
+                      className={cn(
+                        "inline-flex items-center justify-center w-10 h-10 rounded-full text-xl",
+                        today ? "bg-primary text-primary-foreground font-semibold" : "text-foreground",
+                      )}
+                    >
+                      {format(day, "d")}
+                    </div>
                   </div>
 
                   {hasAllDayArea && (
@@ -557,9 +571,9 @@ export function CalendarDayView({
                         className="absolute left-0 right-0 z-20 pointer-events-none"
                         style={{ top: ((nowMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT }}
                       >
-                        <div className="flex items-center">
-                          <div className="w-2.5 h-2.5 rounded-full bg-destructive -ms-1" />
-                          <div className="flex-1 h-px bg-destructive" />
+                        <div className="flex items-center -translate-y-1/2">
+                          <div className="w-3 h-3 rounded-full bg-destructive -ms-1.5 flex-shrink-0" />
+                          <div className="flex-1 h-0.5 bg-destructive" />
                         </div>
                       </div>
                     )}
@@ -609,21 +623,24 @@ export function CalendarDayView({
                         if (startMin + durationMin <= hours.startMinutes || startMin >= hours.endMinutes) return null;
                         const clip = clipToDisplayHours(startMin, startMin + durationMin, hours);
                         const cal = calendars.find(c => c.id === pendingPreview.calendarId);
-                        const color = cal?.color || "hsl(var(--primary))";
+                        const color = cal?.color || "#3b82f6";
+                        // Drawn like a saved event, so the new event shows where
+                        // it will land while it is being created.
                         return (
                           <div
-                            className="absolute left-2 right-2 z-10 rounded-md pointer-events-none border-2 border-dashed overflow-hidden"
+                            data-pending-preview
+                            className="absolute left-0.5 right-0.5 z-30 rounded-xs pointer-events-none overflow-hidden px-1.5 py-0.5 text-xs shadow-md"
                             style={{
                               top: ((clip.startMinutes - hours.startMinutes) / 60) * HOUR_HEIGHT,
                               height: Math.max(24, ((clip.endMinutes - clip.startMinutes) / 60) * HOUR_HEIGHT),
-                              borderColor: color,
-                              backgroundColor: `${color}10`,
+                              backgroundColor: color,
+                              color: readableTextOn(color),
                             }}
                           >
-                            <div className="text-[10px] font-medium px-1.5 py-0.5 truncate" style={{ color }}>
+                            <div className="font-medium truncate">
                               {pendingPreview.title}
                             </div>
-                            <div className="text-[9px] px-1.5 opacity-70" style={{ color }}>
+                            <div className="text-[10.5px] opacity-85 truncate">
                               {formatSnapTime(startMin, timeFormat)} – {formatSnapTime(startMin + durationMin, timeFormat)}
                             </div>
                           </div>

@@ -8,13 +8,14 @@ import { orderKeywords, placeHeldRows, type HeldKeywords, type SortLevel } from 
 import { SearchFilters, DEFAULT_SEARCH_FILTERS, buildJMAPFilter, isFilterEmpty } from "@/lib/jmap/search-utils";
 import { emailHooks } from "@/lib/plugin-hooks";
 import { resolveThreadRoute } from "@/lib/thread-routing";
-import { threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
+import { emailKeyFor, threadKeyFor, threadIdFromKey, KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY } from "@/lib/thread-utils";
 import type { ExternalSearchResult } from "@/lib/plugin-types";
 import { positionsByAccount, fetchUnifiedEmails, fetchUnifiedMailboxCounts, searchUnifiedEmails, advancedSearchUnifiedEmails, fetchCrossViewEmails, searchCrossViewEmails, advancedSearchCrossViewEmails, fetchTagEmails, trashAndJunkIds, searchAcrossAccounts, advancedSearchAcrossAccounts, getCrossUnreadTotal, type AcrossAccountsSearchOptions, type UnifiedAccountClient, type UnifiedMailboxCounts } from "@/lib/unified-mailbox";
 import { defaultSearchScopeFor, isAllFoldersSearchScope, SEARCH_SCOPE_ALL_FOLDERS } from "@/lib/search-scope-folders";
 import { useAuthStore } from "@/stores/auth-store";
 import { pathNamesMailFolder } from "@/lib/deep-links";
 import { currentStoreEpoch } from "@/lib/store-epoch";
+import { folderListKey, forgetFolderLists, rememberFolderList, rememberedFolderList } from "@/lib/folder-list-cache";
 import { keywordPointer } from "@/lib/jmap/patch-pointer";
 import { useAccountStore } from "@/stores/account-store";
 import { useMessageListTabsStore } from "@/stores/message-list-tabs-store";
@@ -44,6 +45,41 @@ type PendingUndoSend = {
    *  which selects *which login's client* to talk to. */
   submissionAccountId?: string;
 };
+
+/** Drop the matching emails from a key-based selection. */
+function dropFromSelection(
+  state: { emails: Email[]; selectedEmailKeys: Set<string> },
+  matches: (email: Email) => boolean,
+): Set<string> {
+  const next = new Set(state.selectedEmailKeys);
+  for (const email of state.emails) if (matches(email)) next.delete(emailKeyFor(email));
+  return next;
+}
+
+/**
+ * The emails behind a key-based selection, each once. Looks in the list and in
+ * the loaded members of expanded threads: a thread member ticked in a folder
+ * view may live in another folder and so never be a list row.
+ */
+export function resolveSelectedEmails(state: {
+  emails: Email[];
+  threadEmailsCache: Map<string, Email[]>;
+  selectedEmailKeys: Set<string>;
+}): Email[] {
+  const { selectedEmailKeys } = state;
+  if (selectedEmailKeys.size === 0) return [];
+  const found = new Map<string, Email>();
+  const visit = (email: Email) => {
+    const key = emailKeyFor(email);
+    if (selectedEmailKeys.has(key) && !found.has(key)) found.set(key, email);
+  };
+  state.emails.forEach(visit);
+  for (const members of state.threadEmailsCache.values()) members.forEach(visit);
+  return [...found.values()];
+}
+
+/** Enough of an email to key a selection by its owning account. */
+type SelectableEmail = Pick<Email, 'id' | 'sourceClientAccountId' | 'sourceAccountId'>;
 
 /**
  * Explicit messages for a batch action, instead of the list selection. A
@@ -85,7 +121,7 @@ interface EmailStore {
   searchQuery: string;
   quota: { used: number; total: number } | null;
   processingReadStatus: Set<string>; // Track emails being marked as read/unread
-  selectedEmailIds: Set<string>; // Track selected emails for batch operations
+  selectedEmailKeys: Set<string>; // Track selected emails for batch operations
   // Emails the user just read (unread view) or unstarred (starred view) that
   // should stay visible in that self-filtering cross view until it is re-opened,
   // instead of vanishing on the next push refresh. In a folder sorted on a
@@ -227,9 +263,10 @@ interface EmailStore {
   setQuota: (quota: { used: number; total: number } | null) => void;
   selectKeyword: (keyword: string | null) => void;
   fetchTagCounts: (client: IJMAPClient) => Promise<void>;
-  toggleEmailSelection: (emailId: string) => void;
-  selectRangeEmails: (targetEmailId: string) => void;
-  lastSelectedEmailId: string | null;
+  /** Take the email, not its id: the id alone collides across accounts. */
+  toggleEmailSelection: (email: SelectableEmail) => void;
+  selectRangeEmails: (target: SelectableEmail) => void;
+  lastSelectedEmailKey: string | null;
   selectAllEmails: () => void;
   clearSelection: () => void;
 
@@ -292,7 +329,8 @@ interface EmailStore {
    * grouped by the login and JMAP account they live in, then copied through
    * crossAccountMoveEmails with `keepOriginal`.
    */
-  copyEmailsToAccount: (emailIds: string[], destAccountId: string, destMailboxId: string) => Promise<void>;
+  /** Pass emails rather than ids where you have them: an id alone can name another account's namesake. */
+  copyEmailsToAccount: (emails: Array<string | Email>, destAccountId: string, destMailboxId: string) => Promise<void>;
   searchEmails: (client: IJMAPClient, query: string) => Promise<void>;
   advancedSearch: (client: IJMAPClient) => Promise<void>;
   setSearchFilters: (filters: Partial<SearchFilters>) => void;
@@ -826,6 +864,13 @@ export function resolveEmailBlobContext(
 
 // List requests can finish after navigation. Never apply an old folder/tag
 // response (or error) to the view the user has since selected.
+/**
+ * The plain folder list on screen and the key it is remembered under (see
+ * lib/folder-list-cache). Null while the rows showing belong to no folder
+ * list - a search, a tag, a unified view, or a folder still loading.
+ */
+let shownFolderList: { key: string; mailboxId: string; pageSize: number } | null = null;
+
 function captureEmailListView(): () => boolean {
   const view = useEmailStore.getState();
   const activeAccountId = useAuthStore.getState().activeAccountId;
@@ -1445,6 +1490,102 @@ function applyBatchMailboxCounterUpdate(
   return { mailboxes, accountMailboxes };
 }
 
+/**
+ * The folder with `role` in one account's mailbox list. `accountId` scopes it
+ * to a shared/group owner; without it, own folders only. Own folders may or
+ * may not carry their account id, so a missing one counts as own.
+ */
+function findRoleMailbox(mailboxes: Mailbox[], role: string, accountId: string | undefined): Mailbox | undefined {
+  return mailboxes.find(m =>
+    m.role === role && (accountId && m.accountId ? m.accountId === accountId : !m.isShared)
+  );
+}
+
+/**
+ * Batch spam / not-spam. Each message is routed like the single-message
+ * action: through its own account's client, to that account's junk or inbox.
+ * The batch used to send everything through the active client to the selected
+ * folder's account, so in unified, tag and search views it either failed for
+ * other accounts or returned early while the caller showed a success toast.
+ *
+ * Throws when any message could not be moved; the ones that were moved still
+ * leave the list.
+ */
+async function runBatchSpamAction(
+  get: StoreGet,
+  set: StoreSet,
+  client: IJMAPClient,
+  emailIds: string[],
+  role: 'junk' | 'inbox',
+  run: (actionClient: IJMAPClient, email: Email, accountId: string | undefined, destination: Mailbox | undefined) => Promise<void>,
+  arrivesUnread: (email: Email) => boolean,
+): Promise<void> {
+  // Act on the selected emails themselves: bare ids collide across accounts,
+  // so looking them up in the list could pick another account's namesake.
+  const wanted = new Set(emailIds);
+  const state = get();
+  const selected = resolveSelectedEmails(state).filter(e => wanted.has(e.id));
+  const targets = selected.length > 0 ? selected : state.emails.filter(e => wanted.has(e.id));
+  if (targets.length === 0) {
+    throw new Error('Emails not found');
+  }
+
+  const destinationByKey = new Map<string, string | undefined>();
+  const failures: unknown[] = [];
+  for (const email of targets) {
+    const { client: actionClient, mailboxes, accountId } = resolveEmailActionContext(email, client);
+    const destination = findRoleMailbox(mailboxes, role, accountId);
+    if (!destination && role === 'inbox') {
+      failures.push(new Error('Inbox not found'));
+      continue;
+    }
+    try {
+      await run(actionClient, email, accountId, destination);
+      destinationByKey.set(emailKeyFor(email), destination?.id);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+
+  if (destinationByKey.size > 0) {
+    const moved = targets.filter(e => destinationByKey.has(emailKeyFor(e)));
+    set(s => {
+      // Counters change in the email's own account list (#281).
+      const patch = applyBatchMailboxCounterUpdate(s, moved, (mb, group) => {
+        let dTotal = 0;
+        let dUnread = 0;
+        for (const e of group as Email[]) {
+          if (emailInMailbox(e, mb)) {
+            dTotal--;
+            if (!e.keywords?.$seen) dUnread--;
+          }
+          if (destinationByKey.get(emailKeyFor(e)) === mb.id) {
+            dTotal++;
+            if (arrivesUnread(e)) dUnread++;
+          }
+        }
+        return dTotal === 0 && dUnread === 0 ? mb : {
+          ...mb,
+          totalEmails: Math.max(0, mb.totalEmails + dTotal),
+          unreadEmails: Math.max(0, mb.unreadEmails + dUnread),
+        };
+      });
+      const isMoved = (e: Email) => destinationByKey.has(emailKeyFor(e));
+      return {
+        emails: s.emails.filter(e => !isMoved(e)),
+        selectedEmail: s.selectedEmail && isMoved(s.selectedEmail) ? null : s.selectedEmail,
+        selectedEmailKeys: new Set(),
+        ...patch,
+      };
+    });
+  }
+
+  if (failures.length > 0) {
+    console.error(`Batch ${role === 'junk' ? 'mark as spam' : 'not spam'} failed for ${failures.length} of ${targets.length} emails:`, failures);
+    throw failures[0] instanceof Error ? failures[0] : new Error('Batch spam action failed');
+  }
+}
+
 // Sidebar tag badges render from `tagCounts`, which is *fetched from the server*
 // (`fetchTagCounts` -> `getTagCounts`) rather than derived from `state.emails`.
 // So a read/unread mutation has to keep it in step locally, exactly as it does
@@ -1677,9 +1818,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   searchQuery: "",
   quota: null,
   processingReadStatus: new Set(),
-  selectedEmailIds: new Set(),
+  selectedEmailKeys: new Set(),
   retainedInViewIds: new Set(),
-  lastSelectedEmailId: null,
+  lastSelectedEmailKey: null,
   hasMoreEmails: false,
   totalEmails: 0,
   listOrder: [],
@@ -1761,7 +1902,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       ),
     isLoadingMore: false,
     selectedEmail: null,
-    selectedEmailIds: new Set(),
+    selectedEmailKeys: new Set(),
     selectedKeyword: null,
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
@@ -1800,7 +1941,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
   selectEmail: (email) => {
     const prev = get().selectedEmail;
-    set({ selectedEmail: email, lastSelectedEmailId: email?.id ?? get().lastSelectedEmailId });
+    set({ selectedEmail: email, lastSelectedEmailKey: email ? emailKeyFor(email) : get().lastSelectedEmailKey });
     if (prev && (!email || email.id !== prev.id)) {
       emailHooks.onEmailClose.emitSync(prev);
     }
@@ -1821,7 +1962,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     selectedKeyword: keyword,
     isLoadingMore: false,
     selectedEmail: null,
-    selectedEmailIds: new Set(),
+    selectedEmailKeys: new Set(),
     expandedThreadIds: new Set(),
     threadEmailsCache: new Map(),
     threadEmailCounts: new Map(),
@@ -1873,7 +2014,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         : scopeIsDefault ? { searchMailboxId: defaultSearchScopeFor(mailboxes, mailboxId) } : {}),
       isLoadingMore: false,
       selectedEmail: null,
-      selectedEmailIds: new Set(),
+      selectedEmailKeys: new Set(),
       selectedKeyword: null,
       expandedThreadIds: new Set(),
       threadEmailsCache: new Map(),
@@ -1891,41 +2032,42 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
   setQuota: (quota) => set({ quota }),
 
-  toggleEmailSelection: (emailId) => {
-    const { selectedEmailIds } = get();
-    const newSelection = new Set(selectedEmailIds);
-    if (newSelection.has(emailId)) {
-      newSelection.delete(emailId);
+  toggleEmailSelection: (email) => {
+    const key = emailKeyFor(email);
+    const { selectedEmailKeys } = get();
+    const newSelection = new Set(selectedEmailKeys);
+    if (newSelection.has(key)) {
+      newSelection.delete(key);
     } else {
-      newSelection.add(emailId);
+      newSelection.add(key);
     }
-    set({ selectedEmailIds: newSelection, lastSelectedEmailId: emailId });
+    set({ selectedEmailKeys: newSelection, lastSelectedEmailKey: key });
   },
 
-  selectRangeEmails: (targetEmailId) => {
-    const { emails, lastSelectedEmailId, selectedEmailIds } = get();
-    const anchorId = lastSelectedEmailId || emails[0]?.id;
-    if (!anchorId) return;
-    const anchorIndex = emails.findIndex(e => e.id === anchorId);
-    const targetIndex = emails.findIndex(e => e.id === targetEmailId);
+  selectRangeEmails: (target) => {
+    const { emails, lastSelectedEmailKey, selectedEmailKeys } = get();
+    const anchorKey = lastSelectedEmailKey || (emails[0] && emailKeyFor(emails[0]));
+    if (!anchorKey) return;
+    const anchorIndex = emails.findIndex(e => emailKeyFor(e) === anchorKey);
+    const targetKey = emailKeyFor(target);
+    const targetIndex = emails.findIndex(e => emailKeyFor(e) === targetKey);
     if (anchorIndex === -1 || targetIndex === -1) return;
     const start = Math.min(anchorIndex, targetIndex);
     const end = Math.max(anchorIndex, targetIndex);
-    const newSelection = new Set(selectedEmailIds);
+    const newSelection = new Set(selectedEmailKeys);
     for (let i = start; i <= end; i++) {
-      newSelection.add(emails[i].id);
+      newSelection.add(emailKeyFor(emails[i]));
     }
-    set({ selectedEmailIds: newSelection });
+    set({ selectedEmailKeys: newSelection });
   },
 
   selectAllEmails: () => {
     const { emails } = get();
-    const allIds = new Set(emails.map(e => e.id));
-    set({ selectedEmailIds: allIds });
+    set({ selectedEmailKeys: new Set(emails.map(emailKeyFor)) });
   },
 
   clearSelection: () => {
-    set({ selectedEmailIds: new Set(), lastSelectedEmailId: null });
+    set({ selectedEmailKeys: new Set(), lastSelectedEmailKey: null });
   },
 
   // JMAP operations
@@ -2037,7 +2179,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // A background refresh (e.g. after an account switch restored a cached list)
     // repopulates the list without showing the loading overlay, so switching to
     // an already-visited account doesn't flash a spinner over the visible mail.
-    const background = opts?.background ?? false;
+    let background = opts?.background ?? false;
     // Loading a real mailbox is a fresh navigation (leaving any cross view), so
     // drop the unread/starred retain set and the held row.
     set(background ? { error: null, retainedInViewIds: new Set(), listHold: null } : { isLoading: true, error: null, retainedInViewIds: new Set(), listHold: null }); // Keep previous emails visible during transition
@@ -2154,6 +2296,38 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // The configured list order (#718).
       const order = getMessageListOrderFor(mailbox?.role);
 
+      // Paint what this folder showed last time and load behind it: the rows
+      // are there at once, the fresh page replaces them when it lands, and a
+      // failed load leaves them in place instead of emptying the folder.
+      const listKey = folderListKey({
+        login: useAuthStore.getState().activeAccountId,
+        viewingAccountId: get().viewingAccountId,
+        // The login tells own accounts apart; a shared folder adds its owner.
+        accountId: accountId ?? '',
+        mailboxId: targetMailboxId,
+        filter: categoryFilter,
+        order,
+      });
+      const remembered = background ? undefined : rememberedFolderList(listKey);
+      if (remembered) {
+        background = true;
+        set({
+          emails: annotateScheduledEmails(remembered.emails, get().scheduledSubmissionByEmailId),
+          hasMoreEmails: remembered.hasMoreEmails,
+          totalEmails: remembered.totalEmails,
+          listOrder: order,
+          // The remembered page has no state a push delta could start from.
+          emailListSync: null,
+          threadEmailsCache: new Map(),
+          expandedThreadIds: new Set(),
+          isLoadingThread: null,
+          isLoading: false,
+        });
+      }
+      // Until this folder's rows are on screen, edits to the list belong to
+      // whatever was showing before and must not be remembered under this key.
+      shownFolderList = remembered ? { key: listKey, mailboxId: targetMailboxId, pageSize: emailsPerPage } : null;
+
       const result = await effectiveClient.getEmails(
         jmapMailboxId,
         accountId,
@@ -2189,6 +2363,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         isLoadingThread: null,
         isLoading: false
       });
+      shownFolderList = { key: listKey, mailboxId: targetMailboxId, pageSize: emailsPerPage };
+      rememberFolderList(listKey, get(), emailsPerPage);
       // Fetch full thread counts in the background (non-blocking)
       void get().fetchThreadEmailCounts(client);
     } catch (error) {
@@ -2942,9 +3118,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return {
           emails: state.emails.filter(e => !idSet.has(e.id)),
           selectedEmail: state.selectedEmail && idSet.has(state.selectedEmail.id) ? null : state.selectedEmail,
-          selectedEmailIds: (() => {
-            const next = new Set(state.selectedEmailIds);
-            for (const id of idSet) next.delete(id);
+          selectedEmailKeys: (() => {
+            const next = new Set(state.selectedEmailKeys);
+            // Keys, not ids: drop exactly the emails leaving the list.
+            for (const e of state.emails) if (idSet.has(e.id)) next.delete(emailKeyFor(e));
             return next;
           })(),
           ...patch,
@@ -3040,9 +3217,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           state.selectedEmail && movedSet.has(state.selectedEmail.id)
             ? null
             : state.selectedEmail,
-        selectedEmailIds: (() => {
-          const next = new Set(state.selectedEmailIds);
-          for (const id of movedIds) next.delete(id);
+        selectedEmailKeys: (() => {
+          const next = new Set(state.selectedEmailKeys);
+          for (const e of state.emails) if (movedSet.has(e.id)) next.delete(emailKeyFor(e));
           return next;
         })(),
         isLoading: false,
@@ -3091,8 +3268,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     // One group per (login, JMAP account): crossAccountMoveEmails takes a
     // single source JMAP account per call.
     const groups = new Map<string, { login: string; jmapAccountId?: string; ids: string[] }>();
-    for (const id of emailIds) {
-      const email = state.emails.find((e) => e.id === id)
+    for (const entry of emailIds) {
+      const id = typeof entry === 'string' ? entry : entry.id;
+      const email = typeof entry !== 'string' ? entry : state.emails.find((e) => e.id === id)
         ?? (state.selectedEmail?.id === id ? state.selectedEmail : undefined);
       // Aggregate views stamp each email with the login that reaches it and
       // its owning JMAP account; otherwise it lives in the open folder.
@@ -3159,8 +3337,11 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const removedEmailIds = new Set(threadEmailIds);
       set((currentState) => {
         const nextSelectedEmail = getNextSelectedEmailAfterRemoval(currentState, removedEmailIds);
+        const removedKeys = new Set(
+          currentState.emails.filter(e => removedEmailIds.has(e.id)).map(emailKeyFor)
+        );
         const nextSelectedEmailIds = new Set(
-          Array.from(currentState.selectedEmailIds).filter(id => !removedEmailIds.has(id))
+          Array.from(currentState.selectedEmailKeys).filter(key => !removedKeys.has(key))
         );
         const nextExpandedThreadIds = new Set(currentState.expandedThreadIds);
         nextExpandedThreadIds.delete(threadKeyFor(email));
@@ -3170,7 +3351,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return {
           emails: currentState.emails.filter(currentEmail => !removedEmailIds.has(currentEmail.id)),
           selectedEmail: nextSelectedEmail,
-          selectedEmailIds: nextSelectedEmailIds,
+          selectedEmailKeys: nextSelectedEmailIds,
           expandedThreadIds: nextExpandedThreadIds,
           threadEmailsCache: nextThreadEmailsCache,
         };
@@ -3568,13 +3749,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   // Batch operations
   batchMarkAsRead: async (client, read, target) => {
-    const { selectedEmailIds, emails } = get();
-    const targetIds = target ? new Set(target.emailIds) : selectedEmailIds;
-    if (targetIds.size === 0) return;
+    const { selectedEmailKeys, emails } = get();
+    // The selection is keyed by owning account; JMAP takes the bare ids of
+    // exactly those emails, never the keys and never a lookup by id (which
+    // is what let a namesake in another account ride along). A targeted call
+    // names its messages, and the account they belong to, itself.
+    const selectedEmails = target ? [] : resolveSelectedEmails(get());
+    const targetIds = target ? new Set(target.emailIds) : null;
+    const emailIdsArray = targetIds ? Array.from(targetIds) : selectedEmails.map(e => e.id);
+    if (emailIdsArray.length === 0) return;
 
     set({ isLoading: true, error: null });
     try {
-      const emailIdsArray = Array.from(targetIds);
 
       if (target) {
         // Messages named by the caller need not be loaded, so the list's
@@ -3583,11 +3769,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       } else if (isAggregateListView()) {
         // Group by owning JMAP account; dispatch through the reaching login client.
         const bySource = new Map<string, { clientAccountId?: string; ids: string[] }>();
-        for (const emailId of emailIdsArray) {
-          const email = emails.find(e => e.id === emailId);
-          const key = email?.sourceAccountId || '__default__';
-          if (!bySource.has(key)) bySource.set(key, { clientAccountId: email?.sourceClientAccountId, ids: [] });
-          bySource.get(key)!.ids.push(emailId);
+        for (const email of selectedEmails) {
+          const key = email.sourceAccountId || '__default__';
+          if (!bySource.has(key)) bySource.set(key, { clientAccountId: email.sourceClientAccountId, ids: [] });
+          bySource.get(key)!.ids.push(email.id);
         }
 
         const promises = Array.from(bySource.entries()).map(async ([sourceAccountId, { clientAccountId, ids }]) => {
@@ -3607,13 +3792,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
       // Update local state
       const updatedEmails = emails.map(email =>
-        targetIds.has(email.id)
+        (targetIds ? targetIds.has(email.id) : selectedEmailKeys.has(emailKeyFor(email)))
           ? { ...email, keywords: { ...email.keywords, $seen: read } }
           : email
       );
 
       // Update mailbox counters per the email's own account list (#281).
-      const affectedEmails = emails.filter(e => targetIds.has(e.id));
+      const affectedEmails = emails.filter(e => (targetIds ? targetIds.has(e.id) : selectedEmailKeys.has(emailKeyFor(e))));
       const mailboxPatch = applyBatchMailboxCounterUpdate(get(), affectedEmails, (mailbox, group) => {
         let deltaUnread = 0;
         for (const email of group as Email[]) {
@@ -3653,7 +3838,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         tagCounts,
         retainedInViewIds,
         // The user's own selection is not what a targeted call acted on.
-        selectedEmailIds: target ? get().selectedEmailIds : new Set(),
+        selectedEmailKeys: target ? get().selectedEmailKeys : new Set(),
         isLoading: false
       });
       refillAfterKeywordChange(get, client, ['$seen']);
@@ -3666,8 +3851,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchSetTag: async (client, tagId, add) => {
-    const { selectedEmailIds, emails } = get();
-    if (selectedEmailIds.size === 0) return;
+    const { selectedEmailKeys } = get();
+    if (selectedEmailKeys.size === 0) return;
 
     // Both prefixes name the same tag when read, so taking one off clears
     // either spelling; putting one on writes the current spelling only.
@@ -3677,24 +3862,22 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
     // Group by the account each message lives in, exactly as a single-message
     // tag change is routed: its source in an aggregate view, the selected
-    // folder's owner in a shared folder. (#281)
-    const loaded = new Map(emails.map(e => [e.id, e]));
-    const groups = new Map<IJMAPClient, Map<string | undefined, string[]>>();
-    for (const emailId of selectedEmailIds) {
-      // A loaded message already in the wanted state needs no write. One the
-      // list does not hold (a collapsed thread member) is written regardless.
-      const email = loaded.get(emailId);
-      if (email && tagKeys.some(key => email.keywords?.[key] === true) === add) continue;
-      const { client: actionClient, accountId } = resolveKeywordActionContext(emailId, client);
-      const byAccount = groups.get(actionClient) ?? new Map<string | undefined, string[]>();
+    // folder's owner in a shared folder. (#281) The selection is keyed by
+    // owning account, so a namesake in another account is never written.
+    const groups = new Map<IJMAPClient, Map<string | undefined, Email[]>>();
+    for (const email of resolveSelectedEmails(get())) {
+      // A message already in the wanted state needs no write.
+      if (tagKeys.some(key => email.keywords?.[key] === true) === add) continue;
+      const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+      const byAccount = groups.get(actionClient) ?? new Map<string | undefined, Email[]>();
       groups.set(actionClient, byAccount);
-      byAccount.set(accountId, [...(byAccount.get(accountId) ?? []), emailId]);
+      byAccount.set(accountId, [...(byAccount.get(accountId) ?? []), email]);
     }
 
     const writes = [...groups].flatMap(([actionClient, byAccount]) =>
-      [...byAccount].map(async ([accountId, ids]) => {
-        await actionClient.batchUpdateKeywords(ids, patch, accountId);
-        return ids;
+      [...byAccount].map(async ([accountId, group]) => {
+        await actionClient.batchUpdateKeywords(group.map(e => e.id), patch, accountId);
+        return group.map(emailKeyFor);
       }),
     );
     if (writes.length === 0) return;
@@ -3709,8 +3892,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       return next;
     };
     set((state) => ({
-      emails: state.emails.map(e => written.has(e.id) ? { ...e, keywords: retag(e.keywords) } : e),
-      selectedEmail: state.selectedEmail && written.has(state.selectedEmail.id)
+      emails: state.emails.map(e => written.has(emailKeyFor(e)) ? { ...e, keywords: retag(e.keywords) } : e),
+      selectedEmail: state.selectedEmail && written.has(emailKeyFor(state.selectedEmail))
         ? { ...state.selectedEmail, keywords: retag(state.selectedEmail.keywords) }
         : state.selectedEmail,
     }));
@@ -3724,13 +3907,20 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchDelete: async (client, permanent = false) => {
-    const { selectedEmailIds, emails, selectedMailbox } = get();
+    const { selectedEmailKeys, emails, selectedMailbox } = get();
     const mailboxes = resolveActionMailboxes();
-    if (selectedEmailIds.size === 0) return;
+    if (selectedEmailKeys.size === 0) return;
 
     set({ isLoading: true, error: null });
     try {
-      const emailIdsArray = Array.from(selectedEmailIds);
+      // The selection is keyed by owning account; JMAP takes the bare ids of
+      // exactly those emails, never the keys and never a lookup by id (which
+      // is what let a namesake in another account ride along).
+      const selectedEmails = resolveSelectedEmails(get());
+      if (selectedEmails.length === 0) {
+        set({ selectedEmailKeys: new Set(), isLoading: false });
+        return;
+      }
 
       // Determine if the current folder forces permanent deletion.
       const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
@@ -3745,12 +3935,14 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       // `sourceClientAccountId` and routes JMAP via `sourceAccountId`. Undecorated
       // emails (normal single-mailbox view) fall into '__default__' = active client.
       const accountMailboxes = get().accountMailboxes;
-      const bySource = new Map<string, { clientAccountId?: string; ids: string[] }>();
-      for (const emailId of emailIdsArray) {
-        const email = emails.find(e => e.id === emailId);
-        const key = email?.sourceAccountId || '__default__';
-        if (!bySource.has(key)) bySource.set(key, { clientAccountId: email?.sourceClientAccountId, ids: [] });
-        bySource.get(key)!.ids.push(emailId);
+      // Group the selected emails themselves: looking an id up in the list
+      // would find the first account's namesake and act on it instead.
+      const bySource = new Map<string, { clientAccountId?: string; ids: string[]; keys: string[] }>();
+      for (const email of selectedEmails) {
+        const key = email.sourceAccountId || '__default__';
+        if (!bySource.has(key)) bySource.set(key, { clientAccountId: email.sourceClientAccountId, ids: [], keys: [] });
+        bySource.get(key)!.ids.push(email.id);
+        bySource.get(key)!.keys.push(emailKeyFor(email));
       }
 
       // Undecorated emails viewed in a shared/group folder directly (non-unified)
@@ -3779,8 +3971,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       } else {
         // Move to trash per account.
         const failedAccounts: string[] = [];
-        const movedEmailIds = new Set<string>();
-        const promises = Array.from(bySource.entries()).map(async ([sourceAccountId, { clientAccountId, ids }]) => {
+        // Keys, not ids: a namesake in an account that failed must stay.
+        const movedKeys = new Set<string>();
+        const promises = Array.from(bySource.entries()).map(async ([sourceAccountId, { clientAccountId, ids, keys }]) => {
           const acctClient = getClient(sourceAccountId, clientAccountId);
           if (!acctClient) {
             failedAccounts.push(sourceAccountId);
@@ -3797,24 +3990,24 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           }
           const trashId = trashMailbox.originalId || trashMailbox.id;
           await acctClient.batchMoveEmails(ids, trashId, jmapIdFor(sourceAccountId), alsoMarkRead);
-          ids.forEach(id => movedEmailIds.add(id));
+          keys.forEach(key => movedKeys.add(key));
         });
         await Promise.allSettled(promises);
 
-        if (failedAccounts.length > 0 && movedEmailIds.size === 0) {
+        if (failedAccounts.length > 0 && movedKeys.size === 0) {
           // Nothing moved - bail out so the UI doesn't drop the emails from view.
           throw new Error('Trash mailbox not found - cannot move emails to trash');
         }
 
         // Only remove successfully moved emails from local state.
-        if (movedEmailIds.size < emailIdsArray.length) {
-          const deletedEmails = emails.filter(e => movedEmailIds.has(e.id));
-          const remainingEmails = emails.filter(e => !movedEmailIds.has(e.id));
+        if (movedKeys.size < selectedEmails.length) {
+          const deletedEmails = emails.filter(e => movedKeys.has(emailKeyFor(e)));
+          const remainingEmails = emails.filter(e => !movedKeys.has(emailKeyFor(e)));
           const mailboxPatch = applyBatchMailboxCounterUpdate(get(), deletedEmails, applyDeleteCounters);
           set({
             emails: remainingEmails,
             ...mailboxPatch,
-            selectedEmailIds: new Set(),
+            selectedEmailKeys: new Set(),
             selectedEmail: null,
             isLoading: false,
             error: 'Some emails could not be moved: trash folder missing for one or more accounts',
@@ -3824,16 +4017,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
 
       // Remove deleted emails from local state
-      const remainingEmails = emails.filter(e => !selectedEmailIds.has(e.id));
+      const remainingEmails = emails.filter(e => !selectedEmailKeys.has(emailKeyFor(e)));
 
       // Update mailbox counters per the email's own account list (#281).
-      const deletedEmails = emails.filter(e => selectedEmailIds.has(e.id));
+      const deletedEmails = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e)));
       const mailboxPatch = applyBatchMailboxCounterUpdate(get(), deletedEmails, applyDeleteCounters);
 
       set({
         emails: remainingEmails,
         ...mailboxPatch,
-        selectedEmailIds: new Set(),
+        selectedEmailKeys: new Set(),
         selectedEmail: null,
         isLoading: false
       });
@@ -3846,13 +4039,15 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchMoveToMailbox: async (client, toMailboxId, target) => {
-    const { selectedEmailIds, emails } = get();
-    const targetIds = target ? new Set(target.emailIds) : selectedEmailIds;
-    if (targetIds.size === 0) return;
+    const { selectedEmailKeys, emails } = get();
+    // Keyed selection as in batchMarkAsRead; a targeted call names its own.
+    const selectedEmails = target ? [] : resolveSelectedEmails(get());
+    const targetIds = target ? new Set(target.emailIds) : null;
+    const emailIdsArray = targetIds ? Array.from(targetIds) : selectedEmails.map(e => e.id);
+    if (emailIdsArray.length === 0) return;
 
     set({ isLoading: true, error: null });
     try {
-      const emailIdsArray = Array.from(targetIds);
 
       if (target) {
         // Messages named by the caller need not be loaded, so the list's
@@ -3864,11 +4059,10 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const destMailbox = resolveActionMailboxes().find(mb => mb.id === toMailboxId);
         const jmapDestId = destMailbox?.originalId || toMailboxId;
         const bySource = new Map<string, { clientAccountId?: string; ids: string[] }>();
-        for (const emailId of emailIdsArray) {
-          const email = emails.find(e => e.id === emailId);
-          const key = email?.sourceAccountId || '__default__';
-          if (!bySource.has(key)) bySource.set(key, { clientAccountId: email?.sourceClientAccountId, ids: [] });
-          bySource.get(key)!.ids.push(emailId);
+        for (const email of selectedEmails) {
+          const key = email.sourceAccountId || '__default__';
+          if (!bySource.has(key)) bySource.set(key, { clientAccountId: email.sourceClientAccountId, ids: [] });
+          bySource.get(key)!.ids.push(email.id);
         }
 
         const promises = Array.from(bySource.entries()).map(async ([sourceAccountId, { clientAccountId, ids }]) => {
@@ -3891,14 +4085,13 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       }
 
       // Update local state - remove from current view since they moved
-      const remainingEmails = emails.filter(e => !targetIds.has(e.id));
+      const moved = (e: Email) => (targetIds ? targetIds.has(e.id) : selectedEmailKeys.has(emailKeyFor(e)));
+      const remainingEmails = emails.filter(e => !moved(e));
 
       set({
         emails: remainingEmails,
         // A targeted call only drops the moved messages from the selection.
-        selectedEmailIds: target
-          ? new Set([...get().selectedEmailIds].filter(id => !targetIds.has(id)))
-          : new Set(),
+        selectedEmailKeys: target ? dropFromSelection(get(), moved) : new Set(),
         isLoading: false
       });
 
@@ -3915,9 +4108,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchArchive: async (client) => {
-    const { selectedEmailIds, emails } = get();
+    const { selectedEmailKeys, emails } = get();
     const mailboxes = resolveActionMailboxes();
-    if (selectedEmailIds.size === 0) return;
+    if (selectedEmailKeys.size === 0) return;
 
     // Scope the archive folder to the viewed shared/group account (if any) so the
     // move lands on the owner account, not the user's own archive (which appears
@@ -3941,7 +4134,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     const mode = useSettingsStore.getState().archiveMode;
     const archiveId = archiveMailbox.originalId || archiveMailbox.id;
 
-    const selected = emails.filter(e => selectedEmailIds.has(e.id));
+    const selected = emails.filter(e => selectedEmailKeys.has(emailKeyFor(e)));
     if (selected.length === 0) return;
 
     set({ isLoading: true, error: null });
@@ -3954,8 +4147,8 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         archiveMailbox.accountId,
       );
 
-      const remaining = emails.filter(e => !selectedEmailIds.has(e.id));
-      set({ emails: remaining, selectedEmailIds: new Set(), isLoading: false });
+      const remaining = emails.filter(e => !selectedEmailKeys.has(emailKeyFor(e)));
+      set({ emails: remaining, selectedEmailKeys: new Set(), isLoading: false });
 
       // Refresh the active or viewed account's mailbox cache after the
       // archive (a year/month archive can create new sub-folders).
@@ -3994,14 +4187,18 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       ? (mailboxes.find(mb => emailInMailbox(email, mb) && mb.role === get().unifiedRole)
           ?? mailboxes.find(mb => emailInMailbox(email, mb)))
       : mailboxes.find(m => m.id === get().selectedMailbox);
-    if (!currentMailbox) return;
 
-    get().spamUndoCache.set(emailId, {
-      emailId,
-      originalMailboxId: currentMailbox.originalId || currentMailbox.id,
-      accountId,
-      sourceClientAccountId: email.sourceClientAccountId,
-    });
+    // Without a known source folder there is nothing for undo to restore to;
+    // still move the message, and undo falls back to the inbox. Returning
+    // here let the caller show a success toast for a message never moved.
+    if (currentMailbox) {
+      get().spamUndoCache.set(emailId, {
+        emailId,
+        originalMailboxId: currentMailbox.originalId || currentMailbox.id,
+        accountId,
+        sourceClientAccountId: email.sourceClientAccountId,
+      });
+    }
 
     try {
       const isUnread = !email.keywords?.$seen;
@@ -4142,136 +4339,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   },
 
   batchMarkAsSpam: async (client, emailIds) => {
-    const { selectedMailbox, emails } = get();
-    const mailboxes = resolveActionMailboxes();
-    const effectiveClient = resolveActionClient(client);
-
-    const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
-    if (!currentMailbox) return;
-
     const alsoMarkRead = useSettingsStore.getState().deleteAction === 'trash-and-read';
-
-    try {
-      for (const emailId of emailIds) {
-        const email = emails.find(e => e.id === emailId);
-        const markRead = alsoMarkRead && !!email && !email.keywords?.$seen;
-        await effectiveClient.markAsSpam(emailId, currentMailbox.accountId, markRead);
-      }
-
-      // Adjust counters and drop the emails from the current view. Junk is
-      // resolved the same way the client did for the move itself.
-      const affected = emails.filter(e => emailIds.includes(e.id));
-      const junkMailbox = mailboxes.find(m =>
-        currentMailbox.accountId
-          ? (m.role === 'junk' && m.accountId === currentMailbox.accountId)
-          : (m.role === 'junk' && !m.isShared)
-      );
-      let junkTotal = 0;
-      let junkUnread = 0;
-      for (const e of affected) {
-        junkTotal += 1;
-        // After marking read in the same request, the email arrives in junk as read.
-        if (!e.keywords?.$seen && !alsoMarkRead) junkUnread += 1;
-      }
-
-      set(state => {
-        // Decrement source folders per the email's own account list (#281).
-        const patch = applyBatchMailboxCounterUpdate(state, affected, (mb, group) => {
-          let dTotal = 0;
-          let dUnread = 0;
-          for (const e of group as Email[]) {
-            if (emailInMailbox(e, mb)) {
-              dTotal--;
-              if (!e.keywords?.$seen) dUnread--;
-            }
-          }
-          return dTotal === 0 && dUnread === 0 ? mb : {
-            ...mb,
-            totalEmails: Math.max(0, mb.totalEmails + dTotal),
-            unreadEmails: Math.max(0, mb.unreadEmails + dUnread),
-          };
-        });
-        // The junk folder (picked from the active/viewing list) gains them.
-        if (junkMailbox) {
-          patch.mailboxes = patch.mailboxes.map(mb => mb.id === junkMailbox.id
-            ? { ...mb, totalEmails: mb.totalEmails + junkTotal, unreadEmails: mb.unreadEmails + junkUnread }
-            : mb);
-        }
-        return {
-          emails: state.emails.filter(e => !emailIds.includes(e.id)),
-          selectedEmail: emailIds.includes(state.selectedEmail?.id || '') ? null : state.selectedEmail,
-          selectedEmailIds: new Set(),
-          ...patch,
-        };
-      });
-    } catch (error) {
-      console.error('Failed to batch mark as spam:', error);
-      throw error;
-    }
+    await runBatchSpamAction(get, set, client, emailIds, 'junk', (actionClient, email, accountId) =>
+      actionClient.markAsSpam(email.id, accountId, alsoMarkRead && !email.keywords?.$seen),
+      // After marking read in the same request, the email arrives in junk as read.
+      (email) => !email.keywords?.$seen && !alsoMarkRead,
+    );
   },
 
+  // Batch "not spam" goes to the Inbox: unlike the toast undo there is no
+  // record of where each message came from.
   batchUndoSpam: async (client: IJMAPClient, emailIds: string[]) => {
-    const { selectedMailbox } = get();
-    const mailboxes = resolveActionMailboxes();
-    const effectiveClient = resolveActionClient(client);
-
-    // Find inbox (batch operations don't preserve original mailboxes)
-    const currentMailbox = mailboxes.find(m => m.id === selectedMailbox);
-    const accountId = currentMailbox?.accountId;
-
-    const inboxMailbox = mailboxes.find(m =>
-      m.role === 'inbox' &&
-      (accountId ? m.accountId === accountId : !m.accountId)
+    await runBatchSpamAction(get, set, client, emailIds, 'inbox', (actionClient, email, accountId, destination) =>
+      actionClient.undoSpam(email.id, destination!.originalId || destination!.id, accountId),
+      (email) => !email.keywords?.$seen,
     );
-
-    if (!inboxMailbox) {
-      throw new Error('Inbox not found');
-    }
-
-    try {
-      for (const emailId of emailIds) {
-        await effectiveClient.undoSpam(emailId, inboxMailbox.originalId || inboxMailbox.id, accountId);
-      }
-
-      // Adjust counters and drop the restored emails from the junk view.
-      const affected = get().emails.filter(e => emailIds.includes(e.id));
-      let unreadDelta = 0;
-      for (const e of affected) {
-        if (!e.keywords?.$seen) unreadDelta += 1;
-      }
-
-      set(state => {
-        // Decrement source folders per the email's own account list (#281).
-        const patch = applyBatchMailboxCounterUpdate(state, affected, (mb, group) => {
-          let dTotal = 0;
-          let dUnread = 0;
-          for (const e of group as Email[]) {
-            if (emailInMailbox(e, mb)) {
-              dTotal--;
-              if (!e.keywords?.$seen) dUnread--;
-            }
-          }
-          return dTotal === 0 && dUnread === 0 ? mb : {
-            ...mb,
-            totalEmails: Math.max(0, mb.totalEmails + dTotal),
-            unreadEmails: Math.max(0, mb.unreadEmails + dUnread),
-          };
-        });
-        // The inbox (picked from the active/viewing list) gains them.
-        patch.mailboxes = patch.mailboxes.map(mb => mb.id === inboxMailbox.id
-          ? { ...mb, totalEmails: mb.totalEmails + affected.length, unreadEmails: mb.unreadEmails + unreadDelta }
-          : mb);
-        return {
-          emails: state.emails.filter(e => !emailIds.includes(e.id)),
-          selectedEmail: emailIds.includes(state.selectedEmail?.id || '') ? null : state.selectedEmail,
-          selectedEmailIds: new Set(),
-          ...patch,
-        };
-      });
-    } catch (error) {
-      console.error('Failed to batch restore emails:', error);
-      throw error;
-    }
   },
 
   // Push notification handlers
@@ -5548,7 +5630,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       scheduledAccountScope: isScheduledView ? accountScope : null,
       selectedMailbox: isScheduledView ? VIRTUAL_SCHEDULED_MAILBOX_ID : leavingScheduled ? "" : state.selectedMailbox,
       selectedEmail: leavingScheduled ? null : state.selectedEmail,
-      selectedEmailIds: leavingScheduled ? new Set<string>() : state.selectedEmailIds,
+      selectedEmailKeys: leavingScheduled ? new Set<string>() : state.selectedEmailKeys,
       // Search is unavailable in the scheduled view (the input is disabled there).
       // Reset any active search when entering it so a stale query can't linger or
       // re-run when the user leaves again.
@@ -5683,7 +5765,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       await client.deleteEmail(emailId, owner?.scheduledAccountId);
       set(state => ({
         selectedEmail: state.selectedEmail?.id === emailId ? null : state.selectedEmail,
-        selectedEmailIds: new Set(Array.from(state.selectedEmailIds).filter(id => id !== emailId)),
+        selectedEmailKeys: dropFromSelection(state, e => e.id === emailId),
       }));
     }
     if (get().pendingUndoSend?.submissionId === submissionId) {
@@ -5703,7 +5785,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       await client.deleteEmail(email.id, email.scheduledAccountId);
       set(state => ({
         selectedEmail: state.selectedEmail?.id === email.id ? null : state.selectedEmail,
-        selectedEmailIds: new Set(Array.from(state.selectedEmailIds).filter(id => id !== email.id)),
+        selectedEmailKeys: dropFromSelection(state, e => e.id === email.id),
       }));
       await get().fetchScheduledEmails(client);
       return null;
@@ -5751,7 +5833,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       await client.deleteEmail(pending.emailId, pending.submissionAccountId);
       set(state => ({
         selectedEmail: state.selectedEmail?.id === pending.emailId ? null : state.selectedEmail,
-        selectedEmailIds: new Set(Array.from(state.selectedEmailIds).filter(id => id !== pending.emailId)),
+        selectedEmailKeys: dropFromSelection(state, e => e.id === pending.emailId),
       }));
     } else if (pending.emailId) {
       const { draftsMailbox, sentMailbox } = await submissionMailboxes(client, get().mailboxes, pending.submissionAccountId);
@@ -5978,6 +6060,30 @@ useEmailStore.subscribe((state, prev) => {
   const email = state.selectedEmail;
   if (!email || email.id === prev.selectedEmail?.id) return;
   state.holdListRow(listRowKey(email, state.isScheduledView));
+});
+
+// A folder's remembered list follows what happens to it on screen - a message
+// read, archived or deleted here is shown that way when the folder is opened
+// again, rather than as it was when the folder was loaded.
+useEmailStore.subscribe((state, prev) => {
+  if (state.mailboxes.length === 0 && state.emails.length === 0) {
+    shownFolderList = null;
+    forgetFolderLists();
+    return;
+  }
+  if (state.emails === prev.emails || !shownFolderList) return;
+  if (
+    state.selectedMailbox !== shownFolderList.mailboxId ||
+    state.searchQuery ||
+    !isFilterEmpty(state.searchFilters) ||
+    state.selectedKeyword ||
+    state.isUnifiedView ||
+    state.isScheduledView
+  ) {
+    shownFolderList = null;
+    return;
+  }
+  rememberFolderList(shownFolderList.key, state, shownFolderList.pageSize);
 });
 
 // ---------------------------------------------------------------------------

@@ -9,7 +9,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { debug } from "@/lib/debug";
 import { cn, formatFileSize } from "@/lib/utils";
 import { getFileIconByName } from "@/components/files/file-icons";
-import { loadFilesSettings } from "@/components/files/files-settings-dialog";
+import { loadFilesSettings } from "@/components/files/files-settings";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { FileNode } from "@/lib/jmap/types";
 
@@ -272,7 +272,7 @@ export function FilePickerDialog({ client, onClose, onPick }: FilePickerDialogPr
                   trail.length === 0 ? "font-medium text-foreground" : "text-muted-foreground",
                 )}
               >
-                {t("breadcrumb_root")}
+                {t("my_files")}
               </button>
               {trail.map((crumb, i) => (
                 <span key={crumb.id} className="flex items-center gap-1 min-w-0">

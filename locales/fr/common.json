@@ -147,6 +147,8 @@
     "show_all_tags": "Tout afficher ({count})",
     "show_fewer_tags": "Afficher moins",
     "folders": "Dossiers",
+    "show_more": "Plus",
+    "show_fewer": "Moins",
     "mail": "Messagerie",
     "nav_label": "Navigation",
     "add_app": "Apps",
@@ -243,6 +245,7 @@
     "replied": "Répondu",
     "forwarded": "Transféré",
     "has_attachment": "Avec pièce jointe",
+    "conversations_range": "{from}–{to, number} sur {total, number}",
     "conversations_count": "{count} sur {total} conversations",
     "conversations_count_plus": "{count}+ conversations",
     "conversations_count_simple": "{count} conversations",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "Envoi planifié à {date}",
     "scheduled_send_created": "E-mail planifié pour envoi",
+    "sending_in": "Envoi dans {seconds} s",
+    "undo_send_failed": "Impossible d'annuler. Le message a peut-être déjà été envoyé.",
     "cancel_scheduled_send": "Annuler l’envoi",
     "reschedule_send": "Replanifier",
     "cancel_and_edit": "Annuler et modifier",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Accusé de lecture demandé (cliquez pour désactiver)",
-    "read_receipt_off": "Demander un accusé de lecture",
-    "dsn_on": "Notification de remise demandée (cliquer pour désactiver)",
-    "dsn_off": "Demander une notification de remise",
-    "format_plain_text": "Passer en texte brut",
-    "format_rich_text": "Passer en texte enrichi (HTML)",
-    "require_tls_on": "Remise chiffrée exigée (cliquer pour désactiver)",
-    "require_tls_off": "Exiger une remise chiffrée (TLS)",
+    "minimize": "Réduire",
+    "maximize": "Plein écran",
+    "restore": "Restaurer",
     "new_message": "Nouveau message",
     "signature_edit_hint": "Double-cliquez pour modifier la signature",
     "reply": "Répondre",
@@ -648,6 +648,7 @@
     "discard": "Supprimer",
     "discard_draft_title": "Supprimer le brouillon ?",
     "discard_draft_confirm": "Vous avez des modifications non enregistrées. Voulez-vous supprimer ce brouillon ?",
+    "discard_draft_message": "Le brouillon sera supprimé.",
     "saving": "Enregistrement...",
     "draft_saved": "Brouillon enregistré",
     "save_failed": "Échec de l'enregistrement",
@@ -684,11 +685,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Si votre serveur n'accepte pas cette adresse comme expéditeur d'enveloppe, {identity} est utilisée à la place, et les destinataires peuvent la voir dans l'en-tête Return-Path."
     },
-    "use_template": "Modèle",
     "save_as_template": "Enregistrer comme modèle",
+    "attach_from_device": "Téléverser depuis cet appareil",
+    "templates_menu": "Modèles",
+    "insert_template": "Insérer un modèle",
+    "options": "Options",
+    "option_plain_text": "Texte brut",
+    "option_plain_text_hint": "Envoyer sans mise en forme",
+    "option_read_receipt": "Demander un accusé de lecture",
+    "option_read_receipt_hint": "Demander au destinataire de confirmer l'ouverture",
+    "option_dsn": "Notification de remise",
+    "option_dsn_hint": "Recevoir un rapport quand le serveur le remet",
+    "option_require_tls": "Exiger une remise chiffrée",
+    "option_require_tls_hint": "Remettre uniquement via TLS, sinon rejeter",
     "validation": {
       "recipient_required": "Ajoutez un destinataire pour envoyer",
       "body_required": "Rédigez un message ou joignez un fichier",
+      "invalid_recipients": "Non envoyé - vérifiez ces adresses : {addresses}",
       "attachments_uploading": "Les pièces jointes sont en cours d'envoi — le message partira une fois terminé",
       "attachment_upload_failed": "Non envoyé - le téléversement d'une pièce jointe a échoué. Supprimez-la et réessayez."
     },
@@ -708,7 +721,10 @@
     "smime_unlock_button": "Déverrouiller",
     "smime_passphrase_placeholder": "Phrase secrète S/MIME",
     "send_timeout": "Le serveur ne répond plus. Vérifiez le dossier Envoyés avant de renvoyer : le message est peut-être déjà parti.",
+    "send_offline": "Vous semblez hors ligne. Le message est toujours là ; renvoyez-le une fois de nouveau en ligne.",
+    "formatting": "Mise en forme",
     "send_recipients_rejected": "Non envoyé : le serveur a refusé tous les destinataires.",
+    "send_plugin_failed": "Non envoyé : un plugin chargé de l'envoi a échoué ou a pris trop de temps. Vérifiez le dossier Envoyés avant de renvoyer le message.",
     "send_some_recipients_rejected": "Envoyé, mais pas à ces destinataires : le serveur les a refusés.",
     "continue_draft": "Continuer le brouillon",
     "close_draft_title": "Enregistrer ou supprimer le brouillon ?",
@@ -733,6 +749,11 @@
     "sending": "Envoi...",
     "schedule_send": "Planifier l’envoi",
     "schedule_send_description": "Choisissez quand le serveur doit libérer ce message.",
+    "schedule_preset": {
+      "tomorrow_morning": "Demain matin",
+      "tomorrow_afternoon": "Demain après-midi",
+      "monday_morning": "Lundi matin"
+    },
     "schedule_send_required": "Choisissez une date et une heure.",
     "schedule_send_invalid": "Saisissez une date et une heure valides.",
     "schedule_send_future": "Choisissez une date et une heure futures.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Modifier le nom d'affichage",
     "recipient_email_placeholder": "Adresse e-mail",
     "recipient_name_placeholder": "Nom d'affichage",
+    "invalid_recipient": "Adresse e-mail non valide",
     "autocomplete_search_server": "Rechercher sur le serveur",
     "autocomplete_searching": "Recherche en cours...",
     "mention_recipients": "Destinataires",
@@ -785,6 +807,15 @@
       "remove_background_color": "Supprimer la couleur d'arrière-plan"
     },
     "send_filing_warning": "Envoyé - mais le nettoyage après envoi a échoué, un ancien brouillon peut subsister.",
+    "read_receipt_on": "Accusé de lecture demandé (cliquez pour désactiver)",
+    "read_receipt_off": "Demander un accusé de lecture",
+    "dsn_on": "Notification de remise demandée (cliquer pour désactiver)",
+    "dsn_off": "Demander une notification de remise",
+    "format_plain_text": "Passer en texte brut",
+    "format_rich_text": "Passer en texte enrichi (HTML)",
+    "require_tls_on": "Remise chiffrée exigée (cliquer pour désactiver)",
+    "require_tls_off": "Exiger une remise chiffrée (TLS)",
+    "use_template": "Modèle",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Apparence",
       "description": "Personnalisez l'apparence de votre webmail",
+      "theme": {
+        "label": "Thème",
+        "description": "Choisissez votre schéma de couleurs préféré",
+        "light": "Clair",
+        "dark": "Sombre",
+        "system": "Système"
+      },
       "language": {
         "label": "Langue",
         "description": "Choisissez votre langue préférée"
@@ -1093,6 +1131,12 @@
         "compact": "Compacte",
         "regular": "Normale",
         "comfortable": "Confortable"
+      },
+      "interface_layout": {
+        "label": "Disposition de l'interface",
+        "description": "Où se trouvent la recherche, la navigation et les barres d'outils",
+        "default": "Par défaut",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Activer les animations",
@@ -1241,6 +1285,18 @@
         "swift": "Geste rapide",
         "relax": "Détente",
         "beep": "Bip"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Son de notification",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Faire glisser pour réorganiser",
         "add": "Ajouter un compte"
       },
+      "backup": {
+        "title": "Sauvegarde de la liste des comptes",
+        "description": "Conservez sur le serveur la liste des comptes de ce navigateur, chiffrée avec un mot de passe que vous seul connaissez, et retrouvez-la sur un autre appareil. Les mots de passe des boîtes ne sont pas enregistrés : vous vous connectez vous-même à chaque compte restauré.",
+        "status_none": "Aucune liste enregistrée pour {account}.",
+        "status_saved": "Une liste est enregistrée pour {account}.",
+        "save": "Enregistrer la liste",
+        "restore": "Restaurer la liste",
+        "delete": "Supprimer la liste enregistrée",
+        "cancel": "Annuler",
+        "delete_confirm": "Supprimer du serveur la liste de comptes enregistrée ?",
+        "password": "Mot de passe de la sauvegarde",
+        "password_hint": "Au moins 10 caractères. Il ne peut pas être récupéré : si vous l'oubliez, enregistrez à nouveau la liste avec un nouveau mot de passe.",
+        "restore_hint": "Le mot de passe choisi lors de l'enregistrement de la liste.",
+        "confirm": "Confirmer le mot de passe",
+        "saved": "Liste enregistrée ({count, plural, one {# compte} other {# comptes}}).",
+        "restored": "Comptes ajoutés : {added}. Comptes déjà présents et mis à jour : {updated}. Ouvrez chaque nouveau compte depuis la liste des comptes pour vous connecter.",
+        "skipped": "{count, plural, one {# compte n'a pas été ajouté} other {# comptes n'ont pas été ajoutés}} : la limite de comptes est atteinte.",
+        "deleted": "Liste enregistrée supprimée.",
+        "errors": {
+          "mismatch": "Les mots de passe ne correspondent pas.",
+          "password_length": "Utilisez au moins 10 caractères.",
+          "unlock_failed": "Mot de passe incorrect, ou la liste a été enregistrée pour un autre compte.",
+          "owner_signin_required": "Reconnectez-vous à ce compte, puis réessayez.",
+          "https_required": "Une connexion sécurisée (HTTPS) est nécessaire.",
+          "storage_failed": "Le serveur n'a pas pu lire ou enregistrer la liste. Réessayez plus tard."
+        }
+      },
       "shared_accounts": {
         "title": "Partagé avec moi",
         "description": "Comptes de groupe et partagés que vous pouvez gérer. Sélectionnez-en un pour modifier ses filtres, son répondeur d'absence, ses calendriers et ses contacts.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Sécurité du compte",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "email@exemple.com",
       "forward_keep_copy": "Garder une copie",
       "forward_limit": "Limite de transferts par message sur ce serveur : {count}. Les transferts en trop sont ignorés.",
+      "forward_unavailable": "Ce serveur n'autorise pas le transfert. Les actions de transfert des règles de filtrage n'ont aucun effet.",
       "reject_message": "Message de rejet",
       "reject_placeholder": "Votre e-mail a été rejeté",
       "label_name": "Nom de l'étiquette",
@@ -2397,12 +2484,6 @@
         "title": "Affichage",
         "description": "Configurez l'affichage des fichiers et dossiers"
       },
-      "folder_layout": {
-        "label": "Navigation des dossiers",
-        "description": "Choisissez comment les dossiers sont affichés : intégrés avec les fichiers ou dans une arborescence latérale",
-        "inline": "Intégré",
-        "sidebar": "Barre latérale"
-      },
       "default_view": {
         "label": "Vue par défaut",
         "description": "Choisissez entre la disposition en grille et en liste",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Aperçu"
+      },
+      "folder_layout": {
+        "label": "Navigation des dossiers",
+        "description": "Choisissez comment les dossiers sont affichés : intégrés avec les fichiers ou dans une arborescence latérale",
+        "inline": "Intégré",
+        "sidebar": "Barre latérale"
       }
     },
     "search_placeholder": "Rechercher dans les paramètres",
@@ -2562,7 +2649,12 @@
       "manage": "Gérer les règles",
       "senders_count": "{count, plural, one {# expéditeur} other {# expéditeurs}}",
       "cross_account": "Sélectionnez des messages d'un seul compte",
-      "opaque_hint": "Vos filtres ont été modifiés à la main. Ouvrez les réglages des filtres"
+      "opaque_hint": "Vos filtres ont été modifiés à la main. Ouvrez les réglages des filtres",
+      "loading": "Chargement des règles…",
+      "load_failed": "Impossible de charger les règles",
+      "none": "Aucune règle pour l'instant",
+      "new_mail_only": "Uniquement pour les nouveaux messages",
+      "running": "Exécution de « {name} » sur {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Email suivant",
       "previous_email": "Email précédent",
       "open_email": "Ouvrir l'email",
-      "close_email": "Fermer / Désélectionner"
+      "close_email": "Fermer / Désélectionner",
+      "go_to_folder": "Aller au dossier"
     },
     "actions": {
       "reply": "Répondre",
@@ -2643,7 +2736,8 @@
       "global_search": "Tout rechercher"
     },
     "threads": {
-      "expand_collapse": "Développer/réduire la conversation"
+      "expand_collapse": "Développer/réduire la conversation",
+      "select_mountain_view": "Sélectionner la conversation"
     },
     "composer": {
       "send": "Envoyer l'e-mail",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "Titre du nouvel événement",
-      "aria_label": "Création rapide d'événement"
+      "aria_label": "Création rapide d'événement",
+      "add_title": "Ajouter un titre",
+      "more_options": "Plus d'options"
     },
     "nav_prev": "Précédent",
     "nav_next": "Suivant",
@@ -3574,7 +3670,13 @@
       "due_tomorrow": "Échéance demain",
       "overdue": "En retard"
     },
-    "nav_open_menu": "Ouvrir le menu"
+    "nav_open_menu": "Ouvrir le menu",
+    "toolbar": {
+      "more": "Plus d'actions",
+      "select_view": "Changer de vue, actuellement {view}"
+    },
+    "other_calendars": "Autres agendas",
+    "calendar_options": "Options de {name}"
   },
   "advanced_search": {
     "title": "Recherche avancée",
@@ -3620,6 +3722,8 @@
     "tip_shortcuts": "Appuyez sur ? pour voir tous les raccourcis clavier",
     "tip_sidebar": "Retrouvez le Calendrier, les Contacts et les Parametres dans le menu lateral",
     "tip_settings": "Personnalisez votre experience dans les Parametres",
+    "tip_compose_touch": "Touchez le bouton crayon pour écrire un nouvel e-mail",
+    "tip_sidebar_touch": "Agenda, Contacts et Paramètres se trouvent dans la barre du bas",
     "got_it": "Compris",
     "settings": "Paramètres",
     "dismiss": "Fermer",
@@ -3643,8 +3747,6 @@
     "title": "Fichiers",
     "search_placeholder": "Rechercher des fichiers...",
     "empty_state_title": "Aucun fichier pour le moment",
-    "empty_state_description": "Téléversez des fichiers ou créez des dossiers pour commencer",
-    "upload": "Téléverser",
     "upload_files": "Téléverser des fichiers",
     "new_folder": "Nouveau dossier",
     "new_folder_name": "Nom du dossier",
@@ -3663,11 +3765,10 @@
     "type": "Type",
     "folder": "Dossier",
     "file": "Fichier",
-    "parent_directory": "Répertoire parent",
-    "breadcrumb_root": "Accueil",
-    "drop_files_here": "Déposez des fichiers ou dossiers ici pour les téléverser",
     "uploading": "Téléversement en cours...",
     "upload_success": "{count, plural, one {1 fichier téléversé} other {# fichiers téléversés}}",
+    "upload_canceled": "Téléversement annulé",
+    "upload_canceled_partial": "{count, plural, one {1 fichier a été téléversé} other {# fichiers ont été téléversés}} avant l'annulation",
     "upload_error": "Échec du téléversement du fichier",
     "create_folder_success": "Dossier créé",
     "create_folder_error": "Échec de la création du dossier",
@@ -3700,7 +3801,6 @@
     "file_name": "Nom du fichier",
     "retry": "Réessayer",
     "refresh": "Actualiser",
-    "toggle_favorite": "Basculer le favori",
     "duplicate": "Dupliquer",
     "duplicate_success": "Dupliqué avec succès",
     "duplicate_error": "Échec de la duplication",
@@ -3712,8 +3812,8 @@
     "create_file_error": "Échec de la création du fichier",
     "favorites": "Favoris",
     "recent": "Récents",
-    "properties": "Propriétés",
-    "open_folder": "Ouvrir le dossier",
+    "show_in_folder": "Afficher dans le dossier",
+    "remove_from_recent": "Retirer des récents",
     "upload_folder": "Téléverser un dossier",
     "file_too_large": "\"{name}\" dépasse la taille maximale du fichier ({max})",
     "undo": "Annuler",
@@ -3722,6 +3822,67 @@
     "toolbar": "Actions sur les fichiers",
     "file_list": "Fichiers et dossiers",
     "context_menu": "Actions",
+    "settings_ascending": "Croissant",
+    "settings_descending": "Décroissant",
+    "disabled_title": "La fonctionnalité Fichiers a été désactivée par votre administrateur",
+    "disabled_description": "Les téléchargements de fichiers volumineux via WebDAV peuvent provoquer une instabilité de Stalwart/RocksDB, y compris des crashs de mémoire et une utilisation irrécupérable du disque. Les fichiers supprimés peuvent ne pas être immédiatement purgés du stockage. Cette fonctionnalité n'est pas recommandée pour les environnements de production.",
+    "no_accounts": "Aucun compte connecté.",
+    "open_folder_tree": "Ouvrir l'arborescence des dossiers",
+    "migration_title": "Mise à jour de vos fichiers…",
+    "migration_description": "Organisation des dossiers et fichiers dans leur structure appropriée. Cela ne se produit qu'une seule fois.",
+    "new": "Nouveau",
+    "my_files": "Mes fichiers",
+    "folders": "Dossiers",
+    "files_heading": "Fichiers",
+    "open": "Ouvrir",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Développer {name}",
+    "collapse_folder": "Réduire {name}",
+    "sidebar_hint": "Ajoutez des dossiers aux favoris et ouvrez des fichiers pour les retrouver ici.",
+    "breadcrumbs": "Chemin du dossier",
+    "show_path": "Afficher les dossiers masqués du chemin",
+    "selection_actions": "Actions sur les éléments sélectionnés",
+    "selected_count": "{count, plural, one {1 sélectionné} other {# sélectionnés}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Tout sélectionner",
+    "select_item": "Sélectionner {name}",
+    "more_actions": "Plus d'actions pour {name}",
+    "paste_here": "Coller dans ce dossier",
+    "paste_count": "{count, plural, one {Coller 1 élément} other {Coller # éléments}}",
+    "sort_by": "Trier par",
+    "view_mode": "Affichage",
+    "clear_search": "Effacer la recherche",
+    "no_results_for": "Aucun élément de ce dossier ne correspond à \"{query}\"",
+    "download_count": "{count, plural, one {Télécharger 1 fichier} other {Télécharger # fichiers}}",
+    "delete_count": "{count, plural, one {Supprimer 1 élément} other {Supprimer # éléments}}",
+    "close_details": "Fermer les détails",
+    "file_kind": "Fichier {ext}",
+    "folder_summary": "{folders, plural, =0 {Aucun dossier} one {1 dossier} other {# dossiers}}, {files, plural, =0 {aucun fichier} one {1 fichier} other {# fichiers}}",
+    "details_hint": "Sélectionnez un fichier ou un dossier pour afficher ses détails.",
+    "sharing": "Partage",
+    "shared_with_count": "{count, plural, one {Partagé avec 1 personne} other {Partagé avec # personnes}}",
+    "only_you": "Vous seul",
+    "empty_folder_title": "Ce dossier est vide",
+    "empty_folder_description": "Déposez des fichiers ici ou téléversez-les depuis votre appareil.",
+    "empty_folder_read_only": "Vous ne pouvez pas ajouter de fichiers à ce dossier.",
+    "choose_account": "Choisir un compte",
+    "drop_to_upload": "Déposer pour téléverser dans {folder}",
+    "uploading_count": "Téléversement {current} sur {total}",
+    "dismiss": "Fermer",
+    "zoom_in": "Zoom avant",
+    "zoom_out": "Zoom arrière",
+    "zoom_reset": "Ajuster à l'écran",
+    "rotate": "Pivoter",
+    "close_preview": "Fermer",
+    "empty_state_description": "Téléversez des fichiers ou créez des dossiers pour commencer",
+    "upload": "Téléverser",
+    "parent_directory": "Répertoire parent",
+    "breadcrumb_root": "Accueil",
+    "drop_files_here": "Déposez des fichiers ou dossiers ici pour les téléverser",
+    "toggle_favorite": "Basculer le favori",
+    "properties": "Propriétés",
+    "open_folder": "Ouvrir le dossier",
     "settings_title": "Paramètres des fichiers",
     "settings_display": "Affichage",
     "settings_default_view": "Vue par défaut",
@@ -3730,8 +3891,6 @@
     "settings_default_sort_desc": "Choisissez le tri par défaut pour les fichiers",
     "settings_sort_direction": "Sens du tri",
     "settings_sort_direction_desc": "Choisissez l'ordre croissant ou décroissant",
-    "settings_ascending": "Croissant",
-    "settings_descending": "Décroissant",
     "settings_icons": "Icônes",
     "settings_show_icons": "Afficher les icônes",
     "settings_show_icons_desc": "Afficher les icônes à côté des fichiers et dossiers",
@@ -3746,14 +3905,8 @@
     "settings_folder_layout_desc": "Choisissez comment les dossiers sont affichés : intégrés avec les fichiers ou dans une arborescence latérale",
     "settings_folder_layout_inline": "Intégré",
     "settings_folder_layout_sidebar": "Barre latérale",
-    "disabled_title": "La fonctionnalité Fichiers a été désactivée par votre administrateur",
-    "disabled_description": "Les téléchargements de fichiers volumineux via WebDAV peuvent provoquer une instabilité de Stalwart/RocksDB, y compris des crashs de mémoire et une utilisation irrécupérable du disque. Les fichiers supprimés peuvent ne pas être immédiatement purgés du stockage. Cette fonctionnalité n'est pas recommandée pour les environnements de production.",
     "stability_warning": "Les téléchargements de fichiers volumineux peuvent provoquer une instabilité du serveur. Les fichiers supprimés peuvent ne pas être immédiatement purgés du stockage. À utiliser avec prudence.",
-    "no_accounts": "Aucun compte connecté.",
-    "open_folder_tree": "Ouvrir l'arborescence des dossiers",
     "other_accounts": "Autres comptes",
-    "migration_title": "Mise à jour de vos fichiers…",
-    "migration_description": "Organisation des dossiers et fichiers dans leur structure appropriée. Cela ne se produit qu'une seule fois.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3763,13 +3916,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Globe, ListTodo, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, Shuffle, Check, Calendar as CalendarIcon, ExternalLink } from "@/components/icons";
+import { ChevronDown, ChevronRight, Globe, ListTodo, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, Shuffle, Check, Calendar as CalendarIcon, ExternalLink, MoreVertical } from "@/components/icons";
 import { Link } from "@/i18n/navigation";
 import { cn, formatDateTime } from "@/lib/utils";
 import { withBasePath } from "@/lib/browser-navigation";
@@ -21,6 +21,7 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { displayNow } from "@/lib/timezone";
 import { GoogleCalendarSection } from "./google-calendar-section";
 import { useGoogleCalendar } from "@/hooks/use-google-calendar";
+import { readableTextOn } from "@/lib/color-transform";
 
 /**
  * Split a per-account calendar list into "owned" (the user's own) and
@@ -311,26 +312,34 @@ export function CalendarSidebarPanel({
     const displayName = getCalendarDisplayName(cal);
 
     return (
-      <div key={cal.id} className="relative">
+      <div key={cal.id} className="relative group/cal">
         <button
           onClick={() => onToggleVisibility(cal.id)}
           onContextMenu={hasMenu ? (e) => openContextMenu(e, cal) : undefined}
+          role="checkbox"
+          aria-checked={isVisible}
           data-testid="calendar-item"
           data-calendar-name={displayName}
           data-account={cal.accountName ?? ''}
           data-visible={isVisible}
           className={cn(
-            "flex items-center gap-2 w-full px-1.5 py-1 rounded-md text-sm transition-colors duration-150",
-            "hover:bg-muted"
+            "flex items-center gap-2 w-full ps-5 pe-3 text-sm text-foreground/80 transition-colors duration-150",
+            "hover:bg-muted",
+            hasMenu && "pe-9"
           )}
+          style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
         >
+          {/* A checkbox filled in the calendar colour, empty when hidden. */}
           <span
             className={cn(
-              "w-3 h-3 rounded-sm border-2 flex-shrink-0 transition-colors",
-              isVisible ? "border-transparent" : "border-muted-foreground/40 bg-transparent"
+              "w-3.5 h-3.5 rounded-sm border-2 flex-shrink-0 flex items-center justify-center transition-colors",
+              !isVisible && "border-muted-foreground/40 bg-transparent"
             )}
-            style={isVisible ? { backgroundColor: color, borderColor: color } : undefined}
-          />
+            style={isVisible ? { backgroundColor: color, borderColor: color, color: readableTextOn(color) } : undefined}
+            aria-hidden="true"
+          >
+            {isVisible && <Check className="w-2.5 h-2.5" stroke={3.5} />}
+          </span>
           <span className={cn("truncate", !isVisible && "text-muted-foreground")}>
             {displayName}
           </span>
@@ -352,6 +361,21 @@ export function CalendarSidebarPanel({
             />
           )}
         </button>
+        {hasMenu && (
+          <button
+            type="button"
+            onClick={(e) => openContextMenu(e, cal)}
+            className={cn(
+              "absolute end-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
+              "opacity-0 group-hover/cal:opacity-100 focus-visible:opacity-100",
+              contextMenu.isOpen && contextMenu.data?.id === cal.id && "opacity-100"
+            )}
+            aria-label={t('calendar_options', { name: cal.name })}
+            title={t('calendar_options', { name: cal.name })}
+          >
+            <MoreVertical className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     );
   };

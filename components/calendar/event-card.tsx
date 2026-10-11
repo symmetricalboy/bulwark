@@ -245,11 +245,20 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       )}
       style={{ ...eventFillStyle(color, { inactive: isInactive, separated: true, selected: isSelected }), ...style }}
     >
-      <div className={cn("font-medium truncate flex items-center gap-1", isInactive && "line-through")}>
-        {isBirthday && <Cake className="w-3.5 h-3.5 shrink-0 inline-block text-current" />}
-        {event.title || t("events.no_title")}
+      {/* Shorter blocks have no room for a second line at the 60px hour, so
+          their start time follows the title on the same line, when the
+          block is wide enough to keep the title readable. */}
+      <div className="@container">
+        <div className="flex items-baseline gap-1 min-w-0">
+          <span className={cn("font-medium truncate flex items-center gap-1", isInactive && "line-through")}>
+            {isBirthday && <Cake className="w-3.5 h-3.5 shrink-0 inline-block text-current" />}
+            {event.title || t("events.no_title")}
+          </span>
+          {!event.showWithoutTime && durationMinutes < 45 && (
+            <span className="hidden @min-[120px]:inline flex-shrink-0 opacity-85 text-[10.5px]">{safeFormat(startDate, timeFmt)}</span>
+          )}
+        </div>
       </div>
-      {/* Shorter blocks have no room for a second line at the 60px hour. */}
       {!event.showWithoutTime && durationMinutes >= 45 && (
         <div className="opacity-85 text-[10.5px]">
           {timeString}

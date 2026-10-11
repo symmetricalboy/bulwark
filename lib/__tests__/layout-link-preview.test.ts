@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 // Same isolation shims as layout-theme-color.test.ts: the root layout imports
 // globals.css, next/font and client components purely for rendering.
 vi.mock('@/app/globals.css', () => ({}));
+vi.mock('material-symbols/outlined.css', () => ({}));
 vi.mock('next/font/google', () => ({
   Atkinson_Hyperlegible: () => ({ variable: '--comail-font-body' }),
   Geist: () => ({ variable: '--font-geist-sans' }),

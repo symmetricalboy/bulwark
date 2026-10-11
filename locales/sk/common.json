@@ -147,6 +147,8 @@
     "show_all_tags": "Zobraziť všetko ({count})",
     "show_fewer_tags": "Zobraziť menej",
     "folders": "Priečinky",
+    "show_more": "Viac",
+    "show_fewer": "Menej",
     "shared": "Zdieľané",
     "mail": "Pošta",
     "nav_label": "Navigácia",
@@ -243,6 +245,7 @@
     "replied": "Zodpovedané",
     "forwarded": "Preposlané",
     "has_attachment": "Obsahuje prílohu",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konverzácií",
     "conversations_count_plus": "{count}+ konverzácií",
     "conversations_count_simple": "{count} konverzácií",
@@ -578,6 +581,8 @@
     "more": "viac",
     "scheduled_banner": "Naplánované na odoslanie {date}",
     "scheduled_send_created": "E-mail bol naplánovaný na odoslanie",
+    "sending_in": "Odoslanie o {seconds} s",
+    "undo_send_failed": "Odoslanie sa nedá vrátiť. Správa už možno bola odoslaná.",
     "cancel_scheduled_send": "Zrušiť odoslanie",
     "reschedule_send": "Prenaplánovať",
     "cancel_and_edit": "Zrušiť a upraviť",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Potvrdenie o prečítaní požiadané (kliknutím vypnete)",
-    "read_receipt_off": "Požiadať o potvrdenie o prečítaní",
-    "dsn_on": "Oznámenie o doručení vyžiadané (kliknutím vypnete)",
-    "dsn_off": "Vyžiadať oznámenie o doručení",
-    "format_plain_text": "Prepnúť na obyčajný text",
-    "format_rich_text": "Prepnúť na formátovaný text (HTML)",
-    "require_tls_on": "Šifrované doručenie vyžadované (kliknutím vypnete)",
-    "require_tls_off": "Vyžadovať šifrované doručenie (TLS)",
+    "minimize": "Minimalizovať",
+    "maximize": "Celá obrazovka",
+    "restore": "Obnoviť",
     "new_message": "Nová správa",
     "signature_edit_hint": "Dvojklikom upravíte podpis",
     "reply": "Odpovedať",
@@ -648,6 +648,7 @@
     "discard": "Zahoditť",
     "discard_draft_title": "Zahoditť koncept?",
     "discard_draft_confirm": "Máte neuložené zmeny. Chcete zahoditť tento koncept?",
+    "discard_draft_message": "Koncept sa odstráni.",
     "saving": "Ukladánie...",
     "sending": "Odosielanie...",
     "add_link": "Pridať odkaz",
@@ -687,11 +688,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Ak váš server túto adresu neprijme ako odosielateľa obálky, použije sa namiesto nej {identity} a príjemcovia ju uvidia v hlavičke Return-Path."
     },
-    "use_template": "Šablóna",
     "save_as_template": "Uložiť ako šablónu",
+    "attach_from_device": "Nahrať z tohto zariadenia",
+    "templates_menu": "Šablóny",
+    "insert_template": "Vložiť šablónu",
+    "options": "Možnosti",
+    "option_plain_text": "Obyčajný text",
+    "option_plain_text_hint": "Odoslať bez formátovania",
+    "option_read_receipt": "Vyžiadať potvrdenie o prečítaní",
+    "option_read_receipt_hint": "Požiadať príjemcu o potvrdenie otvorenia",
+    "option_dsn": "Oznámenie o doručení",
+    "option_dsn_hint": "Dostať správu, keď ju server doručí",
+    "option_require_tls": "Vyžadovať šifrované doručenie",
+    "option_require_tls_hint": "Doručiť len cez TLS, inak vrátiť",
     "validation": {
       "recipient_required": "Pridajte príjemcu na odoslanie",
       "body_required": "Napíšte správu alebo priložte súbor",
+      "invalid_recipients": "Neodoslané - skontrolujte tieto adresy: {addresses}",
       "attachments_uploading": "Prílohy sa stále nahrávajú - odošle sa hneď po ich dokončení",
       "attachment_upload_failed": "Neodoslané - prílohu sa nepodarilo nahrať. Odstráňte ju a skúste to znova."
     },
@@ -704,7 +717,10 @@
     "show_less": "Zobraziť menej",
     "send_failed": "Odoslanie e-mailu zlyhalo",
     "send_timeout": "Server prestal odpovedať. Pred opätovným odoslaním skontrolujte priečinok Odoslané — správa už mohla odísť.",
+    "send_offline": "Zdá sa, že ste offline. Správa tu zostáva, odošlite ju znova, keď budete online.",
+    "formatting": "Formátovanie",
     "send_recipients_rejected": "Neodoslané – server odmietol všetkých príjemcov.",
+    "send_plugin_failed": "Neodoslané – doplnok, ktorý zabezpečuje odoslanie, zlyhal alebo trval príliš dlho. Pred opätovným odoslaním skontrolujte priečinok Odoslané.",
     "send_some_recipients_rejected": "Odoslané, ale nie týmto príjemcom – server ich odmietol.",
     "continue_draft": "Pokračovať v koncepte",
     "close_draft_title": "Uložiť alebo zahoditť koncept?",
@@ -733,6 +749,11 @@
     },
     "schedule_send": "Naplánovať odoslanie",
     "schedule_send_description": "Vyberte, kedy má server túto správu odoslať.",
+    "schedule_preset": {
+      "tomorrow_morning": "Zajtra ráno",
+      "tomorrow_afternoon": "Zajtra popoludní",
+      "monday_morning": "V pondelok ráno"
+    },
     "schedule_send_required": "Vyberte dátum a čas.",
     "schedule_send_invalid": "Zadajte platný dátum a čas.",
     "schedule_send_future": "Vyberte budúci dátum a čas.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Upraviť zobrazené meno",
     "recipient_email_placeholder": "E-mailová adresa",
     "recipient_name_placeholder": "Zobrazené meno",
+    "invalid_recipient": "Neplatná e-mailová adresa",
     "autocomplete_search_server": "Hľadať na serveri",
     "autocomplete_searching": "Hľadanie...",
     "mention_recipients": "Príjemcovia",
@@ -785,6 +807,15 @@
       "remove_background_color": "Odstrániť farbu pozadia"
     },
     "send_filing_warning": "Odoslané - ale následné upratovanie zlyhalo, môže zostať zastaraný koncept.",
+    "read_receipt_on": "Potvrdenie o prečítaní požiadané (kliknutím vypnete)",
+    "read_receipt_off": "Požiadať o potvrdenie o prečítaní",
+    "dsn_on": "Oznámenie o doručení vyžiadané (kliknutím vypnete)",
+    "dsn_off": "Vyžiadať oznámenie o doručení",
+    "format_plain_text": "Prepnúť na obyčajný text",
+    "format_rich_text": "Prepnúť na formátovaný text (HTML)",
+    "require_tls_on": "Šifrované doručenie vyžadované (kliknutím vypnete)",
+    "require_tls_off": "Vyžadovať šifrované doručenie (TLS)",
+    "use_template": "Šablóna",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1078,6 +1109,13 @@
       },
       "title": "Vzhľad",
       "description": "Prispôsobte si vzhľad a správanie webmailu",
+      "theme": {
+        "label": "Téma",
+        "description": "Vyberte preferovanú farebnú schému",
+        "light": "Svetlá",
+        "dark": "Tmavá",
+        "system": "Systémová"
+      },
       "language": {
         "label": "Jazyk",
         "description": "Vyberte preferovaný jazyk"
@@ -1096,6 +1134,12 @@
         "compact": "Kompaktné",
         "regular": "Bežné",
         "comfortable": "Pohodlné"
+      },
+      "interface_layout": {
+        "label": "Rozloženie rozhrania",
+        "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
+        "default": "Predvolené",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Povoliť animácie",
@@ -1244,6 +1288,18 @@
         "swift": "Rýchly",
         "relax": "Relaxačný",
         "beep": "Pípnutie"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Zvuk oznámenia",
@@ -1691,6 +1747,33 @@
         "drag_handle": "Presuňte na zmenu poradia",
         "add": "Pridať účet"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Zdieľané so mnou",
         "description": "Skupinové a zdieľané účty, ktoré môžete spravovať.",
@@ -1733,7 +1816,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "scoped": {
       "back": "Späť na môj účet",
@@ -2278,6 +2364,7 @@
       "forward_placeholder": "email@example.com",
       "forward_keep_copy": "Ponechať kópiu",
       "forward_limit": "Limit preposlaní na správu na tomto serveri: {count}. Ďalšie preposlania sa preskočia.",
+      "forward_unavailable": "Tento server nepovoľuje preposielanie. Akcie preposlania v pravidlách filtrov nemajú žiadny účinok.",
       "reject_message": "Správa o odmietnutí",
       "reject_placeholder": "Váš e-mail bol odmietnutý",
       "label_name": "Názov štítku",
@@ -2404,12 +2491,6 @@
         "title": "Zobrazenie",
         "description": "Nakonfigurujte spôsob zobrazenia súborov a priečinkov"
       },
-      "folder_layout": {
-        "label": "Navigácia priečinkov",
-        "description": "Vyberte spôsob zobrazenia priečinkov: vložene so súbormi alebo v stromovej štruktúre postranného panela",
-        "inline": "Vložené",
-        "sidebar": "Postranný panel"
-      },
       "default_view": {
         "label": "Predvolené zobrazenie",
         "description": "Vyberte rozloženie do mriežky alebo zoznamu",
@@ -2455,6 +2536,12 @@
       },
       "preview": {
         "label": "Náhľad"
+      },
+      "folder_layout": {
+        "label": "Navigácia priečinkov",
+        "description": "Vyberte spôsob zobrazenia priečinkov: vložene so súbormi alebo v stromovej štruktúre postranného panela",
+        "inline": "Vložené",
+        "sidebar": "Postranný panel"
       }
     },
     "byomc": {
@@ -2562,7 +2649,12 @@
       "manage": "Spravovať pravidlá",
       "senders_count": "{count, plural, one {# odosielateľa} few {# odosielateľov} many {# odosielateľa} other {# odosielateľov}}",
       "cross_account": "Vyberte správy z jedného účtu",
-      "opaque_hint": "Vaše filtre boli upravené ručne. Otvorte nastavenia filtrov"
+      "opaque_hint": "Vaše filtre boli upravené ručne. Otvorte nastavenia filtrov",
+      "loading": "Načítavajú sa pravidlá…",
+      "load_failed": "Pravidlá sa nepodarilo načítať",
+      "none": "Zatiaľ žiadne pravidlá",
+      "new_mail_only": "Len pre nové správy",
+      "running": "Spúšťa sa „{name}“ v priečinku {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Ďalší e-mail",
       "previous_email": "Predchádzajúci e-mail",
       "open_email": "Otvoriť e-mail",
-      "close_email": "Zavrieť / Zrušiť výber"
+      "close_email": "Zavrieť / Zrušiť výber",
+      "go_to_folder": "Prejsť do priečinka"
     },
     "actions": {
       "reply": "Odpovedať",
@@ -2643,7 +2736,8 @@
       "global_search": "Hľadať všade"
     },
     "threads": {
-      "expand_collapse": "Rozbaliť/zbaliť vlákno"
+      "expand_collapse": "Rozbaliť/zbaliť vlákno",
+      "select_mountain_view": "Vybrať konverzáciu"
     },
     "composer": {
       "send": "Odoslať e-mail",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "Názov novej udalosti",
-      "aria_label": "Rýchle vytvorenie udalosti"
+      "aria_label": "Rýchle vytvorenie udalosti",
+      "add_title": "Pridať názov",
+      "more_options": "Ďalšie možnosti"
     },
     "nav_prev": "Predchádzajúci",
     "nav_next": "Ďalší",
@@ -3574,7 +3670,13 @@
       "due_today": "Dnes",
       "due_tomorrow": "Zajtra",
       "overdue": "Po termíne"
-    }
+    },
+    "toolbar": {
+      "more": "Ďalšie akcie",
+      "select_view": "Zmeniť zobrazenie, teraz {view}"
+    },
+    "other_calendars": "Ďalšie kalendáre",
+    "calendar_options": "Možnosti pre {name}"
   },
   "calendar_event_notifications": {
     "someone": "Niekto",
@@ -3663,6 +3765,8 @@
     "tip_shortcuts": "Stlačte ? na zobrazenie všetkých klávesových skratiek",
     "tip_sidebar": "Kalendár, Kontakty a Nastavenia nájdete v postrannom paneli",
     "tip_settings": "Prispôsobte si aplikáciu v Nastaveniach",
+    "tip_compose_touch": "Ťuknutím na tlačidlo s ceruzkou napíšete nový e-mail",
+    "tip_sidebar_touch": "Kalendár, Kontakty a Nastavenia nájdete na lište dole",
     "got_it": "Rozumiem",
     "settings": "Nastavenia",
     "dismiss": "Zavrieť",
@@ -3686,8 +3790,6 @@
     "title": "Súbory",
     "search_placeholder": "Hľadať súbory...",
     "empty_state_title": "Žiadne súbory",
-    "empty_state_description": "Nahrajte súbory alebo vytvorte priečinky na začiatok",
-    "upload": "Nahrať",
     "upload_files": "Nahrať súbory",
     "new_folder": "Nový priečinok",
     "new_folder_name": "Názov priečinka",
@@ -3706,13 +3808,11 @@
     "type": "Typ",
     "folder": "Priečinok",
     "file": "Súbor",
-    "parent_directory": "Nadradený adresár",
-    "breadcrumb_root": "Domov",
-    "other_accounts": "Ostatné účty",
     "no_accounts": "Žiadne pripojené účty.",
-    "drop_files_here": "Presuňte sem súbory alebo priečinky na ich nahranie",
     "uploading": "Nahrávanie...",
     "upload_success": "{count, plural, one {1 súbor nahraný} other {# súborov nahraných}}",
+    "upload_canceled": "Nahrávanie zrušené",
+    "upload_canceled_partial": "Pred zrušením {count, plural, one {sa nahral 1 súbor} few {sa nahrali # súbory} many {sa nahralo # súboru} other {sa nahralo # súborov}}",
     "upload_error": "Nahranie súboru zlyhalo",
     "create_folder_success": "Priečinok bol vytvorený",
     "create_folder_error": "Vytvorenie priečinka zlyhalo",
@@ -3745,7 +3845,6 @@
     "file_name": "Názov súboru",
     "retry": "Opakovať",
     "refresh": "Obnoviť",
-    "toggle_favorite": "Prepnúť obľúbené",
     "duplicate": "Duplikovať",
     "duplicate_success": "Úspešne duplikované",
     "duplicate_error": "Duplikovanie zlyhalo",
@@ -3757,8 +3856,8 @@
     "create_file_error": "Vytvorenie súboru zlyhalo",
     "favorites": "Obľúbené",
     "recent": "Nedávne",
-    "properties": "Vlastnosti",
-    "open_folder": "Otvoriť priečinok",
+    "show_in_folder": "Zobraziť v priečinku",
+    "remove_from_recent": "Odstrániť z nedávnych",
     "upload_folder": "Nahrať priečinok",
     "file_too_large": "\"{name}\" prekračuje maximálnu veľkosť súboru ({max})",
     "undo": "Späť",
@@ -3768,6 +3867,66 @@
     "open_folder_tree": "Otvoriť strom priečinkov",
     "file_list": "Súbory a priečinky",
     "context_menu": "Akcie",
+    "settings_ascending": "Vzostupne",
+    "settings_descending": "Zostupne",
+    "disabled_title": "Funkcia Súbory je zakázaná správcom",
+    "disabled_description": "Nahrávanie veľkých súborov cez WebDAV môže spôsobiť nestabilitu Stalwart/RocksDB. Táto funkcia sa neodporúča v produkčnom prostredí.",
+    "migration_title": "Aktualizácia vašich súborov…",
+    "migration_description": "Usporiadanie priečinkov a súborov do správnej štruktúry. Toto prebehne iba raz.",
+    "new": "Nové",
+    "my_files": "Moje súbory",
+    "folders": "Priečinky",
+    "files_heading": "Súbory",
+    "open": "Otvoriť",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Rozbaliť {name}",
+    "collapse_folder": "Zbaliť {name}",
+    "sidebar_hint": "Pridajte priečinky do obľúbených a otvárajte súbory, aby ste ich našli tu.",
+    "breadcrumbs": "Cesta k priečinku",
+    "show_path": "Zobraziť skryté priečinky v ceste",
+    "selection_actions": "Akcie pre vybrané položky",
+    "selected_count": "{count, plural, one {Vybraná 1 položka} few {Vybrané # položky} many {Vybranej # položky} other {Vybraných # položiek}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Vybrať všetko",
+    "select_item": "Vybrať {name}",
+    "more_actions": "Ďalšie akcie pre {name}",
+    "paste_here": "Vložiť do tohto priečinka",
+    "paste_count": "{count, plural, one {Vložiť 1 položku} few {Vložiť # položky} many {Vložiť # položky} other {Vložiť # položiek}}",
+    "sort_by": "Zoradiť podľa",
+    "view_mode": "Zobrazenie",
+    "clear_search": "Vymazať hľadanie",
+    "no_results_for": "V tomto priečinku nič nezodpovedá výrazu „{query}“",
+    "download_count": "{count, plural, one {Stiahnuť 1 súbor} few {Stiahnuť # súbory} many {Stiahnuť # súboru} other {Stiahnuť # súborov}}",
+    "delete_count": "{count, plural, one {Odstrániť 1 položku} few {Odstrániť # položky} many {Odstrániť # položky} other {Odstrániť # položiek}}",
+    "close_details": "Zavrieť podrobnosti",
+    "file_kind": "Súbor {ext}",
+    "folder_summary": "{folders, plural, =0 {Žiadne priečinky} one {1 priečinok} few {# priečinky} many {# priečinka} other {# priečinkov}}, {files, plural, =0 {žiadne súbory} one {1 súbor} few {# súbory} many {# súboru} other {# súborov}}",
+    "details_hint": "Vyberte súbor alebo priečinok a zobrazia sa jeho podrobnosti.",
+    "sharing": "Zdieľanie",
+    "shared_with_count": "{count, plural, one {Zdieľané s 1 osobou} few {Zdieľané s # osobami} many {Zdieľané s # osoby} other {Zdieľané s # osobami}}",
+    "only_you": "Iba vy",
+    "empty_folder_title": "Tento priečinok je prázdny",
+    "empty_folder_description": "Presuňte sem súbory alebo ich nahrajte zo zariadenia.",
+    "empty_folder_read_only": "Do tohto priečinka nemôžete pridávať súbory.",
+    "choose_account": "Vyberte účet",
+    "drop_to_upload": "Pustite a nahrajte do {folder}",
+    "uploading_count": "Nahráva sa {current} z {total}",
+    "dismiss": "Zavrieť",
+    "zoom_in": "Priblížiť",
+    "zoom_out": "Oddialiť",
+    "zoom_reset": "Prispôsobiť obrazovke",
+    "rotate": "Otočiť",
+    "close_preview": "Zavrieť",
+    "empty_state_description": "Nahrajte súbory alebo vytvorte priečinky na začiatok",
+    "upload": "Nahrať",
+    "parent_directory": "Nadradený adresár",
+    "breadcrumb_root": "Domov",
+    "other_accounts": "Ostatné účty",
+    "drop_files_here": "Presuňte sem súbory alebo priečinky na ich nahranie",
+    "toggle_favorite": "Prepnúť obľúbené",
+    "properties": "Vlastnosti",
+    "open_folder": "Otvoriť priečinok",
     "settings_title": "Nastavenia súborov",
     "settings_display": "Zobrazenie",
     "settings_default_view": "Predvolené zobrazenie",
@@ -3776,8 +3935,6 @@
     "settings_default_sort_desc": "Vyberte predvolené triedenie súborov",
     "settings_sort_direction": "Smer triedenia",
     "settings_sort_direction_desc": "Vyberte vzostupné alebo zostupné poradie",
-    "settings_ascending": "Vzostupne",
-    "settings_descending": "Zostupne",
     "settings_icons": "Ikony",
     "settings_show_icons": "Zobrazovať ikony súborov",
     "settings_show_icons_desc": "Zobrazovať ikony vedľa súborov a priečinkov",
@@ -3792,11 +3949,7 @@
     "settings_folder_layout_desc": "Vyberte spôsob zobrazenia priečinkov: vložene so súbormi alebo v stromovej štruktúre v postrannom paneli",
     "settings_folder_layout_inline": "Vložené",
     "settings_folder_layout_sidebar": "Postranný panel",
-    "disabled_title": "Funkcia Súbory je zakázaná správcom",
-    "disabled_description": "Nahrávanie veľkých súborov cez WebDAV môže spôsobiť nestabilitu Stalwart/RocksDB. Táto funkcia sa neodporúča v produkčnom prostredí.",
     "stability_warning": "Nahrávanie veľkých súborov môže spôsobiť nestabilitu servera. Používajte s opatrnosťou.",
-    "migration_title": "Aktualizácia vašich súborov…",
-    "migration_description": "Usporiadanie priečinkov a súborov do správnej štruktúry. Toto prebehne iba raz.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3806,13 +3959,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

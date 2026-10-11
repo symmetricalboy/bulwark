@@ -8,13 +8,15 @@ import { applyNewTabToAnchor, emailIframeCsp, escapeHtml, isOpenableLinkHref, pl
 import { getRenderableHtmlBody } from "@/lib/email-body-selection";
 import { collectReferencedCids, isEmbeddedInBody } from "@/lib/attachment-visibility";
 import { collapsePlainTextQuotes, setupQuoteCollapse } from "@/lib/quote-collapse";
+import { DARK_PENDING_CLASS, applyEmailDarkMode, emailColorScheme, emailDarkModeCss, emailHasNativeDarkMode as htmlHasNativeDarkMode, resolveColorSchemeMedia } from "@/lib/email-dark-mode";
 import { fitEmailBodyWidth } from "@/lib/email-fit-width";
 import { withBasePath } from "@/lib/browser-navigation";
 import { buildContactsPath, buildMailPath } from "@/lib/deep-links";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { formatFileSize, cn, MailboxNode, formatDateTime, generateUUID } from "@/lib/utils";
+import { formatFileSize, cn, MailboxNode, formatDate, formatDateTime, generateUUID } from "@/lib/utils";
+import { formatScheduledSendAt } from "@/lib/scheduled-send-label";
 import { buildMoveTargets, resolveMoveOwnerAccountId } from "@/lib/move-targets";
 import { emailDisplayDate } from "@/lib/email-date";
 import { TagBadge } from "./tag-badge";
@@ -89,6 +91,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { Attachment as PostalMimeAttachment } from 'postal-mime';
 import { useSettingsStore } from "@/stores/settings-store";
+import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useUIStore } from "@/stores/ui-store";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
 import { toast } from "@/stores/toast-store";
@@ -407,16 +410,21 @@ export function ContactSidebarPanel({
 
   return (
     <div className="w-[320px] shrink-0 border-s border-border bg-background flex flex-col h-full animate-in slide-in-from-right-5 duration-200">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h3 className="text-sm font-semibold text-foreground truncate">{t('contact_sidebar.title')}</h3>
-        <button
-          onClick={onClose}
-          className="p-1 rounded hover:bg-muted transition-colors"
-          aria-label={t('contact_sidebar.close')}
-        >
-          <PanelRightClose className="w-4 h-4 text-muted-foreground" />
-        </button>
+      {/* Header - h-14 with the border on the wrapper so it lines up with
+          the viewer toolbar and the folder sidebar header. */}
+      <div className="border-b border-border shrink-0">
+        <div className="flex items-center justify-between gap-2 h-14 ps-4 pe-2">
+          <h3 className="text-sm font-semibold text-foreground truncate">{t('contact_sidebar.title')}</h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-9 w-9 shrink-0"
+            aria-label={t('contact_sidebar.close')}
+          >
+            <PanelRightClose className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
@@ -446,34 +454,41 @@ export function ContactSidebarPanel({
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div className="px-4 pb-4 flex items-center justify-center gap-2">
+        {/* Quick actions - styled like the shared Button (default + outline,
+            size sm) since MailtoLink renders an anchor, not a Button. */}
+        <div className="px-4 pb-5 flex flex-col gap-2">
           <MailtoLink
             to={primaryEmail}
-            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
+            className="inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             title={t('contact_sidebar.action_email_title')}
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-4 h-4" />
             {t('contact_sidebar.action_email')}
           </MailtoLink>
-          <button
-            onClick={() => handleCopy(primaryEmail)}
-            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
-            title={t('contact_sidebar.action_copy_title')}
-          >
-            <Copy className="w-3.5 h-3.5" />
-            {t('contact_sidebar.action_copy')}
-          </button>
-          {contact && onEditContact && (
-            <button
-              onClick={onEditContact}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-2 rounded-md hover:bg-muted transition-colors border border-border"
-              title={t('contact_sidebar.action_edit_title')}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleCopy(primaryEmail)}
+              className="flex-1 min-w-0 gap-2"
+              title={t('contact_sidebar.action_copy_title')}
             >
-              <EditIcon className="w-3.5 h-3.5" />
-              {tCommon('edit')}
-            </button>
-          )}
+              <Copy className="w-4 h-4 shrink-0" />
+              <span className="truncate">{t('contact_sidebar.action_copy')}</span>
+            </Button>
+            {contact && onEditContact && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onEditContact}
+                className="flex-1 min-w-0 gap-2"
+                title={t('contact_sidebar.action_edit_title')}
+              >
+                <EditIcon className="w-4 h-4 shrink-0" />
+                <span className="truncate">{tCommon('edit')}</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Details sections */}
@@ -708,8 +723,9 @@ export function EmailViewer({
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const { sortTagIds, tagColor } = useKeywordFormat();
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
-  const showToolbarLabels = useSettingsStore((state) => state.showToolbarLabels);
-  const mailLayout = useSettingsStore((state) => state.mailLayout);
+  const showToolbarLabelsSetting = useSettingsStore((state) => state.showToolbarLabels);
+  const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
+  const mailLayout = useEffectiveMailLayout();
   const calendarInvitationParsingEnabled = useSettingsStore((state) => state.calendarInvitationParsingEnabled);
   const readReceiptResponse = useSettingsStore((state) => state.readReceiptResponse);
   const hideInlineImageAttachments = useSettingsStore((state) => state.hideInlineImageAttachments);
@@ -761,6 +777,15 @@ export function EmailViewer({
 
   // Tablet list visibility
   const { isTablet, isMobile } = useDeviceDetection();
+  // Mountain View's conversation view: an icon-only toolbar at the top, and Reply /
+  // Reply all / Forward as buttons under the message rather than in the bar.
+  const mvViewer = interfaceLayout === 'mountain-view' && !isMobile;
+  // On the phone too Mountain View ends the message with Reply / Reply all / Forward
+  // and has no bar fixed at the bottom; previous / next move to the top bar.
+  const mvMobileViewer = interfaceLayout === 'mountain-view' && isMobile;
+  const mvReplyRow = mvViewer || mvMobileViewer;
+  // Mountain View's toolbars are icon-only, on the phone as on the desktop.
+  const showToolbarLabels = showToolbarLabelsSetting && interfaceLayout !== 'mountain-view';
   // Inside a Pro pane, `isMobile` above is pane-width based: overlays that
   // would go viewport-fixed must instead cover just the pane (via
   // PaneOverlay + absolute positioning), and viewport CSS breakpoints like
@@ -2206,7 +2231,7 @@ export function EmailViewer({
   // Detect if the email HTML has native dark mode support
   const emailHasNativeDarkMode = useMemo(() => {
     if (!effectiveEmailContent.isHtml) return false;
-    return /prefers-color-scheme\s*:\s*dark/i.test(effectiveEmailContent.html);
+    return htmlHasNativeDarkMode(effectiveEmailContent.html);
   }, [effectiveEmailContent.html, effectiveEmailContent.isHtml]);
 
   const emailAlwaysLightMode = useSettingsStore((state) => state.emailAlwaysLightMode);
@@ -2218,50 +2243,12 @@ export function EmailViewer({
   const emailIframeSrcDoc = useMemo(() => {
     if (!effectiveEmailContent.isHtml) return '';
 
-    // If email has native dark mode, let it handle its own theming
-    // Otherwise, use CSS filter inversion for dark mode (preserves layout)
-    // Re-invert leaf media elements so they appear normal.
-    //
-    // Background-COLOR containers (bgcolor, background: shorthand) are
-    // re-inverted so their fill flips to a dark tone, but skipped when they
-    // wrap media: the inner image already gets its own re-invert, and a filter
-    // on the container would double-invert it. Nested color containers must NOT
-    // stack another invert either - each filter toggles the inversion, so an
-    // odd number of stacked filters (body + outer + inner) lands back on
-    // light-on-light; the descendant rule disables filter on a color container
-    // nested inside another.
-    //
-    // Background-IMAGE containers are different: a real photo and whatever is
-    // composited over it (headline text, logos) was designed by the sender to
-    // read together, so the whole subtree should return to its original
-    // light-mode appearance - even when it wraps media. We therefore re-invert
-    // these unconditionally (no :has guard) and cancel the per-image re-invert
-    // for media inside them, otherwise those images would flip back to inverted.
-    const darkModeCSS = isDark && !emailHasNativeDarkMode ? `
-      html { background: #121212; }
-      body { filter: invert(1) hue-rotate(180deg); background: #ededed; }
-      img, video, svg, canvas, object, embed, input[type="image"] {
-        filter: invert(1) hue-rotate(180deg);
-      }
-      [style*="background:"]:not(:has(img, video, svg, canvas, object, embed)),
-      [bgcolor]:not(:has(img, video, svg, canvas, object, embed)) {
-        filter: invert(1) hue-rotate(180deg);
-      }
-      :where([style*="background:"], [bgcolor])
-        :where([style*="background:"], [bgcolor]):not(:has(img, video, svg, canvas, object, embed)) {
-        filter: none !important;
-      }
-      [style*="background-image"],
-      [background] {
-        filter: invert(1) hue-rotate(180deg);
-      }
-      [style*="background-image"] :where(img, video, svg, canvas, object, embed, input[type="image"]),
-      [background] :where(img, video, svg, canvas, object, embed, input[type="image"]) {
-        filter: none;
-      }
-    ` : '';
-
-    const colorScheme = isDark && emailHasNativeDarkMode ? 'light dark' : 'light';
+    // Dark mode rewrites the mail's colours after load (applyEmailDarkMode in
+    // handleIframeLoad); this only sets the fallback colours and keeps the
+    // body hidden until that pass ran. A mail with its own dark styles gets
+    // them pinned to the app theme rather than the OS.
+    const darkModeCSS = isDark ? emailDarkModeCss() : '';
+    const colorScheme = emailColorScheme(isDark, emailHasNativeDarkMode);
 
     // Bare HTML emails (no <style>) tend to be plain prose without their own
     // layout - give them the same padding as plain-text mails (.email-content-text).
@@ -2298,7 +2285,7 @@ export function EmailViewer({
     const iframeCsp = emailIframeCsp(effectiveEmailContent.externalBlocked);
 
     return `<!DOCTYPE html>
-<html style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html class="${isDark ? DARK_PENDING_CLASS : ''}" style="color-scheme: ${colorScheme};"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="${iframeCsp}">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="x-dns-prefetch-control" content="off">
@@ -2349,7 +2336,7 @@ export function EmailViewer({
   pre { white-space: pre-wrap; word-wrap: break-word; }
   ${wordHtmlCSS}
   ${darkModeCSS}
-</style></head><body dir="auto">${effectiveEmailContent.html}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
+</style></head><body dir="auto">${resolveColorSchemeMedia(effectiveEmailContent.html, isDark)}<style>html,body{height:auto!important;min-height:0!important;max-height:none!important}</style></body></html>`;
   }, [effectiveEmailContent.html, effectiveEmailContent.isHtml, effectiveEmailContent.hasStyleTag, effectiveEmailContent.externalBlocked, isDark, emailHasNativeDarkMode, messageSpacing]);
 
   // Unblocking external content is handled by rebuilding the iframe srcDoc:
@@ -2437,6 +2424,13 @@ export function EmailViewer({
           hide: t('hide_quoted_text'),
         });
 
+        // Before the height wiring and after the quote toggle exists, so the
+        // toggle is converted too. Reads the mail's computed colours and
+        // un-hides the body when done.
+        if (isDark) {
+          applyEmailDarkMode(doc, { remoteContentAllowed: !effectiveEmailContent.externalBlocked });
+        }
+
         // Auto-resize iframe to fit content
         // Measure max(documentElement, body): a height:100% wrapper can leave
         // documentElement.scrollHeight short while the real content lives in body.
@@ -2509,7 +2503,7 @@ export function EmailViewer({
 
         // Plugin intercept: let plugins cancel or rewrite external links inside
         // the email body before navigation happens. Bound on the iframe doc so
-        // it survives DOM mutations from dark-mode pass below.
+        // it survives later DOM mutations.
         const onLinkClick = async (ev: Event) => {
           const targetEl = (ev.target as Element | null)?.closest?.('a[href], area[href]') as HTMLAnchorElement | HTMLAreaElement | null;
           if (!targetEl) return;
@@ -2540,106 +2534,11 @@ export function EmailViewer({
         };
         doc.addEventListener('click', onLinkClick, true);
 
-        // Dark mode: re-invert elements with stylesheet-defined background images
-        // (CSS attribute selectors only catch inline styles, not <style> block rules)
-        if (isDark && !emailHasNativeDarkMode) {
-          const win = doc.defaultView;
-          if (win) {
-            doc.body.querySelectorAll('*').forEach(el => {
-              const htmlEl = el as HTMLElement;
-              // Skip elements already handled by CSS attribute selectors
-              if (htmlEl.style.backgroundImage || htmlEl.style.background ||
-                  htmlEl.hasAttribute('background') || htmlEl.hasAttribute('bgcolor')) return;
-              // Skip leaf media elements (already re-inverted by CSS)
-              const tag = htmlEl.tagName;
-              if (['IMG', 'VIDEO', 'SVG', 'CANVAS', 'OBJECT', 'EMBED'].includes(tag)) return;
-              const computed = win.getComputedStyle(htmlEl);
-              if (computed.backgroundImage && computed.backgroundImage !== 'none') {
-                // Re-invert so the background image returns to its original
-                // appearance. Matches the CSS background-image rules: re-invert
-                // even when media is nested, then cancel the per-image
-                // re-invert on that media so it isn't left double-inverted.
-                htmlEl.style.filter = 'invert(1) hue-rotate(180deg)';
-                htmlEl.querySelectorAll('img, video, svg, canvas, object, embed, input[type="image"]')
-                  .forEach(m => { (m as HTMLElement).style.filter = 'none'; });
-              }
-            });
-
-            // Re-invert emoji glyphs so they keep their original colors. The
-            // body's invert filter flips colored emoji (yellow smiley → blue,
-            // red heart → cyan, etc.). Wrap each emoji run in a span that
-            // re-inverts. Only act when the ancestor invert depth is odd -
-            // emojis inside a double-inverted bgcolor container already render
-            // at their original colors.
-            let emojiRe: RegExp;
-            try {
-              emojiRe = new RegExp('\\p{RGI_Emoji}', 'gv');
-            } catch {
-              emojiRe = /\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*/gu;
-            }
-            const emojiTestRe = /\p{Extended_Pictographic}/u;
-            const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'IFRAME']);
-
-            const isOddInvertDepth = (start: Element | null) => {
-              let count = 0;
-              let n: Element | null = start;
-              while (n) {
-                if (n === doc.body) { count++; break; }
-                const cs = win.getComputedStyle(n);
-                if (cs.filter && cs.filter.includes('invert')) count++;
-                n = n.parentElement;
-              }
-              return count % 2 === 1;
-            };
-
-            const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
-              acceptNode(node) {
-                let p = node.parentElement;
-                while (p) {
-                  if (SKIP_TAGS.has(p.tagName)) return NodeFilter.FILTER_REJECT;
-                  p = p.parentElement;
-                }
-                return emojiTestRe.test(node.nodeValue || '')
-                  ? NodeFilter.FILTER_ACCEPT
-                  : NodeFilter.FILTER_REJECT;
-              },
-            });
-
-            const emojiTextNodes: Text[] = [];
-            let cur: Node | null;
-            while ((cur = walker.nextNode())) emojiTextNodes.push(cur as Text);
-
-            emojiTextNodes.forEach((textNode) => {
-              const parent = textNode.parentElement;
-              if (!parent || !isOddInvertDepth(parent)) return;
-              const text = textNode.nodeValue || '';
-              emojiRe.lastIndex = 0;
-              const frag = doc.createDocumentFragment();
-              let lastIndex = 0;
-              let m: RegExpExecArray | null;
-              while ((m = emojiRe.exec(text)) !== null) {
-                if (m.index > lastIndex) {
-                  frag.appendChild(doc.createTextNode(text.slice(lastIndex, m.index)));
-                }
-                const span = doc.createElement('span');
-                span.style.cssText = 'filter:invert(1) hue-rotate(180deg)';
-                span.textContent = m[0];
-                frag.appendChild(span);
-                lastIndex = m.index + m[0].length;
-              }
-              if (lastIndex === 0) return;
-              if (lastIndex < text.length) {
-                frag.appendChild(doc.createTextNode(text.slice(lastIndex)));
-              }
-              parent.replaceChild(frag, textNode);
-            });
-          }
-        }
       }
     } catch {
       // Cross-origin restrictions - iframe will still display content
     }
-  }, [isDark, emailHasNativeDarkMode, email?.id, t, openCidPartLink]);
+  }, [isDark, effectiveEmailContent.externalBlocked, email?.id, t, openCidPartLink]);
 
   // Wire up the iframe as soon as its sandboxed document has parsed, rather than
   // waiting for the iframe 'load' event. 'load' also waits on every subresource,
@@ -3067,6 +2966,32 @@ export function EmailViewer({
             <ChevronLeft className="w-5 h-5" />
           </Button>
         )}
+        {showBackButton && mvMobileViewer && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onNavigatePrev}
+              disabled={!onNavigatePrev}
+              className="h-9 w-9 flex-shrink-0"
+              aria-label={t('tooltips.previous')}
+              title={t('tooltips.previous')}
+            >
+              <ChevronUp className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onNavigateNext}
+              disabled={!onNavigateNext}
+              className="h-9 w-9 flex-shrink-0"
+              aria-label={t('tooltips.next')}
+              title={t('tooltips.next')}
+            >
+              <ChevronDown className="w-5 h-5" />
+            </Button>
+          </>
+        )}
         {isScheduled && canCancelScheduled && (
           <>
             <Button
@@ -3111,7 +3036,7 @@ export function EmailViewer({
             <span className="text-sm">{t('edit_draft')}</span>
           </Button>
         )}
-        {!isScheduled && !isDraft && (<>
+        {!isScheduled && !isDraft && !mvViewer && (<>
         <Button
           variant="ghost"
           size="sm"
@@ -3389,7 +3314,7 @@ export function EmailViewer({
             onClick={() => { setMoreMenuOpen(!moreMenuOpen); setMoreMenuSlideEnabled(true); setMoreMenuSub(null); setTagMenuOpen(false); setMoveMenuOpen(false); }}
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
-            <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>
+            {interfaceLayout !== 'mountain-view' && <span className="text-[10px] leading-tight sm:hidden">{t('more_actions')}</span>}
           </Button>
           {moreMenuOpen && !isMobile && (
             <div
@@ -4012,8 +3937,9 @@ export function EmailViewer({
                 </div>
               )}
             </div>
-            {/* Date/time on the right of subject row - hidden on mobile, shown next to sender */}
-            <div className="hidden sm:block flex-shrink-0 text-end">
+            {/* Date/time on the right of subject row - hidden on mobile, shown next to sender.
+                Mountain View puts it on the sender's row instead, and shows no size. */}
+            <div className={cn("hidden flex-shrink-0 text-end", !mvViewer && "sm:block")}>
               <span className="text-xs lg:text-sm text-muted-foreground whitespace-nowrap">
                 {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
@@ -4038,8 +3964,10 @@ export function EmailViewer({
         </div>
       )}
 
-      {/* Email Content Area */}
-      <div className={cn("flex-1 overflow-auto overscroll-contain bg-muted/30", isMobile && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
+      {/* Email Content Area. Mountain View reads the conversation on one plain
+          sheet, so the reply buttons under the message sit on the page colour
+          rather than on a tinted strip. */}
+      <div className={cn("flex-1 overflow-auto overscroll-contain", mvViewer || mvMobileViewer ? "bg-background" : "bg-muted/30", isMobile && !mvMobileViewer && "pb-[calc(3.25rem+env(safe-area-inset-bottom)/2)] sm:pb-0")}>
       <div className="min-h-full flex flex-col">
 
       {/* === SENDER INFO (Desktop) === */}
@@ -4074,6 +4002,9 @@ export function EmailViewer({
                     ) : (
                       <span className="font-semibold text-foreground">{t('unknown_sender')}</span>
                     )}
+                    {mvViewer && sender?.email && sender?.name && (
+                      <span className="text-xs text-muted-foreground truncate">&lt;{sender.email}&gt;</span>
+                    )}
                     <EmailIdentityBadge email={email} identities={identities} />
                     {shouldShowUnsubBanner && listHeaders?.listUnsubscribe && (
                       <UnsubscribeBanner
@@ -4088,9 +4019,14 @@ export function EmailViewer({
                         }}
                       />
                     )}
+                    {mvViewer && (
+                      <span className="ms-auto ps-2 text-xs text-muted-foreground whitespace-nowrap" data-mv-sender-date="">
+                        {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </div>
-                  {/* Email address under name */}
-                  {sender?.email && sender?.name && (
+                  {/* Email address under name (on the name's line under Mountain View) */}
+                  {!mvViewer && sender?.email && sender?.name && (
                     <div className="text-sm text-muted-foreground mt-0.5 truncate">{sender.email}</div>
                   )}
                 </div>
@@ -4363,8 +4299,8 @@ export function EmailViewer({
                   />
                 )}
               </div>
-              {/* Email address under name */}
-              {sender?.email && sender?.name && (
+              {/* Email address under name - Mountain View keeps it in the details */}
+              {!mvMobileViewer && sender?.email && sender?.name && (
                 <div className="text-xs text-muted-foreground mt-0.5 truncate">{sender.email}</div>
               )}
               {/* Row 2: Recipients */}
@@ -4406,9 +4342,11 @@ export function EmailViewer({
             {/* Date/time + size on the right (mobile) */}
             <div className="sm:hidden flex-shrink-0 text-end ms-2">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                {mvMobileViewer
+                  ? formatDate(emailDisplayDate(email))
+                  : formatDateTime(emailDisplayDate(email), timeFormat, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
               </span>
-              {email.size > 0 && (
+              {email.size > 0 && !mvMobileViewer && (
                 <div className="text-xs text-muted-foreground/60">
                   {formatFileSize(email.size)}
                 </div>
@@ -4795,7 +4733,7 @@ export function EmailViewer({
               <div className="flex items-center gap-2 text-primary">
                 <CalendarClock className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  {t('scheduled_banner', { date: email.scheduledSendAt ? formatDateTime(email.scheduledSendAt, timeFormat) : '' })}
+                  {t('scheduled_banner', { date: email.scheduledSendAt ? formatScheduledSendAt(email.scheduledSendAt, timeFormat) : '' })}
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -4841,7 +4779,8 @@ export function EmailViewer({
                 <File className="w-4 h-4" />
                 <span className="text-sm font-medium">{t('draft_banner')}</span>
               </div>
-              {onEditDraft && (
+              {/* The toolbar already has Edit, except for a scheduled message. */}
+              {onEditDraft && isScheduled && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -5368,7 +5307,7 @@ export function EmailViewer({
                 title="Email content"
                 className="w-full border-0 block"
                 scrolling="no"
-                style={{ minHeight: '100px', colorScheme: isDark && emailHasNativeDarkMode ? 'light dark' : 'light' }}
+                style={{ minHeight: '100px', colorScheme: emailColorScheme(isDark, emailHasNativeDarkMode) }}
                 onLoad={handleIframeLoad}
               />
             ) : (
@@ -5389,8 +5328,29 @@ export function EmailViewer({
 
           <PluginSlot name="email-footer" />
 
+          {/* Mountain View: Reply / Reply all / Forward as buttons under the message. */}
+          {mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (
+            <div
+              className={cn("pb-6 pt-2", isMobile ? "grid grid-cols-3 gap-2 px-4" : "flex flex-wrap items-center gap-2 px-6")}
+              data-mv-reply-row=""
+            >
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={() => onReply?.()}>
+                <Reply className="w-4 h-4" />
+                {t('reply')}
+              </Button>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onReplyAll}>
+                <ReplyAll className="w-4 h-4" />
+                {t('reply_all')}
+              </Button>
+              <Button variant="outline" size="sm" className={cn("rounded-full gap-2", isMobile ? "min-w-0 px-2 text-xs" : "px-5")} onClick={onForward}>
+                <Forward className="w-4 h-4" />
+                {t('forward')}
+              </Button>
+            </div>
+          )}
+
           {/* Quick Reply Section - hidden for drafts and while loading a new email */}
-          {!isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
+          {!mvReplyRow && !isDraft && !isScheduled && !isBodyLoading && (effectiveEmailContent.isHtml ? iframeReady : true) && (<div className="bg-background border-t border-border px-6 mt-auto" style={{ paddingBlock: 'var(--density-header-py)' }}>
             <div className="flex items-start" style={{ gap: 'var(--density-item-gap)' }}>
               <div className="flex-shrink-0">
                 <Avatar
@@ -5537,7 +5497,7 @@ export function EmailViewer({
     {/* Mobile bottom action bar - pane-scoped inside a Pro pane (the
         viewport `sm:hidden` guard would otherwise hide it there, and
         `fixed` would span the whole app instead of the pane). */}
-    {isMobile && (
+    {isMobile && !mvMobileViewer && (
       <nav className={cn(
         "z-50 bg-background border-t border-border overflow-hidden pb-[calc(env(safe-area-inset-bottom)/2)]",
         isPaneScoped ? "absolute bottom-0 left-0 right-0" : "fixed bottom-0 left-0 right-0 sm:hidden",

@@ -147,6 +147,8 @@
     "show_all_tags": "Zobrazit vše ({count})",
     "show_fewer_tags": "Zobrazit méně",
     "folders": "Složky",
+    "show_more": "Více",
+    "show_fewer": "Méně",
     "shared": "Sdílené",
     "mail": "Pošta",
     "nav_label": "Navigace",
@@ -243,6 +245,7 @@
     "replied": "Zodpovězeno",
     "forwarded": "Přeposláno",
     "has_attachment": "Obsahuje přílohu",
+    "conversations_range": "{from}–{to, number} z {total, number}",
     "conversations_count": "{count} z {total} konverzací",
     "conversations_count_plus": "Více než {count} konverzací",
     "conversations_count_simple": "{count} konverzací",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "Naplánováno k odeslání {date}",
     "scheduled_send_created": "E-mail byl naplánován k odeslání",
+    "sending_in": "Odeslání za {seconds} s",
+    "undo_send_failed": "Odeslání nelze vrátit. Zpráva už možná byla odeslána.",
     "cancel_scheduled_send": "Zrušit odeslání",
     "reschedule_send": "Přeplánovat",
     "cancel_and_edit": "Zrušit a upravit",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",
-    "read_receipt_off": "Vyžádat potvrzení o přečtení",
-    "dsn_on": "Oznámení o doručení vyžádáno (kliknutím vypnete)",
-    "dsn_off": "Vyžádat oznámení o doručení",
-    "format_plain_text": "Přepnout na prostý text",
-    "format_rich_text": "Přepnout na formátovaný text (HTML)",
-    "require_tls_on": "Šifrované doručení vyžadováno (kliknutím vypnete)",
-    "require_tls_off": "Vyžadovat šifrované doručení (TLS)",
+    "minimize": "Minimalizovat",
+    "maximize": "Celá obrazovka",
+    "restore": "Obnovit",
     "new_message": "Nová zpráva",
     "signature_edit_hint": "Dvojklikem upravíte podpis",
     "reply": "Odpovědět",
@@ -648,6 +648,7 @@
     "discard": "Zahodit",
     "discard_draft_title": "Zahodit koncept?",
     "discard_draft_confirm": "Máte neuložené změny. Chcete tento koncept zahodit?",
+    "discard_draft_message": "Koncept bude smazán.",
     "saving": "Ukládání...",
     "draft_saved": "Koncept byl uložen",
     "save_failed": "Uložení selhalo",
@@ -684,11 +685,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Pokud váš server tuto adresu jako odesílatele obálky nepřijme, použije se místo ní {identity} a příjemci ji uvidí v záhlaví Return-Path."
     },
-    "use_template": "Šablona",
     "save_as_template": "Uložit jako šablonu",
+    "attach_from_device": "Nahrát z tohoto zařízení",
+    "templates_menu": "Šablony",
+    "insert_template": "Vložit šablonu",
+    "options": "Možnosti",
+    "option_plain_text": "Prostý text",
+    "option_plain_text_hint": "Odeslat bez formátování",
+    "option_read_receipt": "Vyžádat potvrzení o přečtení",
+    "option_read_receipt_hint": "Požádat příjemce o potvrzení otevření",
+    "option_dsn": "Oznámení o doručení",
+    "option_dsn_hint": "Dostat zprávu, až ji server doručí",
+    "option_require_tls": "Vyžadovat šifrované doručení",
+    "option_require_tls_hint": "Doručit jen přes TLS, jinak vrátit",
     "validation": {
       "recipient_required": "Chcete-li zprávu odeslat, přidejte příjemce",
       "body_required": "Napište zprávu nebo připojte soubor",
+      "invalid_recipients": "Neodesláno - zkontrolujte tyto adresy: {addresses}",
       "attachments_uploading": "Přílohy se stále nahrávají – odeslání proběhne po dokončení",
       "attachment_upload_failed": "Neodesláno - přílohu se nepodařilo nahrát. Odeberte ji a zkuste to znovu."
     },
@@ -701,7 +714,10 @@
     "show_less": "Zobrazit méně",
     "send_failed": "Odeslání zprávy selhalo",
     "send_timeout": "Server přestal odpovídat. Než odešlete znovu, zkontrolujte složku Odeslané – zpráva už mohla odejít.",
+    "send_offline": "Zdá se, že jste offline. Zpráva tu zůstává, odešlete ji znovu, až budete online.",
+    "formatting": "Formátování",
     "send_recipients_rejected": "Neodesláno – server odmítl všechny příjemce.",
+    "send_plugin_failed": "Neodesláno – plugin, který zajišťuje odeslání, selhal nebo trval příliš dlouho. Před opětovným odesláním zkontrolujte složku Odeslané.",
     "send_some_recipients_rejected": "Odesláno, ale ne těmto příjemcům – server je odmítl.",
     "continue_draft": "Pokračovat v úpravě konceptu",
     "close_draft_title": "Uložit nebo zahodit koncept?",
@@ -733,6 +749,11 @@
     "sending": "Odesílání...",
     "schedule_send": "Naplánovat odeslání",
     "schedule_send_description": "Vyberte, kdy má server tuto zprávu odeslat.",
+    "schedule_preset": {
+      "tomorrow_morning": "Zítra ráno",
+      "tomorrow_afternoon": "Zítra odpoledne",
+      "monday_morning": "V pondělí ráno"
+    },
     "schedule_send_required": "Vyberte datum a čas.",
     "schedule_send_invalid": "Zadejte platné datum a čas.",
     "schedule_send_future": "Vyberte budoucí datum a čas.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Upravit zobrazované jméno",
     "recipient_email_placeholder": "E-mailová adresa",
     "recipient_name_placeholder": "Zobrazované jméno",
+    "invalid_recipient": "Neplatná e-mailová adresa",
     "autocomplete_search_server": "Hledat na serveru",
     "autocomplete_searching": "Hledání...",
     "mention_recipients": "Příjemci",
@@ -785,6 +807,15 @@
       "remove_background_color": "Odebrat barvu pozadí"
     },
     "send_filing_warning": "Odesláno - ale následný úklid selhal, může zůstat zastaralý koncept.",
+    "read_receipt_on": "Vyžádáno potvrzení o přečtení (kliknutím vypnete)",
+    "read_receipt_off": "Vyžádat potvrzení o přečtení",
+    "dsn_on": "Oznámení o doručení vyžádáno (kliknutím vypnete)",
+    "dsn_off": "Vyžádat oznámení o doručení",
+    "format_plain_text": "Přepnout na prostý text",
+    "format_rich_text": "Přepnout na formátovaný text (HTML)",
+    "require_tls_on": "Šifrované doručení vyžadováno (kliknutím vypnete)",
+    "require_tls_off": "Vyžadovat šifrované doručení (TLS)",
+    "use_template": "Šablona",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Vzhled",
       "description": "Přizpůsobte si vzhled a chování vašeho webového e-mailu",
+      "theme": {
+        "label": "Motiv",
+        "description": "Vyberte preferované barevné schéma",
+        "light": "Světlý",
+        "dark": "Tmavý",
+        "system": "Systémový"
+      },
       "language": {
         "label": "Jazyk",
         "description": "Vyberte preferovaný jazyk"
@@ -1093,6 +1131,12 @@
         "compact": "Kompaktní",
         "regular": "Běžná",
         "comfortable": "Pohodlná"
+      },
+      "interface_layout": {
+        "label": "Rozvržení rozhraní",
+        "description": "Kde se nachází hledání, navigace a panely nástrojů",
+        "default": "Výchozí",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Povolit animace",
@@ -1241,6 +1285,18 @@
         "swift": "Rychlý",
         "relax": "Relaxační",
         "beep": "Pípnutí"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Zvuk oznámení",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Přetažením změňte pořadí",
         "add": "Přidat účet"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Sdíleno se mnou",
         "description": "Skupinové a sdílené účty, které můžete spravovat. Vyberte jeden pro úpravu jeho filtrů, odpovědi v nepřítomnosti, kalendářů a kontaktů.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Zabezpečení účtu",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "email@example.com",
       "forward_keep_copy": "Ponechat kopii",
       "forward_limit": "Limit přeposlání na zprávu na tomto serveru: {count}. Další přeposlání se přeskočí.",
+      "forward_unavailable": "Tento server nepovoluje přeposílání. Akce přeposlání v pravidlech filtrů nemají žádný účinek.",
       "reject_message": "Zpráva o odmítnutí",
       "reject_placeholder": "Váš e-mail byl odmítnut",
       "label_name": "Název štítku",
@@ -2397,12 +2484,6 @@
         "title": "Zobrazení",
         "description": "Nakonfigurujte způsob zobrazení souborů a složek"
       },
-      "folder_layout": {
-        "label": "Navigace složek",
-        "description": "Vyberte způsob zobrazení složek: společně se soubory nebo ve stromové struktuře postranního panelu",
-        "inline": "Vložená",
-        "sidebar": "Postranní panel"
-      },
       "default_view": {
         "label": "Výchozí zobrazení",
         "description": "Vyberte rozložení do mřížky nebo seznamu",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Náhled"
+      },
+      "folder_layout": {
+        "label": "Navigace složek",
+        "description": "Vyberte způsob zobrazení složek: společně se soubory nebo ve stromové struktuře postranního panelu",
+        "inline": "Vložená",
+        "sidebar": "Postranní panel"
       }
     },
     "search_placeholder": "Hledat nastavení",
@@ -2562,7 +2649,12 @@
       "manage": "Spravovat pravidla",
       "senders_count": "{count, plural, one {# odesílatele} few {# odesílatelů} many {# odesílatele} other {# odesílatelů}}",
       "cross_account": "Vyberte zprávy z jednoho účtu",
-      "opaque_hint": "Vaše filtry byly upraveny ručně. Otevřete nastavení filtrů"
+      "opaque_hint": "Vaše filtry byly upraveny ručně. Otevřete nastavení filtrů",
+      "loading": "Načítání pravidel…",
+      "load_failed": "Pravidla se nepodařilo načíst",
+      "none": "Zatím žádná pravidla",
+      "new_mail_only": "Pouze pro nové zprávy",
+      "running": "Spouštění „{name}“ ve složce {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Další zpráva",
       "previous_email": "Předchozí zpráva",
       "open_email": "Otevřít zprávu",
-      "close_email": "Zavřít / Zrušit výběr"
+      "close_email": "Zavřít / Zrušit výběr",
+      "go_to_folder": "Přejít do složky"
     },
     "actions": {
       "reply": "Odpovědět",
@@ -2643,7 +2736,8 @@
       "global_search": "Hledat ve všem"
     },
     "threads": {
-      "expand_collapse": "Rozbalit/sbalit vlákno"
+      "expand_collapse": "Rozbalit/sbalit vlákno",
+      "select_mountain_view": "Vybrat konverzaci"
     },
     "composer": {
       "send": "Odeslat e-mail",
@@ -3389,7 +3483,9 @@
     },
     "quick_create": {
       "placeholder": "Název nové události",
-      "aria_label": "Rychlé vytvoření události"
+      "aria_label": "Rychlé vytvoření události",
+      "add_title": "Přidat název",
+      "more_options": "Další možnosti"
     },
     "nav_prev": "Předchozí",
     "nav_next": "Další",
@@ -3574,7 +3670,13 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Otevřít nabídku"
+    "nav_open_menu": "Otevřít nabídku",
+    "toolbar": {
+      "more": "Další akce",
+      "select_view": "Změnit zobrazení, nyní {view}"
+    },
+    "other_calendars": "Další kalendáře",
+    "calendar_options": "Možnosti pro {name}"
   },
   "advanced_search": {
     "title": "Pokročilé hledání",
@@ -3620,6 +3722,8 @@
     "tip_shortcuts": "Stiskněte ? pro zobrazení všech klávesových zkratek",
     "tip_sidebar": "Kalendář, Kontakty a Nastavení najdete v postranním panelu",
     "tip_settings": "Přizpůsobte si aplikaci v Nastavení",
+    "tip_compose_touch": "Klepnutím na tlačítko s tužkou napíšete nový e-mail",
+    "tip_sidebar_touch": "Kalendář, Kontakty a Nastavení najdete na liště dole",
     "got_it": "Rozumím",
     "settings": "Nastavení",
     "dismiss": "Zavřít",
@@ -3643,8 +3747,6 @@
     "title": "Soubory",
     "search_placeholder": "Hledat soubory...",
     "empty_state_title": "Žádné soubory",
-    "empty_state_description": "Nahrajte soubory nebo vytvořte složky pro začátek",
-    "upload": "Nahrát",
     "upload_files": "Nahrát soubory",
     "new_folder": "Nová složka",
     "new_folder_name": "Název složky",
@@ -3663,11 +3765,10 @@
     "type": "Typ",
     "folder": "Složka",
     "file": "Soubor",
-    "parent_directory": "Nadřazený adresář",
-    "breadcrumb_root": "Domů",
-    "drop_files_here": "Přetáhněte sem soubory nebo složky pro jejich nahrání",
     "uploading": "Nahrávání...",
     "upload_success": "{count, plural, one {Nahrán 1 soubor} few {Nahrány # soubory} other {Nahráno # souborů}}",
+    "upload_canceled": "Nahrávání zrušeno",
+    "upload_canceled_partial": "Před zrušením {count, plural, one {byl nahrán 1 soubor} few {byly nahrány # soubory} many {bylo nahráno # souboru} other {bylo nahráno # souborů}}",
     "upload_error": "Nahrání souboru selhalo",
     "create_folder_success": "Složka byla vytvořena",
     "create_folder_error": "Vytvoření složky selhalo",
@@ -3700,7 +3801,6 @@
     "file_name": "Název souboru",
     "retry": "Opakovat",
     "refresh": "Obnovit",
-    "toggle_favorite": "Přepnout oblíbené",
     "duplicate": "Duplikovat",
     "duplicate_success": "Úspěšně duplikováno",
     "duplicate_error": "Duplikování selhalo",
@@ -3712,8 +3812,8 @@
     "create_file_error": "Vytvoření souboru selhalo",
     "favorites": "Oblíbené",
     "recent": "Nedávné",
-    "properties": "Vlastnosti",
-    "open_folder": "Otevřít složku",
+    "show_in_folder": "Zobrazit ve složce",
+    "remove_from_recent": "Odebrat z nedávných",
     "upload_folder": "Nahrát složku",
     "file_too_large": "\"{name}\" překračuje maximální velikost souboru ({max})",
     "undo": "Zpět",
@@ -3722,6 +3822,67 @@
     "toolbar": "Akce se soubory",
     "file_list": "Soubory a složky",
     "context_menu": "Akce",
+    "settings_ascending": "Vzestupně",
+    "settings_descending": "Sestupně",
+    "disabled_title": "Funkce Soubory je zakázána správcem",
+    "disabled_description": "Nahrávání velkých souborů přes WebDAV může způsobit nestabilitu Stalwart/RocksDB, včetně pádů z důvodu nedostatku paměti a nevratného zaplnění disku. Odstraněné soubory nemusí být okamžitě odstraněny z úložiště. Tato funkce se nedoporučuje v produkčním prostředí.",
+    "no_accounts": "Žádné připojené účty.",
+    "open_folder_tree": "Otevřít strom složek",
+    "migration_title": "Aktualizace vašich souborů…",
+    "migration_description": "Uspořádání složek a souborů do správné struktury. Toto proběhne pouze jednou.",
+    "new": "Nový",
+    "my_files": "Moje soubory",
+    "folders": "Složky",
+    "files_heading": "Soubory",
+    "open": "Otevřít",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Rozbalit {name}",
+    "collapse_folder": "Sbalit {name}",
+    "sidebar_hint": "Zde najdete oblíbené složky a otevřené soubory.",
+    "breadcrumbs": "Cesta ke složce",
+    "show_path": "Zobrazit skryté složky v cestě",
+    "selection_actions": "Akce pro vybrané položky",
+    "selected_count": "{count, plural, one {Vybrána 1 položka} few {Vybrány # položky} many {Vybráno # položky} other {Vybráno # položek}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Vybrat vše",
+    "select_item": "Vybrat {name}",
+    "more_actions": "Další akce pro {name}",
+    "paste_here": "Vložit do této složky",
+    "paste_count": "{count, plural, one {Vložit 1 položku} few {Vložit # položky} many {Vložit # položky} other {Vložit # položek}}",
+    "sort_by": "Seřadit podle",
+    "view_mode": "Zobrazení",
+    "clear_search": "Vymazat hledání",
+    "no_results_for": "V této složce nic neodpovídá „{query}“",
+    "download_count": "{count, plural, one {Stáhnout 1 soubor} few {Stáhnout # soubory} many {Stáhnout # souboru} other {Stáhnout # souborů}}",
+    "delete_count": "{count, plural, one {Odstranit 1 položku} few {Odstranit # položky} many {Odstranit # položky} other {Odstranit # položek}}",
+    "close_details": "Zavřít podrobnosti",
+    "file_kind": "Soubor {ext}",
+    "folder_summary": "{folders, plural, =0 {Žádné složky} one {1 složka} few {# složky} many {# složky} other {# složek}}, {files, plural, =0 {žádné soubory} one {1 soubor} few {# soubory} many {# souboru} other {# souborů}}",
+    "details_hint": "Vyberte soubor nebo složku a zobrazí se podrobnosti.",
+    "sharing": "Sdílení",
+    "shared_with_count": "{count, plural, one {Sdíleno s 1 osobou} few {Sdíleno s # osobami} many {Sdíleno s # osoby} other {Sdíleno s # osobami}}",
+    "only_you": "Pouze vy",
+    "empty_folder_title": "Tato složka je prázdná",
+    "empty_folder_description": "Přetáhněte sem soubory nebo je nahrajte ze svého zařízení.",
+    "empty_folder_read_only": "Do této složky nemůžete přidávat soubory.",
+    "choose_account": "Vyberte účet",
+    "drop_to_upload": "Pusťte pro nahrání do {folder}",
+    "uploading_count": "Nahrávání {current} z {total}",
+    "dismiss": "Zavřít",
+    "zoom_in": "Přiblížit",
+    "zoom_out": "Oddálit",
+    "zoom_reset": "Přizpůsobit obrazovce",
+    "rotate": "Otočit",
+    "close_preview": "Zavřít",
+    "empty_state_description": "Nahrajte soubory nebo vytvořte složky pro začátek",
+    "upload": "Nahrát",
+    "parent_directory": "Nadřazený adresář",
+    "breadcrumb_root": "Domů",
+    "drop_files_here": "Přetáhněte sem soubory nebo složky pro jejich nahrání",
+    "toggle_favorite": "Přepnout oblíbené",
+    "properties": "Vlastnosti",
+    "open_folder": "Otevřít složku",
     "settings_title": "Nastavení souborů",
     "settings_display": "Zobrazení",
     "settings_default_view": "Výchozí zobrazení",
@@ -3730,8 +3891,6 @@
     "settings_default_sort_desc": "Vyberte výchozí řazení souborů",
     "settings_sort_direction": "Směr řazení",
     "settings_sort_direction_desc": "Vyberte vzestupné nebo sestupné pořadí",
-    "settings_ascending": "Vzestupně",
-    "settings_descending": "Sestupně",
     "settings_icons": "Ikony",
     "settings_show_icons": "Zobrazovat ikony souborů",
     "settings_show_icons_desc": "Zobrazovat ikony vedle souborů a složek",
@@ -3746,14 +3905,8 @@
     "settings_folder_layout_desc": "Vyberte způsob zobrazení složek: společně se soubory nebo ve stromové struktuře v postranním panelu",
     "settings_folder_layout_inline": "Vložené",
     "settings_folder_layout_sidebar": "Postranní panel",
-    "disabled_title": "Funkce Soubory je zakázána správcem",
-    "disabled_description": "Nahrávání velkých souborů přes WebDAV může způsobit nestabilitu Stalwart/RocksDB, včetně pádů z důvodu nedostatku paměti a nevratného zaplnění disku. Odstraněné soubory nemusí být okamžitě odstraněny z úložiště. Tato funkce se nedoporučuje v produkčním prostředí.",
     "stability_warning": "Nahrávání velkých souborů může způsobit nestabilitu serveru. Odstraněné soubory nemusí být okamžitě odstraněny z úložiště. Používejte s opatrností.",
-    "no_accounts": "Žádné připojené účty.",
-    "open_folder_tree": "Otevřít strom složek",
     "other_accounts": "Ostatní účty",
-    "migration_title": "Aktualizace vašich souborů…",
-    "migration_description": "Uspořádání složek a souborů do správné struktury. Toto proběhne pouze jednou.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3763,13 +3916,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

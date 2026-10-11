@@ -25,6 +25,7 @@ export { GoogleContactsIcon } from './google-contacts-icon';
 import {
   IconActivity,
   IconAddressBook,
+  IconAdjustmentsHorizontal,
   IconAlertCircle,
   IconAlertTriangle,
   IconAlignCenter,
@@ -42,6 +43,7 @@ import {
   IconArrowRight,
   IconArrowUp,
   IconArrowsShuffle,
+  IconArrowsSort,
   IconArrowsVertical,
   IconBan,
   IconBaseline,
@@ -112,6 +114,7 @@ import {
   IconFileSpreadsheet,
   IconFileText,
   IconFileZip,
+  IconFiles,
   IconFilter,
   IconFlag,
   IconFlask,
@@ -120,10 +123,12 @@ import {
   IconFolderDown,
   IconFolderOpen,
   IconFolderPlus,
+  IconFolderSearch,
   IconFolderUp,
   IconFolderX,
   IconFolders,
   IconGitFork,
+  IconGridDots,
   IconGripVertical,
   IconH1,
   IconH2,
@@ -141,6 +146,7 @@ import {
   IconLayoutGrid,
   IconLayoutList,
   IconLayoutRows,
+  IconTemplate,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarRight,
   IconLayoutSidebarRightCollapse,
@@ -207,6 +213,7 @@ import {
   IconSquareCheck,
   IconStack,
   IconStar,
+  IconStarOff,
   IconStrikethrough,
   IconSun,
   IconTable,
@@ -249,6 +256,7 @@ import {
   ArrowRight as LucideArrowRight,
   ArrowUp as LucideArrowUp,
   ArrowUpCircle as LucideArrowUpCircle,
+  ArrowUpDown as LucideArrowUpDown,
   Ban as LucideBan,
   Baseline as LucideBaseline,
   Bell as LucideBell,
@@ -312,6 +320,7 @@ import {
   FileSpreadsheet as LucideFileSpreadsheet,
   FileText as LucideFileText,
   FileVideo as LucideFileVideo,
+  Files as LucideFiles,
   Filter as LucideFilter,
   Flag as LucideFlag,
   FlaskConical as LucideFlaskConical,
@@ -320,12 +329,14 @@ import {
   FolderInput as LucideFolderInput,
   FolderOpen as LucideFolderOpen,
   FolderPlus as LucideFolderPlus,
+  FolderSearch as LucideFolderSearch,
   FolderSync as LucideFolderSync,
   FolderUp as LucideFolderUp,
   FolderX as LucideFolderX,
   Forward as LucideForward,
   GitFork as LucideGitFork,
   Globe as LucideGlobe,
+  Grid3x3 as LucideGrid3x3,
   GripVertical as LucideGripVertical,
   HardDrive as LucideHardDrive,
   Heading1 as LucideHeading1,
@@ -347,6 +358,7 @@ import {
   LayoutDashboard as LucideLayoutDashboard,
   LayoutGrid as LucideLayoutGrid,
   LayoutList as LucideLayoutList,
+  LayoutTemplate as LucideLayoutTemplate,
   Lightbulb as LucideLightbulb,
   Link as LucideLink,
   List as LucideList,
@@ -426,11 +438,13 @@ import {
   ShieldAlert as LucideShieldAlert,
   ShieldCheck as LucideShieldCheck,
   Shuffle as LucideShuffle,
+  SlidersHorizontal as LucideSlidersHorizontal,
   Smartphone as LucideSmartphone,
   Sparkles as LucideSparkles,
   Square as LucideSquare,
   SquarePen as LucideSquarePen,
   Star as LucideStar,
+  StarOff as LucideStarOff,
   StickyNote as LucideStickyNote,
   Store as LucideStore,
   Strikethrough as LucideStrikethrough,
@@ -574,6 +588,7 @@ export const ArrowLeftRight = createDynamicIcon(IconArrowLeftRight, LucideArrowL
 export const ArrowRight = createDynamicIcon(IconArrowRight, LucideArrowRight, 'arrow_forward', 'ArrowRight', false);
 export const ArrowUp = createDynamicIcon(IconArrowUp, LucideArrowUp, 'arrow_upward', 'ArrowUp', false);
 export const ArrowUpCircle = createDynamicIcon(IconCircleArrowUp, LucideArrowUpCircle, 'arrow_circle_up', 'ArrowUpCircle', false);
+export const ArrowUpDown = createDynamicIcon(IconArrowsSort, LucideArrowUpDown, 'swap_vert', 'ArrowUpDown', false);
 export const Ban = createDynamicIcon(IconBan, LucideBan, 'block', 'Ban', false);
 export const Baseline = createDynamicIcon(IconBaseline, LucideBaseline, 'format_color_text', 'Baseline', false);
 export const Bell = createDynamicIcon(IconBell, LucideBell, 'notifications', 'Bell', false);
@@ -637,6 +652,7 @@ export const FilePlus = createDynamicIcon(IconFilePlus, LucideFilePlus, 'note_ad
 export const FileSpreadsheet = createDynamicIcon(IconFileSpreadsheet, LucideFileSpreadsheet, 'table_view', 'FileSpreadsheet', false);
 export const FileText = createDynamicIcon(IconFileText, LucideFileText, 'article', 'FileText', false);
 export const FileVideo = createDynamicIcon(IconVideo, LucideFileVideo, 'video_file', 'FileVideo', false);
+export const Files = createDynamicIcon(IconFiles, LucideFiles, 'file_copy', 'Files', false);
 export const Filter = createDynamicIcon(IconFilter, LucideFilter, 'filter_alt', 'Filter', false);
 export const Flag = createDynamicIcon(IconFlag, LucideFlag, 'flag', 'Flag', false);
 export const FlaskConical = createDynamicIcon(IconFlask, LucideFlaskConical, 'science', 'FlaskConical', false);
@@ -645,11 +661,13 @@ export const Folder = createDynamicIcon(IconFolder, LucideFolder, 'folder', 'Fol
 export const FolderInput = createDynamicIcon(IconFolderDown, LucideFolderInput, 'drive_file_move', 'FolderInput', false);
 export const FolderOpen = createDynamicIcon(IconFolderOpen, LucideFolderOpen, 'folder_open', 'FolderOpen', false);
 export const FolderPlus = createDynamicIcon(IconFolderPlus, LucideFolderPlus, 'create_new_folder', 'FolderPlus', false);
+export const FolderSearch = createDynamicIcon(IconFolderSearch, LucideFolderSearch, 'folder_shared', 'FolderSearch', false);
 export const FolderSync = createDynamicIcon(IconFolders, LucideFolderSync, 'folder_managed', 'FolderSync', false);
 export const FolderUp = createDynamicIcon(IconFolderUp, LucideFolderUp, 'drive_folder_upload', 'FolderUp', false);
 export const FolderX = createDynamicIcon(IconFolderX, LucideFolderX, 'folder_delete', 'FolderX', false);
 export const Forward = createDynamicIcon(IconArrowForwardUp, LucideForward, 'forward', 'Forward', false);
 export const Globe = createDynamicIcon(IconWorld, LucideGlobe, 'language', 'Globe', false);
+export const Grid3x3 = createDynamicIcon(IconGridDots, LucideGrid3x3, 'apps', 'Grid3x3', false);
 export const GripVertical = createDynamicIcon(IconGripVertical, LucideGripVertical, 'drag_indicator', 'GripVertical', false);
 export const HardDrive = createDynamicIcon(IconServer2, LucideHardDrive, 'hard_drive', 'HardDrive', false);
 export const Heading1 = createDynamicIcon(IconH1, LucideHeading1, 'format_h1', 'Heading1', false);
@@ -671,6 +689,7 @@ export const Layers = createDynamicIcon(IconStack, LucideLayers, 'layers', 'Laye
 export const LayoutDashboard = createDynamicIcon(IconLayoutDashboard, LucideLayoutDashboard, 'dashboard', 'LayoutDashboard', false);
 export const LayoutGrid = createDynamicIcon(IconLayoutGrid, LucideLayoutGrid, 'grid_view', 'LayoutGrid', false);
 export const LayoutList = createDynamicIcon(IconLayoutList, LucideLayoutList, 'view_list', 'LayoutList', false);
+export const LayoutTemplate = createDynamicIcon(IconTemplate, LucideLayoutTemplate, 'dashboard_customize', 'LayoutTemplate', false);
 export const Lightbulb = createDynamicIcon(IconBulb, LucideLightbulb, 'lightbulb', 'Lightbulb', false);
 export const Link = createDynamicIcon(IconLink, LucideLink, 'link', 'Link', false);
 export const List = createDynamicIcon(IconList, LucideList, 'list', 'List', false);
@@ -750,11 +769,13 @@ export const ShieldAlert = createDynamicIcon(IconShieldExclamation, LucideShield
 export const ShieldCheck = createDynamicIcon(IconShieldCheck, LucideShieldCheck, 'verified_user', 'ShieldCheck', false);
 export const ShieldFilled = createDynamicIcon(IconShieldFilled, LucideShield, 'shield', 'ShieldFilled', true);
 export const Shuffle = createDynamicIcon(IconArrowsShuffle, LucideShuffle, 'shuffle', 'Shuffle', false);
+export const SlidersHorizontal = createDynamicIcon(IconAdjustmentsHorizontal, LucideSlidersHorizontal, 'tune', 'SlidersHorizontal', false);
 export const Smartphone = createDynamicIcon(IconDeviceMobile, LucideSmartphone, 'mobile', 'Smartphone', false);
 export const Sparkles = createDynamicIcon(IconSparkles, LucideSparkles, 'star_shine', 'Sparkles', false);
 export const Square = createDynamicIcon(IconSquare, LucideSquare, 'crop_square', 'Square', false);
 export const SquarePen = createDynamicIcon(IconEdit, LucideSquarePen, 'edit_square', 'SquarePen', false);
 export const Star = createDynamicIcon(IconStar, LucideStar, 'star', 'Star', false);
+export const StarOff = createDynamicIcon(IconStarOff, LucideStarOff, 'star_rate', 'StarOff', false);
 export const StickyNote = createDynamicIcon(IconNote, LucideStickyNote, 'sticky_note_2', 'StickyNote', false);
 export const Store = createDynamicIcon(IconBuildingStore, LucideStore, 'storefront', 'Store', false);
 export const Strikethrough = createDynamicIcon(IconStrikethrough, LucideStrikethrough, 'format_strikethrough', 'Strikethrough', false);

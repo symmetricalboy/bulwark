@@ -424,3 +424,184 @@ describe('resourceServerRef (issue #1094)', () => {
     expect(resourceServerRef({ id: 'b' })).toEqual({ accountId: undefined, id: 'b' });
   });
 });
+
+describe('file-store folder tree and moves', () => {
+  beforeEach(() => {
+    useFileStore.setState({
+      client: null,
+      currentParentId: null,
+      currentPath: '/',
+      pathStack: [{ id: null, name: '' }],
+      resources: [],
+      allFolders: [],
+      selectedResources: new Set(),
+      clipboard: null,
+      lastAction: null,
+    });
+  });
+
+  it('keeps every folder from the listing for the tree, at any depth', async () => {
+    const client = makeMockClient([
+      dir('a', 'A', null),
+      dir('b', 'B', 'a'),
+      file('f', 'f.txt', 'b'),
+    ]);
+    useFileStore.getState().initClient(client);
+
+    await useFileStore.getState().navigate(null);
+    expect(useFileStore.getState().allFolders.map(f => f.id).sort()).toEqual(['a', 'b']);
+  });
+
+  it('moves items into any folder by id and records the move for undo', async () => {
+    const client = makeMockClient([
+      dir('a', 'A', null),
+      dir('b', 'B', 'a'),
+      file('f', 'f.txt', null),
+    ]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate(null);
+
+    await useFileStore.getState().moveToFolderId(['f.txt'], 'b');
+    expect(client._nodes().find(n => n.id === 'f')!.parentId).toBe('b');
+
+    await useFileStore.getState().undoLastAction();
+    expect(client._nodes().find(n => n.id === 'f')!.parentId).toBeNull();
+  });
+
+  it('refuses to move a folder into itself or a folder below it', async () => {
+    const client = makeMockClient([
+      dir('a', 'A', null),
+      dir('b', 'B', 'a'),
+    ]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate(null);
+
+    await useFileStore.getState().moveToFolderId(['A'], 'b');
+    await useFileStore.getState().moveToFolderId(['A'], 'a');
+    expect(client._nodes().find(n => n.id === 'a')!.parentId).toBeNull();
+  });
+
+  it('reveals a file deep in the tree: opens its folder with the full path and selects it', async () => {
+    const client = makeMockClient([
+      dir('a', 'A', null),
+      dir('b', 'B', 'a'),
+      file('f', 'f.txt', 'b'),
+    ]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate(null);
+
+    expect(await useFileStore.getState().revealNode('f')).toBe('f.txt');
+    const state = useFileStore.getState();
+    expect(state.currentPath).toBe('/A/B');
+    expect(state.currentParentId).toBe('b');
+    expect(state.resources.map(r => r.name)).toEqual(['f.txt']);
+    expect([...state.selectedResources]).toEqual(['f.txt']);
+  });
+
+  it('returns null when the revealed node no longer exists', async () => {
+    const client = makeMockClient([dir('a', 'A', null)]);
+    useFileStore.getState().initClient(client);
+    expect(await useFileStore.getState().revealNode('gone')).toBeNull();
+  });
+});
+
+describe('file-store upload result', () => {
+  beforeEach(() => {
+    useFileStore.setState({
+      client: null,
+      currentParentId: null,
+      currentPath: '/',
+      pathStack: [{ id: null, name: '' }],
+      resources: [],
+      uploadProgress: null,
+      uploadAbortController: null,
+    });
+  });
+
+  it('reports every file when the upload runs to the end', async () => {
+    const client = makeMockClient();
+    useFileStore.getState().initClient(client);
+    const result = await useFileStore.getState().uploadFiles([
+      new File(['a'], 'a.txt'), new File(['b'], 'b.txt'),
+    ]);
+    expect(result).toEqual({ uploaded: 2, canceled: false });
+  });
+
+  it('reports a cancel and only the files that made it before it', async () => {
+    const client = makeMockClient();
+    const upload = client.uploadBlob.bind(client);
+    let calls = 0;
+    client.uploadBlob = (async (file: File) => {
+      calls++;
+      // Cancel while the second file is on its way up.
+      if (calls === 2) useFileStore.getState().cancelUpload();
+      return upload(file);
+    }) as typeof client.uploadBlob;
+    useFileStore.getState().initClient(client);
+
+    const result = await useFileStore.getState().uploadFiles([
+      new File(['a'], 'a.txt'), new File(['b'], 'b.txt'), new File(['c'], 'c.txt'),
+    ]);
+    expect(result).toEqual({ uploaded: 1, canceled: true });
+    expect(client._nodes().map(n => n.name)).toEqual(['a.txt']);
+  });
+});
+
+describe('file-store actions by id', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useFileStore.setState({
+      client: null,
+      currentParentId: null,
+      currentPath: '/',
+      pathStack: [{ id: null, name: '' }],
+      resources: [],
+      allFolders: [],
+      favorites: [],
+      recentFiles: [],
+      selectedResources: new Set(),
+      lastAction: null,
+    });
+  });
+
+  it('renames a folder that is not listed and moves its stars along', async () => {
+    const client = makeMockClient([dir('a', 'A', null), dir('b', 'B', 'a')]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate(null);
+    useFileStore.setState({ favorites: ['/A/B', '/Other'] });
+
+    await useFileStore.getState().renameNode('a', 'Alpha');
+    expect(client._nodes().find(n => n.id === 'a')!.name).toBe('Alpha');
+    expect(useFileStore.getState().favorites).toEqual(['/Alpha/B', '/Other']);
+  });
+
+  it('updates the path on screen when an open folder is renamed', async () => {
+    const client = makeMockClient([dir('a', 'A', null), dir('b', 'B', 'a')]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate('a', 'A');
+    await useFileStore.getState().navigate('b', 'B');
+
+    await useFileStore.getState().renameNode('a', 'Alpha');
+    expect(useFileStore.getState().currentPath).toBe('/Alpha/B');
+  });
+
+  it('deletes the open folder and steps out to its parent, dropping its stars', async () => {
+    const client = makeMockClient([dir('a', 'A', null), dir('b', 'B', 'a')]);
+    useFileStore.getState().initClient(client);
+    await useFileStore.getState().navigate('a', 'A');
+    await useFileStore.getState().navigate('b', 'B');
+    useFileStore.setState({ favorites: ['/A/B', '/A'] });
+
+    await useFileStore.getState().deleteNode('b');
+    const state = useFileStore.getState();
+    expect(state.currentPath).toBe('/A');
+    expect(state.currentParentId).toBe('a');
+    expect(state.favorites).toEqual(['/A']);
+  });
+
+  it('forgets a recent file', () => {
+    useFileStore.setState({ recentFiles: [{ name: 'x', id: '1', timestamp: 1 }, { name: 'y', id: '2', timestamp: 2 }] });
+    useFileStore.getState().removeRecentFile('1');
+    expect(useFileStore.getState().recentFiles.map(r => r.id)).toEqual(['2']);
+  });
+});

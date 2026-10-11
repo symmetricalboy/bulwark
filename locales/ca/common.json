@@ -147,6 +147,8 @@
     "show_all_tags": "Mostra-ho tot ({count})",
     "show_fewer_tags": "Mostra'n menys",
     "folders": "Carpetes",
+    "show_more": "Més",
+    "show_fewer": "Menys",
     "shared": "Compartit",
     "mail": "Correu",
     "nav_label": "Navegació",
@@ -243,6 +245,7 @@
     "replied": "Respost",
     "forwarded": "Reenviat",
     "has_attachment": "Té adjunt",
+    "conversations_range": "{from}–{to, number} de {total, number}",
     "conversations_count": "{count} de {total} converses",
     "conversations_count_plus": "{count}+ converses",
     "conversations_count_simple": "{count} converses",
@@ -578,6 +581,8 @@
     "more": "més",
     "scheduled_banner": "Programat per enviar-se el {date}",
     "scheduled_send_created": "Correu programat per enviar-se",
+    "sending_in": "S'enviarà d'aquí a {seconds} s",
+    "undo_send_failed": "No s'ha pogut desfer. Potser el missatge ja s'ha enviat.",
     "cancel_scheduled_send": "Cancel·la l'enviament",
     "reschedule_send": "Reprograma",
     "cancel_and_edit": "Cancel·la i edita",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Confirmació de lectura sol·licitada (feu clic per desactivar-la)",
-    "read_receipt_off": "Sol·licita una confirmació de lectura",
-    "dsn_on": "Notificació de lliurament sol·licitada (fes clic per desactivar)",
-    "dsn_off": "Sol·licita una notificació de lliurament",
-    "format_plain_text": "Canvia a text sense format",
-    "format_rich_text": "Canvia a text enriquit (HTML)",
-    "require_tls_on": "Lliurament xifrat obligatori (fes clic per desactivar)",
-    "require_tls_off": "Exigeix lliurament xifrat (TLS)",
+    "minimize": "Minimitza",
+    "maximize": "Pantalla completa",
+    "restore": "Restaura",
     "new_message": "Missatge nou",
     "signature_edit_hint": "Feu doble clic per editar la signatura",
     "reply": "Respon",
@@ -648,6 +648,7 @@
     "discard": "Descarta",
     "discard_draft_title": "Voleu descartar l'esborrany?",
     "discard_draft_confirm": "Teniu canvis sense desar. Voleu descartar aquest esborrany?",
+    "discard_draft_message": "S'eliminarà l'esborrany.",
     "saving": "Desant...",
     "sending": "Enviant...",
     "add_link": "Afegeix un enllaç",
@@ -687,11 +688,23 @@
       "email_placeholder": "alias@exemple.com",
       "envelope_notice": "Si el vostre servidor no accepta aquesta adreça com a remitent del sobre, s'hi fa servir {identity}, i els destinataris la poden veure a la capçalera Return-Path."
     },
-    "use_template": "Plantilla",
     "save_as_template": "Desa com a plantilla",
+    "attach_from_device": "Puja des d'aquest dispositiu",
+    "templates_menu": "Plantilles",
+    "insert_template": "Insereix una plantilla",
+    "options": "Opcions",
+    "option_plain_text": "Text pla",
+    "option_plain_text_hint": "Envia sense format",
+    "option_read_receipt": "Demana confirmació de lectura",
+    "option_read_receipt_hint": "Demana al destinatari que confirmi que l'ha obert",
+    "option_dsn": "Notificació de lliurament",
+    "option_dsn_hint": "Rep un informe quan el servidor el lliuri",
+    "option_require_tls": "Exigeix lliurament xifrat",
+    "option_require_tls_hint": "Lliura només per TLS; si no, retorna'l",
     "validation": {
       "recipient_required": "Afegiu un destinatari per enviar",
       "body_required": "Escriviu un missatge o adjunteu un fitxer",
+      "invalid_recipients": "No s'ha enviat - comprova aquestes adreces: {addresses}",
       "attachments_uploading": "Els fitxers adjunts encara s'estan pujant — s'enviarà en acabar",
       "attachment_upload_failed": "No s'ha enviat — no s'ha pogut pujar un fitxer adjunt. Elimineu-lo i torneu-ho a provar."
     },
@@ -704,7 +717,10 @@
     "show_less": "Mostra'n menys",
     "send_failed": "No s'ha pogut enviar el correu",
     "send_timeout": "El servidor ha deixat de respondre. Comproveu la carpeta Enviats abans de tornar a enviar: el missatge pot haver sortit.",
+    "send_offline": "Sembla que no tens connexió. El missatge continua aquí; torna a enviar-lo quan tornis a estar en línia.",
+    "formatting": "Format",
     "send_recipients_rejected": "No s'ha enviat: el servidor ha rebutjat tots els destinataris.",
+    "send_plugin_failed": "No s'ha enviat: un connector que gestiona l'enviament ha fallat o ha trigat massa. Comprova la carpeta Enviats abans de tornar-ho a enviar.",
     "send_some_recipients_rejected": "S'ha enviat, però no a aquests destinataris: el servidor els ha rebutjat.",
     "continue_draft": "Continua l'esborrany",
     "close_draft_title": "Voleu desar o descartar l'esborrany?",
@@ -733,6 +749,11 @@
     },
     "schedule_send": "Programa l'enviament",
     "schedule_send_description": "Trieu quan ha d'alliberar el servidor aquest missatge.",
+    "schedule_preset": {
+      "tomorrow_morning": "Demà al matí",
+      "tomorrow_afternoon": "Demà a la tarda",
+      "monday_morning": "Dilluns al matí"
+    },
     "schedule_send_required": "Trieu una data i hora.",
     "schedule_send_invalid": "Introduïu una data i hora vàlides.",
     "schedule_send_future": "Trieu una data i hora futures.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Edita el nom mostrat",
     "recipient_email_placeholder": "Adreça electrònica",
     "recipient_name_placeholder": "Nom mostrat",
+    "invalid_recipient": "No és una adreça de correu vàlida",
     "autocomplete_search_server": "Cerca al servidor",
     "autocomplete_searching": "Cercant...",
     "mention_recipients": "Destinataris",
@@ -785,6 +807,15 @@
       "remove_background_color": "Elimina el color de fons"
     },
     "send_filing_warning": "Enviat, però la neteja posterior a l'enviament ha fallat; és possible que quedi un esborrany obsolet.",
+    "read_receipt_on": "Confirmació de lectura sol·licitada (feu clic per desactivar-la)",
+    "read_receipt_off": "Sol·licita una confirmació de lectura",
+    "dsn_on": "Notificació de lliurament sol·licitada (fes clic per desactivar)",
+    "dsn_off": "Sol·licita una notificació de lliurament",
+    "format_plain_text": "Canvia a text sense format",
+    "format_rich_text": "Canvia a text enriquit (HTML)",
+    "require_tls_on": "Lliurament xifrat obligatori (fes clic per desactivar)",
+    "require_tls_off": "Exigeix lliurament xifrat (TLS)",
+    "use_template": "Plantilla",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1078,6 +1109,13 @@
       },
       "title": "Aparença",
       "description": "Personalitzeu l'aspecte del vostre correu web",
+      "theme": {
+        "label": "Tema",
+        "description": "Trieu l'esquema de colors preferit",
+        "light": "Clar",
+        "dark": "Fosc",
+        "system": "Sistema"
+      },
       "language": {
         "label": "Idioma",
         "description": "Trieu l'idioma preferit"
@@ -1096,6 +1134,12 @@
         "compact": "Compacta",
         "regular": "Normal",
         "comfortable": "Còmoda"
+      },
+      "interface_layout": {
+        "label": "Disposició de la interfície",
+        "description": "On se situen la cerca, la navegació i les barres d'eines",
+        "default": "Predeterminat",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Activa les animacions",
@@ -1280,6 +1324,18 @@
         "confirm_revoke_title": "Voleu revocar aquest dispositiu?",
         "confirm_revoke_message": "Deixarà de rebre notificacions en segon pla immediatament. Si hi tornes a activar les notificacions push, es registrarà de nou.",
         "confirm_revoke_message_this": "Aquest dispositiu deixarà de rebre notificacions en segon pla immediatament."
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "So de notificació",
@@ -1691,6 +1747,33 @@
         "drag_handle": "Arrossegueu per reordenar",
         "add": "Afegeix un compte"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Compartit amb mi",
         "description": "Comptes de grup i compartits que podeu gestionar. Seleccioneu-ne un per editar-ne els filtres, la resposta automàtica, els calendaris i els contactes.",
@@ -1733,7 +1816,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "scoped": {
       "back": "Torna al meu compte",
@@ -2278,6 +2364,7 @@
       "forward_placeholder": "correu@exemple.com",
       "forward_keep_copy": "Conserva'n una còpia",
       "forward_limit": "Límit de reenviaments per missatge en aquest servidor: {count}. Els reenviaments addicionals s'ometen.",
+      "forward_unavailable": "Aquest servidor no permet reenviar. Les accions de reenviament de les regles de filtre no tenen cap efecte.",
       "reject_message": "Missatge de rebuig",
       "reject_placeholder": "El vostre correu ha estat rebutjat",
       "label_name": "Nom de l'etiqueta",
@@ -2404,12 +2491,6 @@
         "title": "Visualització",
         "description": "Configureu com es mostren els fitxers i les carpetes"
       },
-      "folder_layout": {
-        "label": "Navegació de carpetes",
-        "description": "Trieu com es mostren les carpetes: incrustades amb els fitxers o en un arbre a la barra lateral",
-        "inline": "Incrustades",
-        "sidebar": "Barra lateral"
-      },
       "default_view": {
         "label": "Vista predeterminada",
         "description": "Trieu entre disposició de quadrícula i de llista",
@@ -2455,6 +2536,12 @@
       },
       "preview": {
         "label": "Previsualització"
+      },
+      "folder_layout": {
+        "label": "Navegació de carpetes",
+        "description": "Trieu com es mostren les carpetes: incrustades amb els fitxers o en un arbre a la barra lateral",
+        "inline": "Incrustades",
+        "sidebar": "Barra lateral"
       }
     },
     "byomc": {
@@ -2562,7 +2649,12 @@
       "manage": "Gestiona les regles",
       "senders_count": "{count, plural, one {# remitent} other {# remitents}}",
       "cross_account": "Selecciona missatges d'un sol compte",
-      "opaque_hint": "Els teus filtres s'han editat a mà. Obre la configuració dels filtres"
+      "opaque_hint": "Els teus filtres s'han editat a mà. Obre la configuració dels filtres",
+      "loading": "S'estan carregant les regles…",
+      "load_failed": "No s'han pogut carregar les regles",
+      "none": "Encara no hi ha regles",
+      "new_mail_only": "Només per a missatges nous",
+      "running": "S'està executant «{name}» a {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Correu següent",
       "previous_email": "Correu anterior",
       "open_email": "Obre el correu",
-      "close_email": "Tanca / Desselecciona"
+      "close_email": "Tanca / Desselecciona",
+      "go_to_folder": "Vés a la carpeta"
     },
     "actions": {
       "reply": "Respon",
@@ -2643,7 +2736,8 @@
       "global_search": "Cerca-ho tot"
     },
     "threads": {
-      "expand_collapse": "Desplega/replega el fil"
+      "expand_collapse": "Desplega/replega el fil",
+      "select_mountain_view": "Selecciona la conversa"
     },
     "composer": {
       "send": "Envia el correu",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "Títol del nou esdeveniment",
-      "aria_label": "Crea un esdeveniment ràpidament"
+      "aria_label": "Crea un esdeveniment ràpidament",
+      "add_title": "Afegeix un títol",
+      "more_options": "Més opcions"
     },
     "nav_prev": "Anterior",
     "nav_next": "Següent",
@@ -3574,7 +3670,13 @@
       "due_today": "Avui",
       "due_tomorrow": "Demà",
       "overdue": "Vençuda"
-    }
+    },
+    "toolbar": {
+      "more": "Més accions",
+      "select_view": "Canvia la vista, actualment {view}"
+    },
+    "other_calendars": "Altres calendaris",
+    "calendar_options": "Opcions de {name}"
   },
   "calendar_event_notifications": {
     "someone": "Algú",
@@ -3663,6 +3765,8 @@
     "tip_shortcuts": "Premeu ? per veure totes les dreceres de teclat",
     "tip_sidebar": "Trobeu el Calendari, els Contactes i la Configuració al menú de la barra lateral",
     "tip_settings": "Personalitzeu la vostra experiència a la Configuració",
+    "tip_compose_touch": "Toca el botó del llapis per escriure un correu nou",
+    "tip_sidebar_touch": "Trobaràs el Calendari, els Contactes i la Configuració a la barra inferior",
     "got_it": "Entesos",
     "settings": "Configuració",
     "dismiss": "Descarta",
@@ -3686,8 +3790,6 @@
     "title": "Fitxers",
     "search_placeholder": "Cerca fitxers...",
     "empty_state_title": "Encara no hi ha fitxers",
-    "empty_state_description": "Pugeu fitxers o creeu carpetes per començar",
-    "upload": "Puja",
     "upload_files": "Puja fitxers",
     "new_folder": "Carpeta nova",
     "new_folder_name": "Nom de la carpeta",
@@ -3706,13 +3808,11 @@
     "type": "Tipus",
     "folder": "Carpeta",
     "file": "Fitxer",
-    "parent_directory": "Directori superior",
-    "breadcrumb_root": "Inici",
-    "other_accounts": "Altres comptes",
     "no_accounts": "Cap compte connectat.",
-    "drop_files_here": "Deixeu anar fitxers o carpetes aquí per pujar-los",
     "uploading": "Pujant...",
     "upload_success": "{count, plural, one {1 fitxer pujat} other {# fitxers pujats}}",
+    "upload_canceled": "Pujada cancel·lada",
+    "upload_canceled_partial": "{count, plural, one {S'ha pujat 1 fitxer} other {S'han pujat # fitxers}} abans de cancel·lar",
     "upload_error": "No s'ha pogut pujar el fitxer",
     "create_folder_success": "Carpeta creada",
     "create_folder_error": "No s'ha pogut crear la carpeta",
@@ -3745,7 +3845,6 @@
     "file_name": "Nom del fitxer",
     "retry": "Reintenta",
     "refresh": "Actualitza",
-    "toggle_favorite": "Commuta preferit",
     "duplicate": "Duplica",
     "duplicate_success": "Duplicat correctament",
     "duplicate_error": "No s'ha pogut duplicar",
@@ -3757,8 +3856,8 @@
     "create_file_error": "No s'ha pogut crear el fitxer",
     "favorites": "Preferits",
     "recent": "Recents",
-    "properties": "Propietats",
-    "open_folder": "Obre la carpeta",
+    "show_in_folder": "Mostra a la carpeta",
+    "remove_from_recent": "Treu de recents",
     "upload_folder": "Puja una carpeta",
     "file_too_large": "«{name}» supera la mida màxima de fitxer ({max})",
     "undo": "Desfés",
@@ -3768,6 +3867,66 @@
     "open_folder_tree": "Obre l'arbre de carpetes",
     "file_list": "Fitxers i carpetes",
     "context_menu": "Accions",
+    "settings_ascending": "Ascendent",
+    "settings_descending": "Descendent",
+    "disabled_title": "La funció de fitxers està desactivada per l'administrador",
+    "disabled_description": "Les pujades de fitxers grans via WebDAV poden causar inestabilitat a Stalwart/RocksDB, incloent-hi fallades per manca de memòria i ús de disc irrecuperable. És possible que els fitxers suprimits no s'eliminin immediatament de l'emmagatzematge de blobs. No es recomana aquesta funció per a entorns de producció.",
+    "migration_title": "Actualitzant els vostres fitxers…",
+    "migration_description": "S'estan organitzant les carpetes i els fitxers en la seva estructura adequada. Això només passa una vegada.",
+    "new": "Nou",
+    "my_files": "Els meus fitxers",
+    "folders": "Carpetes",
+    "files_heading": "Fitxers",
+    "open": "Obre",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Desplega {name}",
+    "collapse_folder": "Plega {name}",
+    "sidebar_hint": "Les carpetes preferides i els fitxers oberts apareixen aquí.",
+    "breadcrumbs": "Camí de la carpeta",
+    "show_path": "Mostra les carpetes ocultes del camí",
+    "selection_actions": "Accions per als elements seleccionats",
+    "selected_count": "{count, plural, one {1 seleccionat} other {# seleccionats}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Selecciona-ho tot",
+    "select_item": "Selecciona {name}",
+    "more_actions": "Més accions per a {name}",
+    "paste_here": "Enganxa en aquesta carpeta",
+    "paste_count": "{count, plural, one {Enganxa 1 element} other {Enganxa # elements}}",
+    "sort_by": "Ordena per",
+    "view_mode": "Visualització",
+    "clear_search": "Esborra la cerca",
+    "no_results_for": "No hi ha res en aquesta carpeta que coincideixi amb «{query}»",
+    "download_count": "{count, plural, one {Baixa 1 fitxer} other {Baixa # fitxers}}",
+    "delete_count": "{count, plural, one {Suprimeix 1 element} other {Suprimeix # elements}}",
+    "close_details": "Tanca els detalls",
+    "file_kind": "Fitxer {ext}",
+    "folder_summary": "{folders, plural, =0 {Cap carpeta} one {1 carpeta} other {# carpetes}}, {files, plural, =0 {cap fitxer} one {1 fitxer} other {# fitxers}}",
+    "details_hint": "Seleccioneu un fitxer o una carpeta per veure'n els detalls.",
+    "sharing": "Compartició",
+    "shared_with_count": "{count, plural, one {Compartit amb 1 persona} other {Compartit amb # persones}}",
+    "only_you": "Només vós",
+    "empty_folder_title": "Aquesta carpeta és buida",
+    "empty_folder_description": "Deixeu anar fitxers aquí o pugeu-los des del dispositiu.",
+    "empty_folder_read_only": "No podeu afegir fitxers a aquesta carpeta.",
+    "choose_account": "Trieu un compte",
+    "drop_to_upload": "Deixeu anar per pujar a {folder}",
+    "uploading_count": "S'està pujant {current} de {total}",
+    "dismiss": "Descarta",
+    "zoom_in": "Amplia",
+    "zoom_out": "Redueix",
+    "zoom_reset": "Ajusta a la pantalla",
+    "rotate": "Gira",
+    "close_preview": "Tanca",
+    "empty_state_description": "Pugeu fitxers o creeu carpetes per començar",
+    "upload": "Puja",
+    "parent_directory": "Directori superior",
+    "breadcrumb_root": "Inici",
+    "other_accounts": "Altres comptes",
+    "drop_files_here": "Deixeu anar fitxers o carpetes aquí per pujar-los",
+    "toggle_favorite": "Commuta preferit",
+    "properties": "Propietats",
+    "open_folder": "Obre la carpeta",
     "settings_title": "Configuració de fitxers",
     "settings_display": "Visualització",
     "settings_default_view": "Vista predeterminada",
@@ -3776,8 +3935,6 @@
     "settings_default_sort_desc": "Trieu l'ordenació predeterminada dels fitxers",
     "settings_sort_direction": "Direcció de l'ordenació",
     "settings_sort_direction_desc": "Trieu ordre ascendent o descendent",
-    "settings_ascending": "Ascendent",
-    "settings_descending": "Descendent",
     "settings_icons": "Icones",
     "settings_show_icons": "Mostra les icones de fitxer",
     "settings_show_icons_desc": "Mostra icones al costat dels fitxers i les carpetes",
@@ -3792,11 +3949,7 @@
     "settings_folder_layout_desc": "Trieu com es mostren les carpetes: incrustades amb els fitxers o en un arbre a la barra lateral",
     "settings_folder_layout_inline": "Incrustades",
     "settings_folder_layout_sidebar": "Barra lateral",
-    "disabled_title": "La funció de fitxers està desactivada per l'administrador",
-    "disabled_description": "Les pujades de fitxers grans via WebDAV poden causar inestabilitat a Stalwart/RocksDB, incloent-hi fallades per manca de memòria i ús de disc irrecuperable. És possible que els fitxers suprimits no s'eliminin immediatament de l'emmagatzematge de blobs. No es recomana aquesta funció per a entorns de producció.",
     "stability_warning": "Les pujades de fitxers grans poden causar inestabilitat al servidor. És possible que els fitxers suprimits no s'eliminin immediatament de l'emmagatzematge. Utilitzeu-ho amb precaució.",
-    "migration_title": "Actualitzant els vostres fitxers…",
-    "migration_description": "S'estan organitzant les carpetes i els fitxers en la seva estructura adequada. Això només passa una vegada.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3806,13 +3959,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

@@ -147,6 +147,8 @@
     "show_all_tags": "Показать все ({count})",
     "show_fewer_tags": "Показать меньше",
     "folders": "Папки",
+    "show_more": "Ещё",
+    "show_fewer": "Свернуть",
     "mail": "Почта",
     "nav_label": "Навигация",
     "add_app": "Приложения",
@@ -243,6 +245,7 @@
     "replied": "Отвечено",
     "forwarded": "Переслано",
     "has_attachment": "С вложением",
+    "conversations_range": "{from}–{to, number} из {total, number}",
     "conversations_count": "{count} из {total} бесед",
     "conversations_count_plus": "{count}+ бесед",
     "conversations_count_simple": "{count} бесед",
@@ -578,6 +581,8 @@
     },
     "scheduled_banner": "Запланировано к отправке {date}",
     "scheduled_send_created": "Письмо запланировано к отправке",
+    "sending_in": "Отправка через {seconds} с",
+    "undo_send_failed": "Не удалось отменить. Возможно, сообщение уже отправлено.",
     "cancel_scheduled_send": "Отменить отправку",
     "reschedule_send": "Перенести",
     "cancel_and_edit": "Отменить и изменить",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Запрошено уведомление о прочтении (нажмите, чтобы отключить)",
-    "read_receipt_off": "Запросить уведомление о прочтении",
-    "dsn_on": "Запрошено уведомление о доставке (нажмите, чтобы отключить)",
-    "dsn_off": "Запросить уведомление о доставке",
-    "format_plain_text": "Переключить на простой текст",
-    "format_rich_text": "Переключить на форматированный текст (HTML)",
-    "require_tls_on": "Требуется зашифрованная доставка (нажмите, чтобы отключить)",
-    "require_tls_off": "Требовать зашифрованную доставку (TLS)",
+    "minimize": "Свернуть",
+    "maximize": "Во весь экран",
+    "restore": "Восстановить",
     "new_message": "Новое письмо",
     "signature_edit_hint": "Дважды щёлкните, чтобы изменить подпись",
     "reply": "Ответить",
@@ -648,6 +648,7 @@
     "discard": "Удалить",
     "discard_draft_title": "Удалить черновик?",
     "discard_draft_confirm": "Есть несохранённые изменения. Удалить этот черновик?",
+    "discard_draft_message": "Черновик будет удалён.",
     "saving": "Сохранение...",
     "draft_saved": "Черновик сохранён",
     "save_failed": "Не удалось сохранить",
@@ -684,11 +685,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Если ваш сервер не принимает этот адрес как отправителя конверта, вместо него используется {identity}, и получатели увидят его в заголовке Return-Path."
     },
-    "use_template": "Шаблон",
     "save_as_template": "Сохранить как шаблон",
+    "attach_from_device": "Загрузить с этого устройства",
+    "templates_menu": "Шаблоны",
+    "insert_template": "Вставить шаблон",
+    "options": "Параметры",
+    "option_plain_text": "Обычный текст",
+    "option_plain_text_hint": "Отправить без форматирования",
+    "option_read_receipt": "Запросить уведомление о прочтении",
+    "option_read_receipt_hint": "Попросить получателя подтвердить открытие",
+    "option_dsn": "Уведомление о доставке",
+    "option_dsn_hint": "Получить отчёт, когда сервер доставит письмо",
+    "option_require_tls": "Требовать шифрованную доставку",
+    "option_require_tls_hint": "Доставлять только через TLS, иначе вернуть",
     "validation": {
       "recipient_required": "Укажите получателя для отправки",
       "body_required": "Напишите сообщение или прикрепите файл",
+      "invalid_recipients": "Не отправлено - проверьте эти адреса: {addresses}",
       "attachments_uploading": "Вложения ещё загружаются — отправка начнётся, как только загрузка завершится",
       "attachment_upload_failed": "Не отправлено — не удалось загрузить вложение. Удалите его и попробуйте снова."
     },
@@ -701,7 +714,10 @@
     "show_less": "Свернуть",
     "send_failed": "Не удалось отправить письмо",
     "send_timeout": "Сервер перестал отвечать. Прежде чем отправлять снова, проверьте папку «Отправленные» — письмо могло уже уйти.",
+    "send_offline": "Похоже, вы не в сети. Сообщение сохранено, отправьте его снова, когда подключение восстановится.",
+    "formatting": "Форматирование",
     "send_recipients_rejected": "Не отправлено — сервер отклонил всех получателей.",
+    "send_plugin_failed": "Не отправлено: плагин, который отвечает за отправку, завершился с ошибкой или работал слишком долго. Проверьте папку «Отправленные», прежде чем отправлять снова.",
     "send_some_recipients_rejected": "Отправлено, но не этим получателям — сервер их отклонил.",
     "continue_draft": "Продолжить черновик",
     "close_draft_title": "Сохранить или удалить черновик?",
@@ -733,6 +749,11 @@
     "sending": "Отправка...",
     "schedule_send": "Запланировать отправку",
     "schedule_send_description": "Выберите, когда сервер должен отправить это сообщение.",
+    "schedule_preset": {
+      "tomorrow_morning": "Завтра утром",
+      "tomorrow_afternoon": "Завтра днём",
+      "monday_morning": "В понедельник утром"
+    },
     "schedule_send_required": "Выберите дату и время.",
     "schedule_send_invalid": "Введите действительные дату и время.",
     "schedule_send_future": "Выберите дату и время в будущем.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Изменить отображаемое имя",
     "recipient_email_placeholder": "Адрес эл. почты",
     "recipient_name_placeholder": "Отображаемое имя",
+    "invalid_recipient": "Недействительный адрес электронной почты",
     "autocomplete_search_server": "Искать на сервере",
     "autocomplete_searching": "Поиск...",
     "mention_recipients": "Получатели",
@@ -785,6 +807,15 @@
       "remove_background_color": "Убрать цвет фона"
     },
     "send_filing_warning": "Отправлено - но последующая очистка не удалась, может остаться устаревший черновик.",
+    "read_receipt_on": "Запрошено уведомление о прочтении (нажмите, чтобы отключить)",
+    "read_receipt_off": "Запросить уведомление о прочтении",
+    "dsn_on": "Запрошено уведомление о доставке (нажмите, чтобы отключить)",
+    "dsn_off": "Запросить уведомление о доставке",
+    "format_plain_text": "Переключить на простой текст",
+    "format_rich_text": "Переключить на форматированный текст (HTML)",
+    "require_tls_on": "Требуется зашифрованная доставка (нажмите, чтобы отключить)",
+    "require_tls_off": "Требовать зашифрованную доставку (TLS)",
+    "use_template": "Шаблон",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1075,6 +1106,13 @@
       },
       "title": "Внешний вид",
       "description": "Настройте внешний вид веб-почты",
+      "theme": {
+        "label": "Тема",
+        "description": "Выберите предпочтительную цветовую схему",
+        "light": "Светлая",
+        "dark": "Тёмная",
+        "system": "Системная"
+      },
       "language": {
         "label": "Язык",
         "description": "Выберите предпочтительный язык"
@@ -1093,6 +1131,12 @@
         "compact": "Компактный",
         "regular": "Обычный",
         "comfortable": "Просторный"
+      },
+      "interface_layout": {
+        "label": "Макет интерфейса",
+        "description": "Где находятся поиск, навигация и панели инструментов",
+        "default": "По умолчанию",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Включить анимации",
@@ -1241,6 +1285,18 @@
         "swift": "Быстрый жест",
         "relax": "Релакс",
         "beep": "Сигнал"
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Звук уведомления",
@@ -1688,6 +1744,33 @@
         "drag_handle": "Перетащите, чтобы изменить порядок",
         "add": "Добавить учётную запись"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Доступные мне",
         "description": "Групповые и общие учётные записи, которыми вы можете управлять. Выберите одну, чтобы изменить её фильтры, автоответчик, календари и контакты.",
@@ -1730,7 +1813,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "security": {
       "title": "Безопасность аккаунта",
@@ -2271,6 +2357,7 @@
       "forward_placeholder": "user@пример.рф",
       "forward_keep_copy": "Сохранить копию",
       "forward_limit": "Лимит пересылок на одно письмо на этом сервере: {count}. Лишние пересылки пропускаются.",
+      "forward_unavailable": "Этот сервер не разрешает пересылку. Действия пересылки в правилах фильтров не сработают.",
       "reject_message": "Сообщение об отклонении",
       "reject_placeholder": "Ваше письмо было отклонено",
       "label_name": "Название тега",
@@ -2397,12 +2484,6 @@
         "title": "Отображение",
         "description": "Настройте отображение файлов и папок"
       },
-      "folder_layout": {
-        "label": "Навигация по папкам",
-        "description": "Выберите, как отображать папки: встроенно с файлами или в боковом дереве",
-        "inline": "Встроенно",
-        "sidebar": "Боковая панель"
-      },
       "default_view": {
         "label": "Вид по умолчанию",
         "description": "Выберите между сеткой и списком",
@@ -2448,6 +2529,12 @@
       },
       "preview": {
         "label": "Предпросмотр"
+      },
+      "folder_layout": {
+        "label": "Навигация по папкам",
+        "description": "Выберите, как отображать папки: встроенно с файлами или в боковом дереве",
+        "inline": "Встроенно",
+        "sidebar": "Боковая панель"
       }
     },
     "search_placeholder": "Поиск настроек",
@@ -2562,7 +2649,12 @@
       "manage": "Управление правилами",
       "senders_count": "{count, plural, one {# отправителя} few {# отправителей} many {# отправителей} other {# отправителя}}",
       "cross_account": "Выберите письма из одной учётной записи",
-      "opaque_hint": "Ваши фильтры отредактированы вручную. Откройте настройки фильтров"
+      "opaque_hint": "Ваши фильтры отредактированы вручную. Откройте настройки фильтров",
+      "loading": "Загрузка правил…",
+      "load_failed": "Не удалось загрузить правила",
+      "none": "Правил пока нет",
+      "new_mail_only": "Только для новых писем",
+      "running": "Выполняется «{name}» в папке {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Следующее письмо",
       "previous_email": "Предыдущее письмо",
       "open_email": "Открыть письмо",
-      "close_email": "Закрыть / Отменить выбор"
+      "close_email": "Закрыть / Отменить выбор",
+      "go_to_folder": "Перейти к папке"
     },
     "actions": {
       "reply": "Ответить",
@@ -2643,7 +2736,8 @@
       "global_search": "Искать везде"
     },
     "threads": {
-      "expand_collapse": "Развернуть/свернуть цепочку"
+      "expand_collapse": "Развернуть/свернуть цепочку",
+      "select_mountain_view": "Выбрать переписку"
     },
     "composer": {
       "send": "Отправить письмо",
@@ -3389,7 +3483,9 @@
     },
     "quick_create": {
       "placeholder": "Название нового события",
-      "aria_label": "Быстрое создание события"
+      "aria_label": "Быстрое создание события",
+      "add_title": "Добавьте название",
+      "more_options": "Другие параметры"
     },
     "nav_prev": "Предыдущий",
     "nav_next": "Следующий",
@@ -3574,7 +3670,13 @@
       "bah": "Bahman",
       "esf": "Esfand"
     },
-    "nav_open_menu": "Открыть меню"
+    "nav_open_menu": "Открыть меню",
+    "toolbar": {
+      "more": "Другие действия",
+      "select_view": "Сменить вид, сейчас {view}"
+    },
+    "other_calendars": "Другие календари",
+    "calendar_options": "Параметры: {name}"
   },
   "advanced_search": {
     "title": "Расширенный поиск",
@@ -3620,6 +3722,8 @@
     "tip_shortcuts": "Нажмите ? для просмотра всех сочетаний клавиш",
     "tip_sidebar": "Найдите Календарь, Контакты и Настройки в боковом меню",
     "tip_settings": "Настройте интерфейс в разделе «Настройки»",
+    "tip_compose_touch": "Нажмите кнопку с карандашом, чтобы написать новое письмо",
+    "tip_sidebar_touch": "Календарь, Контакты и Настройки находятся на нижней панели",
     "got_it": "Понятно",
     "settings": "Настройки",
     "dismiss": "Закрыть",
@@ -3643,8 +3747,6 @@
     "title": "Файлы",
     "search_placeholder": "Поиск файлов...",
     "empty_state_title": "Файлов пока нет",
-    "empty_state_description": "Загрузите файлы или создайте папки для начала",
-    "upload": "Загрузить",
     "upload_files": "Загрузить файлы",
     "new_folder": "Новая папка",
     "new_folder_name": "Название папки",
@@ -3663,11 +3765,10 @@
     "type": "Тип",
     "folder": "Папка",
     "file": "Файл",
-    "parent_directory": "Родительский каталог",
-    "breadcrumb_root": "Главная",
-    "drop_files_here": "Перетащите файлы или папки сюда для загрузки",
     "uploading": "Загрузка...",
     "upload_success": "{count, plural, one {1 файл загружен} other {# файлов загружено}}",
+    "upload_canceled": "Загрузка отменена",
+    "upload_canceled_partial": "{count, plural, one {# файл был загружен} few {# файла было загружено} many {# файлов было загружено} other {# файла было загружено}} до отмены",
     "upload_error": "Не удалось загрузить файл",
     "create_folder_success": "Папка создана",
     "create_folder_error": "Не удалось создать папку",
@@ -3700,7 +3801,6 @@
     "file_name": "Имя файла",
     "retry": "Повторить",
     "refresh": "Обновить",
-    "toggle_favorite": "Переключить избранное",
     "duplicate": "Дублировать",
     "duplicate_success": "Дублирование выполнено успешно",
     "duplicate_error": "Не удалось дублировать",
@@ -3712,8 +3812,8 @@
     "create_file_error": "Не удалось создать файл",
     "favorites": "Избранное",
     "recent": "Недавние",
-    "properties": "Свойства",
-    "open_folder": "Открыть папку",
+    "show_in_folder": "Показать в папке",
+    "remove_from_recent": "Убрать из недавних",
     "upload_folder": "Загрузить папку",
     "file_too_large": "«{name}» превышает максимальный размер файла ({max})",
     "undo": "Отменить",
@@ -3722,6 +3822,67 @@
     "toolbar": "Действия с файлами",
     "file_list": "Файлы и папки",
     "context_menu": "Действия",
+    "settings_ascending": "По возрастанию",
+    "settings_descending": "По убыванию",
+    "disabled_title": "Функция файлов отключена вашим администратором",
+    "disabled_description": "Загрузка больших файлов через WebDAV может вызвать нестабильность Stalwart/RocksDB, включая ошибки нехватки памяти и невосстановимое использование диска. Удалённые файлы могут не быть немедленно удалены из хранилища. Эта функция не рекомендуется для рабочих сред.",
+    "no_accounts": "Нет подключённых учётных записей.",
+    "open_folder_tree": "Открыть дерево папок",
+    "migration_title": "Обновление ваших файлов…",
+    "migration_description": "Папки и файлы упорядочиваются в правильную структуру. Это происходит только один раз.",
+    "new": "Создать",
+    "my_files": "Мои файлы",
+    "folders": "Папки",
+    "files_heading": "Файлы",
+    "open": "Открыть",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Развернуть {name}",
+    "collapse_folder": "Свернуть {name}",
+    "sidebar_hint": "Добавляйте папки в избранное и открывайте файлы, чтобы они появлялись здесь.",
+    "breadcrumbs": "Путь к папке",
+    "show_path": "Показать скрытые папки пути",
+    "selection_actions": "Действия с выбранными элементами",
+    "selected_count": "{count, plural, one {Выбран # элемент} few {Выбрано # элемента} many {Выбрано # элементов} other {Выбрано # элемента}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Выбрать все",
+    "select_item": "Выбрать {name}",
+    "more_actions": "Другие действия для {name}",
+    "paste_here": "Вставить в эту папку",
+    "paste_count": "{count, plural, one {Вставить # элемент} few {Вставить # элемента} many {Вставить # элементов} other {Вставить # элемента}}",
+    "sort_by": "Сортировка",
+    "view_mode": "Вид",
+    "clear_search": "Очистить поиск",
+    "no_results_for": "В этой папке ничего не найдено по запросу «{query}»",
+    "download_count": "{count, plural, one {Скачать # файл} few {Скачать # файла} many {Скачать # файлов} other {Скачать # файла}}",
+    "delete_count": "{count, plural, one {Удалить # элемент} few {Удалить # элемента} many {Удалить # элементов} other {Удалить # элемента}}",
+    "close_details": "Закрыть подробности",
+    "file_kind": "Файл {ext}",
+    "folder_summary": "{folders, plural, =0 {Нет папок} one {# папка} few {# папки} many {# папок} other {# папки}}, {files, plural, =0 {нет файлов} one {# файл} few {# файла} many {# файлов} other {# файла}}",
+    "details_hint": "Выберите файл или папку, чтобы увидеть подробности.",
+    "sharing": "Общий доступ",
+    "shared_with_count": "{count, plural, one {Доступ открыт # человеку} few {Доступ открыт # людям} many {Доступ открыт # людям} other {Доступ открыт # человека}}",
+    "only_you": "Только вы",
+    "empty_folder_title": "Эта папка пуста",
+    "empty_folder_description": "Перетащите файлы сюда или загрузите их с устройства.",
+    "empty_folder_read_only": "Вы не можете добавлять файлы в эту папку.",
+    "choose_account": "Выберите учётную запись",
+    "drop_to_upload": "Отпустите, чтобы загрузить в {folder}",
+    "uploading_count": "Загрузка {current} из {total}",
+    "dismiss": "Закрыть",
+    "zoom_in": "Увеличить",
+    "zoom_out": "Уменьшить",
+    "zoom_reset": "По размеру экрана",
+    "rotate": "Повернуть",
+    "close_preview": "Закрыть",
+    "empty_state_description": "Загрузите файлы или создайте папки для начала",
+    "upload": "Загрузить",
+    "parent_directory": "Родительский каталог",
+    "breadcrumb_root": "Главная",
+    "drop_files_here": "Перетащите файлы или папки сюда для загрузки",
+    "toggle_favorite": "Переключить избранное",
+    "properties": "Свойства",
+    "open_folder": "Открыть папку",
     "settings_title": "Настройки файлов",
     "settings_display": "Отображение",
     "settings_default_view": "Вид по умолчанию",
@@ -3730,8 +3891,6 @@
     "settings_default_sort_desc": "Выберите способ сортировки файлов по умолчанию",
     "settings_sort_direction": "Направление сортировки",
     "settings_sort_direction_desc": "Выберите порядок: по возрастанию или убыванию",
-    "settings_ascending": "По возрастанию",
-    "settings_descending": "По убыванию",
     "settings_icons": "Иконки",
     "settings_show_icons": "Показывать иконки файлов",
     "settings_show_icons_desc": "Отображать иконки рядом с файлами и папками",
@@ -3746,14 +3905,8 @@
     "settings_folder_layout_desc": "Выберите, как отображать папки: встроенно с файлами или в боковом дереве",
     "settings_folder_layout_inline": "Встроенно",
     "settings_folder_layout_sidebar": "Боковая панель",
-    "disabled_title": "Функция файлов отключена вашим администратором",
-    "disabled_description": "Загрузка больших файлов через WebDAV может вызвать нестабильность Stalwart/RocksDB, включая ошибки нехватки памяти и невосстановимое использование диска. Удалённые файлы могут не быть немедленно удалены из хранилища. Эта функция не рекомендуется для рабочих сред.",
     "stability_warning": "Загрузка больших файлов может вызвать нестабильность сервера. Удалённые файлы могут не быть немедленно удалены из хранилища. Используйте с осторожностью.",
-    "no_accounts": "Нет подключённых учётных записей.",
-    "open_folder_tree": "Открыть дерево папок",
     "other_accounts": "Другие учётные записи",
-    "migration_title": "Обновление ваших файлов…",
-    "migration_description": "Папки и файлы упорядочиваются в правильную структуру. Это происходит только один раз.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3763,13 +3916,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },

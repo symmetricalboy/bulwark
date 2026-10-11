@@ -24,7 +24,8 @@ describe('Google Drive Client', () => {
     const res = await fetchGoogleDriveFiles('root', 'Notes');
     expect(res.files).toEqual(mockFiles);
     expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/google/drive/files?folderId=root&search=Notes')
+      expect.stringContaining('/api/google/drive/files?folderId=root&search=Notes'),
+      expect.anything()
     );
   });
 
@@ -77,9 +78,9 @@ describe('Google Drive Client', () => {
     } as Response);
 
     await deleteGoogleDriveFile('f1', false);
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api/google/drive/files/f1', {
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/google/drive/files/f1', expect.objectContaining({
       method: 'DELETE',
-    });
+    }));
   });
 
   it('generates download URL and downloads blob with parsed filename', async () => {

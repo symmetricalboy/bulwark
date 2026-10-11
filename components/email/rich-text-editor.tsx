@@ -89,6 +89,11 @@ interface RichTextEditorProps {
   onEditorReady?: (editor: Editor) => void;
   /** Recipients an "@" in the text offers to mention; none turns it off. */
   mentionCandidates?: MentionCandidate[];
+  /**
+   * Hide the formatting toolbar on a phone. It wraps onto two rows there and,
+   * with the address fields, left little room for the text above the keyboard.
+   */
+  collapseToolbarOnMobile?: boolean;
 }
 
 function ToolbarButton({
@@ -111,7 +116,8 @@ function ToolbarButton({
       disabled={disabled}
       title={title}
       className={cn(
-        "p-1.5 rounded hover:bg-accent transition-colors",
+        // Bigger on a phone, where 28px was hard to hit with a finger.
+        "p-1.5 max-md:p-2 rounded hover:bg-accent transition-colors",
         active && "bg-accent text-accent-foreground",
         disabled && "opacity-40 cursor-not-allowed"
       )}
@@ -180,6 +186,7 @@ export function RichTextEditor({
   hasError,
   onEditorReady,
   mentionCandidates,
+  collapseToolbarOnMobile = false,
 }: RichTextEditorProps) {
   const rtlEditingSupport = useSettingsStore((st) => st.rtlEditingSupport);
   const tComposer = useTranslations("email_composer");
@@ -426,13 +433,18 @@ export function RichTextEditor({
   return (
     <div className={cn("flex flex-col", hasError && "ring-2 ring-red-500 dark:ring-red-400 rounded", className)}>
       {/* Toolbar - sticky within the composer's scroll container so it stays
-          visible while editing long bodies. The background stays at main's
-          bg-muted/30 in every state - backdrop-blur has no visual effect while
-          the toolbar rests on the solid page background, and blurs body text
-          sliding underneath only once pinned, so pinned legibility needs no
-          extra opaque overlay (an always-on stronger overlay would read darker
-          than main even at rest). */}
-      <div className="sticky top-0 z-20 flex flex-wrap items-center gap-0.5 px-3 py-1.5 border-b border-border/50 bg-muted/30 backdrop-blur-sm">
+          visible while editing long bodies. Its background is the colour
+          bg-muted/30 gives over the page, made opaque: the same at rest, and
+          body text scrolling underneath stays hidden instead of showing
+          through, which a backdrop blur alone did not guarantee (browsers
+          that skip backdrop-filter drew the text sharp under the buttons). */}
+      <div
+        data-testid="rich-text-toolbar"
+        className={cn(
+          "sticky top-0 z-20 flex flex-wrap items-center gap-0.5 px-3 py-1.5 border-b border-border/50 bg-[color-mix(in_oklab,var(--color-muted)_30%,var(--color-background))]",
+          collapseToolbarOnMobile && "max-md:hidden"
+        )}
+      >
         {/* Font size - two baseline-aligned A's read as "size" at a glance;
             once a size is chosen the button shows that number instead. */}
         <div ref={fontSizeWrapperRef} className="relative">

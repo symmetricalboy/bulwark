@@ -2,6 +2,7 @@
 
 import { Node as TiptapNode, mergeAttributes } from "@tiptap/core";
 import { DOMSerializer } from "@tiptap/pm/model";
+import { NodeSelection, Plugin, PluginKey, Selection, TextSelection } from "@tiptap/pm/state";
 import type { Editor } from "@tiptap/react";
 
 import { buildSignatureBlock } from "@/components/email/signature-block";
@@ -16,6 +17,9 @@ export const QUOTED_HTML_MARKER = "data-quoted-html";
 // remote content (policy "allow", or a trusted sender). Display hint only:
 // serializeEditorContent never emits it.
 const QUOTED_REMOTE_ALLOWED_ATTR = "data-quoted-remote";
+
+// Atom blocks typing must never replace just because they were left selected.
+const ATOM_BLOCKS = new Set(["quotedHtml", "signatureBlock"]);
 
 // Reusable style for the quote bar when quoting email text (like in a reply).
 const QUOTE_BAR_STYLE =
@@ -69,6 +73,47 @@ export const QuotedHtml = TiptapNode.create({
 
   parseHTML() {
     return [{ tag: `div[${QUOTED_HTML_MARKER}]` }];
+  },
+
+  addProseMirrorPlugins() {
+    // Set once the user put the caret somewhere (click, tap) or the editor
+    // already had focus, so later focus keeps that position.
+    let placedByUser = false;
+    const markPlaced = () => {
+      placedByUser = true;
+      return false;
+    };
+    return [
+      new Plugin({
+        key: new PluginKey("quotedHtmlFocus"),
+        props: {
+          handleDOMEvents: {
+            mousedown: markPlaced,
+            touchstart: markPlaced,
+            // Where the editor's selection rests before the user touched it
+            // is an accident of how the body was built: on the quote (or
+            // signature) as a node in a reply, where the first key typed
+            // replaced the whole block, or after the signature in a new
+            // message. Focus from the keyboard puts the caret at the start
+            // instead; a click still lands where it was aimed, because
+            // ProseMirror handles the click after the focus event.
+            focus: (view) => {
+              const { selection, doc } = view.state;
+              const onAtom = selection instanceof NodeSelection
+                && ATOM_BLOCKS.has(selection.node.type.name);
+              if (onAtom || !placedByUser) {
+                const start = Selection.atStart(doc);
+                if (start instanceof TextSelection && !start.eq(selection)) {
+                  view.dispatch(view.state.tr.setSelection(start));
+                }
+              }
+              placedByUser = true;
+              return false;
+            },
+          },
+        },
+      }),
+    ];
   },
 
   renderHTML({ HTMLAttributes }) {

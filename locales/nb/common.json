@@ -147,6 +147,8 @@
     "show_all_tags": "Vis alle ({count})",
     "show_fewer_tags": "Vis færre",
     "folders": "Mapper",
+    "show_more": "Mer",
+    "show_fewer": "Mindre",
     "shared": "Delt",
     "mail": "E-post",
     "nav_label": "Navigasjon",
@@ -243,6 +245,7 @@
     "replied": "Besvart",
     "forwarded": "Videresendt",
     "has_attachment": "Har vedlegg",
+    "conversations_range": "{from}–{to, number} av {total, number}",
     "conversations_count": "{count} av {total} samtaler",
     "conversations_count_plus": "{count}+ samtaler",
     "conversations_count_simple": "{count} samtaler",
@@ -578,6 +581,8 @@
     "more": "mer",
     "scheduled_banner": "Planlagt sending: {date}",
     "scheduled_send_created": "Sendingen er planlagt",
+    "sending_in": "Sendes om {seconds} s",
+    "undo_send_failed": "Kunne ikke angres. Meldingen kan allerede være sendt.",
     "cancel_scheduled_send": "Avbryt sending",
     "reschedule_send": "Planlegg på nytt",
     "cancel_and_edit": "Avbryt og rediger",
@@ -612,14 +617,9 @@
     }
   },
   "email_composer": {
-    "read_receipt_on": "Ber om lesebekreftelse (klikk for å slå av)",
-    "read_receipt_off": "Be om lesebekreftelse",
-    "dsn_on": "Leveringsvarsel forespurt (klikk for å slå av)",
-    "dsn_off": "Be om leveringsvarsel",
-    "format_plain_text": "Bytt til ren tekst",
-    "format_rich_text": "Bytt til formatert tekst (HTML)",
-    "require_tls_on": "Kryptert levering kreves (klikk for å slå av)",
-    "require_tls_off": "Krev kryptert levering (TLS)",
+    "minimize": "Minimer",
+    "maximize": "Fullskjerm",
+    "restore": "Gjenopprett",
     "new_message": "Ny melding",
     "signature_edit_hint": "Dobbeltklikk for å redigere signaturen",
     "reply": "Svar",
@@ -648,6 +648,7 @@
     "discard": "Forkast",
     "discard_draft_title": "Vil du forkaste utkastet?",
     "discard_draft_confirm": "Du har ulagrede endringer. Vil du forkaste dette utkastet?",
+    "discard_draft_message": "Utkastet blir slettet.",
     "saving": "Lagrer...",
     "sending": "Sender...",
     "add_link": "Legg til lenke",
@@ -687,11 +688,23 @@
       "email_placeholder": "alias@example.com",
       "envelope_notice": "Hvis serveren din ikke godtar denne adressen som konvoluttavsender, brukes {identity} i stedet, og mottakerne kan se den i Return-Path-overskriften."
     },
-    "use_template": "Mal",
     "save_as_template": "Lagre som mal",
+    "attach_from_device": "Last opp fra denne enheten",
+    "templates_menu": "Maler",
+    "insert_template": "Sett inn mal",
+    "options": "Alternativer",
+    "option_plain_text": "Ren tekst",
+    "option_plain_text_hint": "Send uten formatering",
+    "option_read_receipt": "Be om lesebekreftelse",
+    "option_read_receipt_hint": "Be mottakeren bekrefte at den er åpnet",
+    "option_dsn": "Leveringsvarsel",
+    "option_dsn_hint": "Få en rapport når serveren leverer den",
+    "option_require_tls": "Krev kryptert levering",
+    "option_require_tls_hint": "Lever bare over TLS, ellers avvis",
     "validation": {
       "recipient_required": "Legg til minst én mottaker før du sender",
       "body_required": "Skriv en melding eller legg ved en fil",
+      "invalid_recipients": "Ikke sendt - sjekk disse adressene: {addresses}",
       "attachments_uploading": "Vedlegg lastes fortsatt opp – meldingen sendes så snart opplastingen er ferdig",
       "attachment_upload_failed": "Ikke sendt – et vedlegg kunne ikke lastes opp. Fjern det og prøv igjen."
     },
@@ -704,7 +717,10 @@
     "show_less": "Vis færre",
     "send_failed": "Kunne ikke sende e-post",
     "send_timeout": "Serveren sluttet å svare. Sjekk Sendt-mappen før du sender på nytt – meldingen kan ha blitt sendt.",
+    "send_offline": "Du ser ut til å være frakoblet. Meldingen er her fortsatt, send den på nytt når du er tilkoblet igjen.",
+    "formatting": "Formatering",
     "send_recipients_rejected": "Ikke sendt – serveren avviste alle mottakerne.",
+    "send_plugin_failed": "Ikke sendt - et tillegg som står for sendingen, mislyktes eller brukte for lang tid. Sjekk Sendt-mappen før du sender på nytt.",
     "send_some_recipients_rejected": "Sendt, men ikke til disse mottakerne – serveren avviste dem.",
     "continue_draft": "Fortsett å skrive",
     "close_draft_title": "Lagre eller forkast utkast?",
@@ -733,6 +749,11 @@
     },
     "schedule_send": "Planlegg sending",
     "schedule_send_description": "Velg når serveren skal sende denne meldingen.",
+    "schedule_preset": {
+      "tomorrow_morning": "I morgen tidlig",
+      "tomorrow_afternoon": "I morgen ettermiddag",
+      "monday_morning": "Mandag morgen"
+    },
     "schedule_send_required": "Velg dato og klokkeslett.",
     "schedule_send_invalid": "Skriv inn en gyldig dato og klokkeslett.",
     "schedule_send_future": "Velg et tidspunkt i fremtiden.",
@@ -745,6 +766,7 @@
     "recipient_edit_name": "Rediger visningsnavn",
     "recipient_email_placeholder": "E-postadresse",
     "recipient_name_placeholder": "Visningsnavn",
+    "invalid_recipient": "Ikke en gyldig e-postadresse",
     "autocomplete_search_server": "Søk på serveren",
     "autocomplete_searching": "Søker...",
     "mention_recipients": "Mottakere",
@@ -785,6 +807,15 @@
       "remove_background_color": "Fjern bakgrunnsfarge"
     },
     "send_filing_warning": "Meldingen ble sendt, men oppryddingen etterpå mislyktes. Et gammelt utkast kan bli liggende.",
+    "read_receipt_on": "Ber om lesebekreftelse (klikk for å slå av)",
+    "read_receipt_off": "Be om lesebekreftelse",
+    "dsn_on": "Leveringsvarsel forespurt (klikk for å slå av)",
+    "dsn_off": "Be om leveringsvarsel",
+    "format_plain_text": "Bytt til ren tekst",
+    "format_rich_text": "Bytt til formatert tekst (HTML)",
+    "require_tls_on": "Kryptert levering kreves (klikk for å slå av)",
+    "require_tls_off": "Krev kryptert levering (TLS)",
+    "use_template": "Mal",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive"
@@ -1078,6 +1109,13 @@
       },
       "title": "Utseende",
       "description": "Tilpass utseendet til nettposten",
+      "theme": {
+        "label": "Tema",
+        "description": "Velg fargevalget du foretrekker",
+        "light": "Lyst",
+        "dark": "Mørkt",
+        "system": "System"
+      },
       "language": {
         "label": "Språk",
         "description": "Velg språket du foretrekker"
@@ -1096,6 +1134,12 @@
         "compact": "Kompakt",
         "regular": "Vanlig",
         "comfortable": "Luftig"
+      },
+      "interface_layout": {
+        "label": "Grensesnittoppsett",
+        "description": "Hvor søk, navigasjon og verktøylinjer ligger",
+        "default": "Standard",
+        "mountain_view": "Mountain View"
       },
       "animations": {
         "label": "Aktiver animasjoner",
@@ -1280,6 +1324,18 @@
         "confirm_revoke_title": "Vil du tilbakekalle tilgangen for denne enheten?",
         "confirm_revoke_message": "Enheten slutter umiddelbart å motta bakgrunnsvarsler. Hvis pushvarsler aktiveres på nytt på enheten, registreres den på nytt.",
         "confirm_revoke_message_this": "Denne enheten slutter umiddelbart å motta bakgrunnsvarsler."
+      },
+      "push_all": {
+        "title": "All accounts",
+        "description": "Turn push on or off for several accounts at once. One browser subscription serves them all.",
+        "select_all": "Select every connected account",
+        "state_on": "notifications on",
+        "state_off": "notifications off",
+        "enable_selected": "Enable for selected",
+        "disable_selected": "Disable for selected",
+        "result_enabled": "Notifications enabled for {count} accounts.",
+        "result_partial": "Enabled for {enabled} accounts; {failed} could not be enabled.",
+        "result_disabled": "Notifications disabled for {count} accounts."
       },
       "sound_selection": {
         "title": "Varslingslyd",
@@ -1691,6 +1747,33 @@
         "drag_handle": "Dra for å omorganisere",
         "add": "Legg til konto"
       },
+      "backup": {
+        "title": "Account list backup",
+        "description": "Keep the list of accounts in this browser on the server, encrypted with a password only you know, and bring it back on another device. Mailbox passwords are not saved: you sign in to each restored account yourself.",
+        "status_none": "No list is saved for {account}.",
+        "status_saved": "A list is saved for {account}.",
+        "save": "Save list",
+        "restore": "Restore list",
+        "delete": "Delete saved list",
+        "cancel": "Cancel",
+        "delete_confirm": "Delete the saved account list from the server?",
+        "password": "Backup password",
+        "password_hint": "At least 10 characters. It cannot be recovered: if you forget it, save the list again with a new one.",
+        "restore_hint": "The password chosen when the list was saved.",
+        "confirm": "Confirm password",
+        "saved": "List saved ({count, plural, one {# account} other {# accounts}}).",
+        "restored": "Accounts added: {added}. Accounts already here and updated: {updated}. Open each new account from the account list to sign in.",
+        "skipped": "{count, plural, one {# account was} other {# accounts were}} not added: the account limit is reached.",
+        "deleted": "Saved list deleted.",
+        "errors": {
+          "mismatch": "The passwords do not match.",
+          "password_length": "Use at least 10 characters.",
+          "unlock_failed": "Wrong password, or the list was saved for another account.",
+          "owner_signin_required": "Sign in to this account again, then retry.",
+          "https_required": "This needs a secure (HTTPS) connection.",
+          "storage_failed": "The server could not read or store the list. Try again later."
+        }
+      },
       "shared_accounts": {
         "title": "Delt med meg",
         "description": "Gruppekontoer og delte kontoer du kan administrere. Velg en konto for å redigere filtre, feriesvar, kalendere og kontakter.",
@@ -1733,7 +1816,10 @@
       "age_days": "{count, plural, one {1 day} other {# days}}",
       "age_months": "{count, plural, one {1 month} other {# months}}",
       "age_years": "{count, plural, one {1 year} other {# years}}",
-      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "remove_button": "Remove",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "remove_confirm_title": "Remove account"
     },
     "scoped": {
       "back": "Tilbake til kontoen min",
@@ -2278,6 +2364,7 @@
       "forward_placeholder": "email@example.com",
       "forward_keep_copy": "Behold en kopi",
       "forward_limit": "Grense for videresendinger per melding på denne serveren: {count}. Flere videresendinger hoppes over.",
+      "forward_unavailable": "Denne serveren tillater ikke videresending. Videresendingshandlinger i filterregler har ingen effekt.",
       "reject_message": "Avvisningsmelding",
       "reject_placeholder": "Meldingen din er avvist",
       "label_name": "Etikettnavn",
@@ -2404,12 +2491,6 @@
         "title": "Visning",
         "description": "Velg hvordan filer og mapper skal vises"
       },
-      "folder_layout": {
-        "label": "Mappenavigering",
-        "description": "Velg om mapper skal vises sammen med filene eller i et tre i sidefeltet",
-        "inline": "Sammen med filer",
-        "sidebar": "Sidefelt"
-      },
       "default_view": {
         "label": "Standardvisning",
         "description": "Velg mellom rutenett og listeoppsett",
@@ -2455,6 +2536,12 @@
       },
       "preview": {
         "label": "Forhåndsvisning"
+      },
+      "folder_layout": {
+        "label": "Mappenavigering",
+        "description": "Velg om mapper skal vises sammen med filene eller i et tre i sidefeltet",
+        "inline": "Sammen med filer",
+        "sidebar": "Sidefelt"
       }
     },
     "byomc": {
@@ -2562,7 +2649,12 @@
       "manage": "Administrer regler",
       "senders_count": "{count, plural, one {# avsender} other {# avsendere}}",
       "cross_account": "Velg meldinger fra én konto",
-      "opaque_hint": "Filtrene dine er redigert for hånd. Åpne filterinnstillingene"
+      "opaque_hint": "Filtrene dine er redigert for hånd. Åpne filterinnstillingene",
+      "loading": "Laster inn regler…",
+      "load_failed": "Kunne ikke laste inn reglene",
+      "none": "Ingen regler ennå",
+      "new_mail_only": "Bare for nye meldinger",
+      "running": "Kjører «{name}» på {folder}…"
     }
   },
   "mailbox_context_menu": {
@@ -2621,7 +2713,8 @@
       "next_email": "Neste e-post",
       "previous_email": "Forrige e-post",
       "open_email": "Åpne e-post",
-      "close_email": "Lukk / fjern valget"
+      "close_email": "Lukk / fjern valget",
+      "go_to_folder": "Gå til mappe"
     },
     "actions": {
       "reply": "Svar",
@@ -2643,7 +2736,8 @@
       "global_search": "Søk i alt"
     },
     "threads": {
-      "expand_collapse": "Utvid eller fold sammen tråden"
+      "expand_collapse": "Utvid eller fold sammen tråden",
+      "select_mountain_view": "Velg samtalen"
     },
     "composer": {
       "send": "Send e-post",
@@ -3415,7 +3509,9 @@
     },
     "quick_create": {
       "placeholder": "Tittel på ny hendelse",
-      "aria_label": "Opprett en hendelse raskt"
+      "aria_label": "Opprett en hendelse raskt",
+      "add_title": "Legg til tittel",
+      "more_options": "Flere alternativer"
     },
     "nav_prev": "Forrige",
     "nav_next": "Neste",
@@ -3574,7 +3670,13 @@
       "due_today": "I dag",
       "due_tomorrow": "I morgen",
       "overdue": "Forfalt"
-    }
+    },
+    "toolbar": {
+      "more": "Flere handlinger",
+      "select_view": "Bytt visning, nå {view}"
+    },
+    "other_calendars": "Andre kalendere",
+    "calendar_options": "Alternativer for {name}"
   },
   "calendar_event_notifications": {
     "someone": "Noen",
@@ -3663,6 +3765,8 @@
     "tip_shortcuts": "Trykk på ? for å se alle tastatursnarveier",
     "tip_sidebar": "Finn kalender, kontakter og innstillinger i menyen i sidefeltet",
     "tip_settings": "Tilpass nettposten under Innstillinger",
+    "tip_compose_touch": "Trykk på blyantknappen for å skrive en ny e-post",
+    "tip_sidebar_touch": "Kalender, Kontakter og Innstillinger finner du i linjen nederst",
     "got_it": "Skjønner",
     "settings": "Innstillinger",
     "dismiss": "Lukk",
@@ -3686,8 +3790,6 @@
     "title": "Filer",
     "search_placeholder": "Søk etter filer...",
     "empty_state_title": "Ingen filer ennå",
-    "empty_state_description": "Last opp filer eller opprett mapper for å komme i gang",
-    "upload": "Last opp",
     "upload_files": "Last opp filer",
     "new_folder": "Ny mappe",
     "new_folder_name": "Mappenavn",
@@ -3706,13 +3808,11 @@
     "type": "Type",
     "folder": "Mappe",
     "file": "Fil",
-    "parent_directory": "Overordnet mappe",
-    "breadcrumb_root": "Hjem",
-    "other_accounts": "Andre kontoer",
     "no_accounts": "Ingen tilkoblede kontoer.",
-    "drop_files_here": "Slipp filer eller mapper her for å laste opp",
     "uploading": "Laster opp...",
     "upload_success": "{count, plural, one {1 fil lastet opp} other {# filer lastet opp}}",
+    "upload_canceled": "Opplastingen ble avbrutt",
+    "upload_canceled_partial": "{count, plural, one {1 fil ble} other {# filer ble}} lastet opp før du avbrøt",
     "upload_error": "Kunne ikke laste opp filen",
     "create_folder_success": "Mappen er opprettet",
     "create_folder_error": "Kunne ikke opprette mappe",
@@ -3745,7 +3845,6 @@
     "file_name": "Filnavn",
     "retry": "Prøv på nytt",
     "refresh": "Oppdater",
-    "toggle_favorite": "Legg til eller fjern favoritt",
     "duplicate": "Dupliser",
     "duplicate_success": "Duplisert",
     "duplicate_error": "Kunne ikke duplisere",
@@ -3757,8 +3856,8 @@
     "create_file_error": "Kunne ikke opprette filen",
     "favorites": "Favoritter",
     "recent": "Nylige",
-    "properties": "Egenskaper",
-    "open_folder": "Åpne mappen",
+    "show_in_folder": "Vis i mappe",
+    "remove_from_recent": "Fjern fra nylige",
     "upload_folder": "Last opp mappe",
     "file_too_large": "«{name}» overskrider den maksimale filstørrelsen på {max}",
     "undo": "Angre",
@@ -3768,6 +3867,66 @@
     "open_folder_tree": "Åpne mappetreet",
     "file_list": "Filer og mapper",
     "context_menu": "Handlinger",
+    "settings_ascending": "Stigende",
+    "settings_descending": "Synkende",
+    "disabled_title": "Administratoren har deaktivert filfunksjonen",
+    "disabled_description": "Store filopplastinger via WebDAV kan føre til ustabilitet i Stalwart/RocksDB, blant annet krasj på grunn av for lite minne og diskplass som ikke blir frigjort. Slettede filer kan ikke fjernes umiddelbart fra blob-lagringen. Denne funksjonen anbefales ikke for produksjonsmiljøer.",
+    "migration_title": "Oppdaterer filene dine...",
+    "migration_description": "Mapper og filer organiseres i riktig struktur. Dette skjer bare én gang.",
+    "new": "Ny",
+    "my_files": "Mine filer",
+    "folders": "Mapper",
+    "files_heading": "Filer",
+    "open": "Åpne",
+    "star": "Star",
+    "unstar": "Unstar",
+    "expand_folder": "Utvid {name}",
+    "collapse_folder": "Skjul {name}",
+    "sidebar_hint": "Stjernemerk mapper og åpne filer for å finne dem her.",
+    "breadcrumbs": "Mappesti",
+    "show_path": "Vis skjulte mapper i stien",
+    "selection_actions": "Handlinger for valgte elementer",
+    "selected_count": "{count, plural, one {1 valgt} other {# valgt}}",
+    "clear_selection": "Clear selection",
+    "select_all": "Velg alle",
+    "select_item": "Velg {name}",
+    "more_actions": "Flere handlinger for {name}",
+    "paste_here": "Lim inn i denne mappen",
+    "paste_count": "{count, plural, one {Lim inn 1 element} other {Lim inn # elementer}}",
+    "sort_by": "Sorter etter",
+    "view_mode": "Oppsett",
+    "clear_search": "Tøm søk",
+    "no_results_for": "Ingenting i denne mappen samsvarer med «{query}»",
+    "download_count": "{count, plural, one {Last ned 1 fil} other {Last ned # filer}}",
+    "delete_count": "{count, plural, one {Slett 1 element} other {Slett # elementer}}",
+    "close_details": "Lukk detaljer",
+    "file_kind": "{ext}-fil",
+    "folder_summary": "{folders, plural, =0 {Ingen mapper} one {1 mappe} other {# mapper}}, {files, plural, =0 {ingen filer} one {1 fil} other {# filer}}",
+    "details_hint": "Velg en fil eller mappe for å se detaljene.",
+    "sharing": "Deling",
+    "shared_with_count": "{count, plural, one {Delt med 1 person} other {Delt med # personer}}",
+    "only_you": "Bare deg",
+    "empty_folder_title": "Denne mappen er tom",
+    "empty_folder_description": "Slipp filer her, eller last dem opp fra enheten din.",
+    "empty_folder_read_only": "Du kan ikke legge til filer i denne mappen.",
+    "choose_account": "Velg en konto",
+    "drop_to_upload": "Slipp for å laste opp til {folder}",
+    "uploading_count": "Laster opp {current} av {total}",
+    "dismiss": "Lukk",
+    "zoom_in": "Zoom inn",
+    "zoom_out": "Zoom ut",
+    "zoom_reset": "Tilpass til skjermen",
+    "rotate": "Roter",
+    "close_preview": "Lukk",
+    "empty_state_description": "Last opp filer eller opprett mapper for å komme i gang",
+    "upload": "Last opp",
+    "parent_directory": "Overordnet mappe",
+    "breadcrumb_root": "Hjem",
+    "other_accounts": "Andre kontoer",
+    "drop_files_here": "Slipp filer eller mapper her for å laste opp",
+    "toggle_favorite": "Legg til eller fjern favoritt",
+    "properties": "Egenskaper",
+    "open_folder": "Åpne mappen",
     "settings_title": "Filinnstillinger",
     "settings_display": "Visning",
     "settings_default_view": "Standardvisning",
@@ -3776,8 +3935,6 @@
     "settings_default_sort_desc": "Velg standardsortering for filer",
     "settings_sort_direction": "Sorteringsretning",
     "settings_sort_direction_desc": "Velg stigende eller synkende rekkefølge",
-    "settings_ascending": "Stigende",
-    "settings_descending": "Synkende",
     "settings_icons": "Ikoner",
     "settings_show_icons": "Vis filikoner",
     "settings_show_icons_desc": "Vis ikoner ved siden av filer og mapper",
@@ -3792,11 +3949,7 @@
     "settings_folder_layout_desc": "Velg om mapper skal vises sammen med filene eller i et tre i sidefeltet",
     "settings_folder_layout_inline": "Sammen med filer",
     "settings_folder_layout_sidebar": "Sidefelt",
-    "disabled_title": "Administratoren har deaktivert filfunksjonen",
-    "disabled_description": "Store filopplastinger via WebDAV kan føre til ustabilitet i Stalwart/RocksDB, blant annet krasj på grunn av for lite minne og diskplass som ikke blir frigjort. Slettede filer kan ikke fjernes umiddelbart fra blob-lagringen. Denne funksjonen anbefales ikke for produksjonsmiljøer.",
     "stability_warning": "Store filopplastinger kan gjøre serveren ustabil. Slettede filer kan ikke fjernes umiddelbart fra lagringen. Bruk med forsiktighet.",
-    "migration_title": "Oppdaterer filene dine...",
-    "migration_description": "Mapper og filer organiseres i riktig struktur. Dette skjer bare én gang.",
     "google_drive": "Google Drive",
     "attach_from_google_drive": "Attach from Google Drive",
     "my_drive": "My Drive",
@@ -3806,13 +3959,10 @@
     "connect_button": "Connect Google Account",
     "open_in_google_drive": "Open in Google Drive",
     "open_google_drive": "Open Google Drive",
-    "star": "Star",
-    "unstar": "Unstar",
     "bulwark_files": "Files",
     "empty_folder": "This folder is empty",
     "no_search_results": "No files found matching your search",
     "no_files": "No files in this folder",
-    "clear_selection": "Clear selection",
     "close": "Close",
     "loading": "Loading..."
   },
