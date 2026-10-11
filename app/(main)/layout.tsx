@@ -112,7 +112,9 @@ async function requestOrigin(): Promise<URL | null> {
   // X-Forwarded-Host portless. Re-attach it unless it's the default for the scheme.
   if (!authority.includes(":")) {
     const port = first("x-forwarded-port");
-    const isDefaultPort = (proto === "https" && port === "443") || (proto === "http" && port === "80");
+    const isDefaultPort =
+      (proto === "https" && (port === "443" || (Boolean(process.env.PORT) && port === process.env.PORT))) ||
+      (proto === "http" && port === "80");
     if (/^\d+$/.test(port) && !isDefaultPort) authority += `:${port}`;
   }
 

@@ -333,6 +333,11 @@ export async function proxy(request: NextRequest) {
   // and must not carry a locale. Letting next-intl rewrite them to
   // /en/connector/... 404s, which breaks every link already in the wild.
   const isConnectorRoute = pathname === '/connector' || pathname.startsWith('/connector/');
+  // Public legal links (/terms, /privacy) are submitted to OAuth providers (Google,
+  // etc.) and must be served directly at their canonical paths without a locale prefix.
+  const isLegalRoute =
+    pathname === '/terms' || pathname.startsWith('/terms/') ||
+    pathname === '/privacy' || pathname.startsWith('/privacy/');
   // The plugin sandbox lives in its own root layout under app/(sandbox)/ and
   // is not part of the localized tree. Letting next-intl rewrite the path to
   // /en/plugin-sandbox 404s, which kills the iframe and disables every plugin.
@@ -353,6 +358,7 @@ export async function proxy(request: NextRequest) {
     !isSetupRoute &&
     !isSandboxRoute &&
     !isConnectorRoute &&
+    !isLegalRoute &&
     !hasLocalePrefix
   ) {
     try {
