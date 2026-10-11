@@ -80,6 +80,15 @@ describe('Groupware access', () => {
     fetchMock.mockResolvedValueOnce(Response.json({ did: 'did:plc:synthetic', groupware_enabled: true, padding: 'x'.repeat(4096) }));
     expect(await groupwareMailboxAllowed(creds.username, 'files')).toBe(false);
   });
+
+  it('allows access in demo mode without bridge or session groupwareEnabled flag', async () => {
+    config.demoMode = true;
+    cookieValues.set('jmap_session_1', encryptSession(creds.serverUrl, creds.username, 'synthetic', { groupwareEnabled: false }));
+    expect(await groupwareAllowed(request, creds, 'calendar')).toBe(true);
+    expect(await groupwareMailboxAllowed(creds.username, 'calendar')).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+    delete config.demoMode;
+  });
 });
 
 describe('JMAP feature boundaries', () => {

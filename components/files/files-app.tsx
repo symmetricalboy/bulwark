@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { ArrowLeft } from "@/components/icons";
@@ -32,7 +32,10 @@ import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { loadFilesSettings } from "@/components/files/files-settings-dialog";
 import type { FolderLayout } from "@/components/files/files-settings-dialog";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { AlertTriangle, Loader2 } from "@/components/icons";
+import { AlertTriangle, Loader2, GoogleDriveIcon, HardDrive, ChevronDown, Check, Plus } from "@/components/icons";
+import { Avatar } from "@/components/ui/avatar";
+import { GoogleDriveBrowser } from "@/components/files/google-drive-browser";
+import { getGoogleStatus, type GoogleAccountStatus } from "@/lib/google/google-drive-client";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { appPath, buildFilesPath, parseFilesPath, type FilesDeepLink } from "@/lib/deep-links";
 import { consumePendingDeepLinkEntry, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
@@ -144,6 +147,41 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const isOfficeEditable = useCallback((name: string) => canWopiOpen(wopiStatus, name), [wopiStatus]);
   const [showDetails, setShowDetails] = useState(false);
   const [detailName, setDetailName] = useState<string | null>(null);
+  const [storageSource, setStorageSource] = useState<'jmap' | 'google-drive'>('jmap');
+  const [googleStatus, setGoogleStatus] = useState<GoogleAccountStatus | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPickerOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [pickerOpen]);
+
+  useEffect(() => {
+    getGoogleStatus().then((s) => {
+      setGoogleStatus(s);
+      if (useFileStore.getState().supportsFiles === false && s.connected) {
+        setStorageSource('google-drive');
+      }
+    });
+  }, []);
 
   const detailResource = detailName ? resources.find(r => r.name === detailName) || null : null;
 
@@ -325,7 +363,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
     }
   }, [createDirectory, t]);
 
-  const maxSizeUpload = client?.getMaxSizeUpload() || 0;
+  const maxSizeUpload = client?.getMaxSizeUpload?.() || 0;
 
   const handleUploadFiles = useCallback(async (files: File[]) => {
     if (maxSizeUpload > 0) {
@@ -536,8 +574,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   // Sharing: the browsing client (store-attached) drives the principal picker
   // and share mutations. supportsPrincipals() gates the whole Share affordance.
-  const sharingEnabled = !!storeClient?.supportsPrincipals();
-  const filesAccountId = storeClient?.getFilesAccountId() ?? null;
+  const sharingEnabled = !!storeClient?.supportsPrincipals?.();
+  const filesAccountId = storeClient?.getFilesAccountId?.() ?? null;
   const handleShare = useCallback(async (id: string, principalId: string, rights: FileNodeRights | null) => {
     await shareResource(id, principalId, rights);
   }, [shareResource]);
@@ -555,6 +593,20 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
           avatarColor: a.avatarColor,
         }))
     : [];
+
+  const allAccountFolders = useMemo(() => {
+    const list = [...accountFolders];
+    if (googleStatus?.connected) {
+      list.push({
+        accountId: '__google_drive__',
+        label: 'Google Drive',
+        email: googleStatus.email || 'Google Drive',
+        avatarColor: '#4285F4',
+      });
+    }
+    return list;
+  }, [accountFolders, googleStatus]);
+
   const isAccountPicker = isEmbedded && currentFilesAccountId === null;
   const currentAccountLabel = isEmbedded && currentFilesAccountId
     ? (accounts.find((a) => a.id === currentFilesAccountId)?.label
@@ -562,7 +614,16 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
         || null)
     : null;
 
+  const activeAccount = useMemo(() => {
+    return accounts.find((a) => a.id === (currentFilesAccountId || activeAccountId)) || accounts[0];
+  }, [accounts, currentFilesAccountId, activeAccountId]);
+
   const handleSelectAccount = useCallback((accountId: string) => {
+    if (accountId === '__google_drive__') {
+      setStorageSource('google-drive');
+      return;
+    }
+    setStorageSource('jmap');
     const nextClient = getClientForAccount(accountId);
     if (!nextClient) return;
     const store = useFileStore.getState();
@@ -600,26 +661,201 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
         )}
         <div className={cn("flex flex-1 min-h-0", inlineApp && "hidden")}>
           <div className="flex-1 min-w-0 flex flex-col">
-            {folderLayout !== "sidebar" && !isEmbedded && (
-              <div className={cn("p-4 border-b border-border", isMobile && "px-3 py-3")}>
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push("/")}
-                    className="justify-start"
+              <div className={cn("px-4 py-2 border-b border-border flex items-center justify-between bg-card/40 shrink-0", isMobile && "px-3 py-2")}>
+                <div className="flex items-center gap-2">
+                  {!isEmbedded ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push("/")}
+                      className="justify-start h-8 px-2"
+                    >
+                      <ArrowLeft className="w-4 h-4 me-1.5" />
+                      {t("title")}
+                    </Button>
+                  ) : (
+                    <span className="text-sm font-semibold text-foreground px-1">
+                      {t("title")}
+                    </span>
+                  )}
+                </div>
+
+                {/* Storage & Account Picker Dropdown */}
+                <div className="relative" ref={pickerRef}>
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen((prev) => !prev)}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-border/70 bg-background hover:bg-accent/60 text-foreground text-xs font-medium shadow-xs transition-colors cursor-pointer select-none"
+                    aria-expanded={pickerOpen}
+                    aria-haspopup="true"
                   >
-                    <ArrowLeft className="w-4 h-4 me-2" />
-                    {t("title")}
-                  </Button>
+                    {storageSource === 'google-drive' ? (
+                      <>
+                        <GoogleDriveIcon className="w-4 h-4 shrink-0" />
+                        <span className="font-semibold truncate max-w-[130px] sm:max-w-[180px]">
+                          Google Drive
+                        </span>
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline truncate max-w-[120px]">
+                          ({googleStatus?.email || 'External'})
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <HardDrive className="w-4 h-4 text-primary shrink-0" />
+                        <span className="font-semibold truncate max-w-[130px] sm:max-w-[180px]">
+                          {activeAccount?.displayName || activeAccount?.label || activeAccount?.username || 'Comail Files'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                          (Comail Files)
+                        </span>
+                      </>
+                    )}
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 shrink-0", pickerOpen && "rotate-180")} />
+                  </button>
+
+                  {pickerOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-72 bg-popover text-popover-foreground border border-border rounded-xl shadow-xl py-1.5 z-50 text-xs animate-in fade-in-0 zoom-in-95">
+                      {/* Comail Files Section */}
+                      <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Comail Files
+                      </div>
+                      <div className="px-1 space-y-0.5">
+                        {accounts.filter((a) => a.isConnected).length > 0 ? (
+                          accounts
+                            .filter((a) => a.isConnected)
+                            .map((acc) => {
+                              const isSelected =
+                                storageSource === 'jmap' &&
+                                (currentFilesAccountId === acc.id || (!currentFilesAccountId && activeAccountId === acc.id));
+                              return (
+                                <button
+                                  key={acc.id}
+                                  type="button"
+                                  onClick={() => {
+                                    handleSelectAccount(acc.id);
+                                    setStorageSource('jmap');
+                                    setPickerOpen(false);
+                                  }}
+                                  className={cn(
+                                    "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-start transition-colors cursor-pointer",
+                                    isSelected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <Avatar
+                                      name={acc.displayName || acc.label}
+                                      email={acc.email || acc.username}
+                                      did={acc.did}
+                                      size="sm"
+                                      className="w-6 h-6 shrink-0"
+                                      disableFavicon
+                                      fallbackColor={acc.avatarColor}
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate text-xs font-medium text-foreground">
+                                        {acc.displayName || acc.label || acc.username}
+                                      </p>
+                                      <p className="truncate text-[11px] text-muted-foreground">
+                                        {acc.email || acc.username}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {isSelected && <Check className="w-4 h-4 text-primary shrink-0 ms-2" />}
+                                </button>
+                              );
+                            })
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStorageSource('jmap');
+                              setPickerOpen(false);
+                            }}
+                            className={cn(
+                              "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-start transition-colors cursor-pointer",
+                              storageSource === 'jmap' ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <HardDrive className="w-5 h-5 text-primary shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-foreground">
+                                  Comail Files
+                                </p>
+                                <p className="truncate text-[11px] text-muted-foreground">
+                                  Primary Storage
+                                </p>
+                              </div>
+                            </div>
+                            {storageSource === 'jmap' && <Check className="w-4 h-4 text-primary shrink-0 ms-2" />}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* External Accounts Section */}
+                      <div className="mt-1 pt-1.5 border-t border-border/50">
+                        <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          External Accounts
+                        </div>
+                        <div className="px-1 space-y-0.5">
+                          {googleStatus?.connected ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStorageSource('google-drive');
+                                setPickerOpen(false);
+                              }}
+                              className={cn(
+                                "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-start transition-colors cursor-pointer",
+                                storageSource === 'google-drive' ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground"
+                              )}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <GoogleDriveIcon className="w-5 h-5 shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-xs font-medium text-foreground">
+                                    Google Drive
+                                  </p>
+                                  <p className="truncate text-[11px] text-muted-foreground">
+                                    {googleStatus.email}
+                                  </p>
+                                </div>
+                              </div>
+                              {storageSource === 'google-drive' && <Check className="w-4 h-4 text-primary shrink-0 ms-2" />}
+                            </button>
+                          ) : (
+                            <a
+                              href="/api/auth/google/start?returnTo=/files"
+                              className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                            >
+                              <GoogleDriveIcon className="w-5 h-5 shrink-0 opacity-70" />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium">Connect Google Drive</p>
+                                <p className="truncate text-[11px] text-muted-foreground">Add external storage</p>
+                              </div>
+                              <Plus className="w-4 h-4 text-muted-foreground shrink-0 ms-2" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
 
             <div className="flex-1 min-h-0 flex flex-col">
-              {supportsFiles === false ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-sm text-muted-foreground">{t("not_available")}</p>
+              {storageSource === 'google-drive' ? (
+                <GoogleDriveBrowser onBackToBulwarkFiles={() => setStorageSource('jmap')} />
+              ) : supportsFiles === false ? (
+                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-4">{t("not_available")}</p>
+                  <Button
+                    onClick={() => setStorageSource('google-drive')}
+                    className="gap-2"
+                  >
+                    <GoogleDriveIcon className="w-4 h-4" />
+                    <span>{t("open_google_drive")}</span>
+                  </Button>
                 </div>
               ) : (
                 <div className="flex flex-col flex-1 min-h-0">
@@ -672,7 +908,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   showDetails={showDetails}
                   onToggleDetails={handleToggleDetails}
                   detailResource={detailResource}
-                  accountFolders={accountFolders}
+                  accountFolders={allAccountFolders}
                   onSelectAccount={handleSelectAccount}
                   accountPickerMode={isAccountPicker}
                   accountLabel={currentAccountLabel}

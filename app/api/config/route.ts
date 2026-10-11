@@ -1,4 +1,5 @@
 import { currentGroupwareEnabled } from '@/lib/groupware/access';
+import { accessApprovalRelayBridgeUrl } from '@/lib/access-approval/relay-bridge';
 import { decryptSession } from '@/lib/auth/crypto';
 import { sessionCookieName } from '@/lib/auth/session-cookie';
 import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
@@ -74,7 +75,9 @@ export async function GET(request: NextRequest) {
     ? Number(requestedSlot) : 0;
   const sessionToken = request.cookies.get(sessionCookieName(slot))?.value;
   const session = sessionToken ? decryptSession(sessionToken) : null;
-  const sessionGroupwareEnabled = session?.groupwareEnabled === true
+  const hasBridge = !!accessApprovalRelayBridgeUrl();
+  const sessionGroupwareEnabled = session !== null
+    && (hasBridge ? session.groupwareEnabled === true : session.groupwareEnabled !== false)
     && await currentGroupwareEnabled(session.username);
   const envCalendarEnabled = configManager.get<boolean>('calendarEnabled', false);
   const envContactsEnabled = configManager.get<boolean>('contactsEnabled', false);

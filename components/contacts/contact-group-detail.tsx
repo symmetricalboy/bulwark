@@ -6,7 +6,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
-import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoUri } from "@/stores/contact-store";
 
 interface ContactGroupDetailProps {
   group: ContactCard;
@@ -109,7 +109,7 @@ export function ContactGroupDetail({
                     className="flex items-center gap-3 flex-1 min-w-0 text-start"
                     onClick={() => onSelectMember(member.id)}
                   >
-                    <Avatar name={mName} email={mEmail} size="sm" />
+                    <Avatar name={mName} email={mEmail} contactPhotoUri={getContactPhotoUri(member)} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{mName}</div>
                       {mEmail && (

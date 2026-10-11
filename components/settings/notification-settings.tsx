@@ -180,6 +180,11 @@ export function NotificationSettings() {
       const deviceClientId = getWebPushDeviceClientId(client.getAccountId());
       if (!deviceClientId) throw new Error('Push device registration is missing');
       await registerAccessApprovalPush(deviceClientId);
+      try {
+        localStorage.setItem(`bulwark.push.onboarding.dismissed.v1.${client.getAccountId()}`, '1');
+      } catch {
+        // Ignore localStorage errors (e.g. storage disabled or quota exceeded)
+      }
       setPushStatus({ kind: 'enabled' });
     } catch (err) {
       if (err instanceof WebPushUnsupportedError) {
@@ -296,9 +301,26 @@ export function NotificationSettings() {
     return t('push.device_status_unknown');
   };
 
+  const soundLabel = (id: NotificationSoundChoice) => {
+    switch (id) {
+      case 'default':
+        return t('sounds.default');
+      case 'cheerful':
+        return t('sounds.cheerful');
+      case 'involved':
+        return t('sounds.involved');
+      case 'swift':
+        return t('sounds.swift');
+      case 'beep':
+        return t('sounds.beep');
+      case 'relax':
+        return t('sounds.relax');
+    }
+  };
+
   const soundOptions = NOTIFICATION_SOUNDS.map((s) => ({
     value: s.id,
-    label: t(`sounds.${s.id}`),
+    label: soundLabel(s.id),
   }));
 
   return (
@@ -414,7 +436,7 @@ export function NotificationSettings() {
               <Volume2 className="w-4 h-4" />
             </Button>
             <Select
-              value={notificationSoundChoice}
+              value={notificationSoundChoice === 'relax' ? 'default' : notificationSoundChoice}
               onChange={(value) => {
                 const choice = value as NotificationSoundChoice;
                 updateSetting('notificationSoundChoice', choice);

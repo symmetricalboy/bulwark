@@ -75,6 +75,15 @@ describe('AccountSwitcher atproto identity', () => {
     expect(avatars.every((node) => node.getAttribute('data-did') === DID)).toBe(true);
     expect(handles.every((node) => node.getAttribute('data-did') === DID)).toBe(true);
   });
+
+  it('renders the account avatar with did in header and rail variants', () => {
+    const { unmount } = render(<AccountSwitcher variant="header" />);
+    expect(screen.getByTestId('account-avatar')).toHaveAttribute('data-did', DID);
+    unmount();
+
+    render(<AccountSwitcher variant="rail" />);
+    expect(screen.getByTestId('account-avatar')).toHaveAttribute('data-did', DID);
+  });
 });
 
 describe('AccountSwitcher headline/email dedup', () => {

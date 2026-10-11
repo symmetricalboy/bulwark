@@ -33,7 +33,15 @@ interface FolderTreeSidebarProps {
   onShare?: (resource: FileResource) => void;
 }
 
-export function FolderTreeSidebar({ currentPath, onNavigate, listByParentId, width = 256, isResizing, canShare, onShare }: FolderTreeSidebarProps) {
+export function FolderTreeSidebar({
+  currentPath,
+  onNavigate,
+  listByParentId,
+  width = 256,
+  isResizing,
+  canShare,
+  onShare,
+}: FolderTreeSidebarProps) {
   const t = useTranslations("files");
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<FileResource>();
   const client = useFileStore(s => s.client);

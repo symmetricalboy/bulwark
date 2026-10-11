@@ -427,15 +427,17 @@ export function CalendarWeekView({
             <div className="absolute inset-0 pointer-events-none">
               {allDaySegments.map((segment) => {
                 const calId = getPrimaryCalendarId(segment.event);
+                const cascadeDelay = Math.min((segment.startIndex * 25) + (segment.row * 20), 350);
                 return (
                   <div
                     key={`${segment.event.id}-${segment.startIndex}-${segment.row}`}
-                    className="absolute px-0.5 pointer-events-auto"
+                    className="absolute px-0.5 pointer-events-auto animate-cal-event-cascade"
                     style={{
                       left: `calc(${(segment.startIndex / colCount) * 100}% + 1px)`,
                       width: `calc(${(segment.span / colCount) * 100}% - 2px)`,
                       top: segment.row * 24 + 2,
                       height: 20,
+                      animationDelay: `${cascadeDelay}ms`,
                     }}
                   >
                     <EventCard
@@ -461,25 +463,29 @@ export function CalendarWeekView({
                 const key = format(day, "yyyy-MM-dd");
                 const dayTasks = tasksByDay.get(key) || [];
                 const baseRow = dayEventRows[dayIndex];
-                return dayTasks.map((task, taskIndex) => (
-                  <div
-                    key={`task-${task.id}`}
-                    className="absolute px-0.5 pointer-events-auto"
-                    style={{
-                      left: `calc(${(dayIndex / colCount) * 100}% + 1px)`,
-                      width: `calc(${(1 / colCount) * 100}% - 2px)`,
-                      top: (baseRow + taskIndex) * 24 + 2,
-                      height: 20,
-                    }}
-                  >
-                    <CalendarTaskChip
-                      task={task}
-                      calendar={calendars.find(c => task.calendarIds[c.id])}
-                      onToggleComplete={onToggleTaskComplete}
-                      onSelect={onSelectTask}
-                    />
-                  </div>
-                ));
+                return dayTasks.map((task, taskIndex) => {
+                  const taskDelay = Math.min((dayIndex * 25) + (taskIndex * 20), 350);
+                  return (
+                    <div
+                      key={`task-${task.id}`}
+                      className="absolute px-0.5 pointer-events-auto animate-cal-event-cascade"
+                      style={{
+                        left: `calc(${(dayIndex / colCount) * 100}% + 1px)`,
+                        width: `calc(${(1 / colCount) * 100}% - 2px)`,
+                        top: (baseRow + taskIndex) * 24 + 2,
+                        height: 20,
+                        animationDelay: `${taskDelay}ms`,
+                      }}
+                    >
+                      <CalendarTaskChip
+                        task={task}
+                        calendar={calendars.find(c => task.calendarIds[c.id])}
+                        onToggleComplete={onToggleTaskComplete}
+                        onSelect={onSelectTask}
+                      />
+                    </div>
+                  );
+                });
               })}
             </div>
           </div>
@@ -558,7 +564,7 @@ export function CalendarWeekView({
           </div>
 
           <div className="border-s border-border relative grid" style={columnsStyle}>
-            {days.map((day) => {
+            {days.map((day, dayIndex) => {
               const key = format(day, "yyyy-MM-dd");
               const todayCol = isDisplayToday(day);
               const dayLayout = layoutByDay.get(key);
@@ -605,7 +611,7 @@ export function CalendarWeekView({
                     />
                   )}
 
-                  {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }) => {
+                  {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }, evIndex) => {
                     const durMin = Math.max(15, endMinutes - startMinutes);
                     const clip = clipToDisplayHours(startMinutes, endMinutes, hours);
                     const baseHeight = Math.max(20, (Math.max(15, clip.endMinutes - clip.startMinutes) / 60) * HOUR_HEIGHT);
@@ -621,12 +627,24 @@ export function CalendarWeekView({
                     const leftPct = (column / totalColumns) * 100;
                     const widthPct = (1 / totalColumns) * 100;
 
+                    const cascadeDelay = Math.min((dayIndex * 30) + (evIndex * 20), 450);
                     return (
                       <div
                         key={ev.id}
-                        className="absolute z-10 group/event"
+                        className={cn(
+                          "absolute z-10 group/event animate-cal-event-cascade",
+                          isResizing && "!animate-none"
+                        )}
                         data-calendar-event
-                        style={{ top, height, left: `${leftPct}%`, width: `${widthPct}%`, paddingLeft: 1, paddingRight: 1 }}
+                        style={{
+                          top,
+                          height,
+                          left: `${leftPct}%`,
+                          width: `${widthPct}%`,
+                          paddingLeft: 1,
+                          paddingRight: 1,
+                          animationDelay: isResizing ? undefined : `${cascadeDelay}ms`,
+                        }}
                       >
                         <EventCard
                           event={ev}

@@ -156,7 +156,8 @@
     "unified_all_starred": "Tüm yıldızlılar",
     "unified_all_mail": "Tüm postalar",
     "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
+    "tasks": "Görevler"
   },
   "protocol_handlers": {
     "title": "Varsayılan uygulamalar",
@@ -783,7 +784,10 @@
       "background_color": "Arka plan rengi",
       "remove_background_color": "Arka plan rengini kaldır"
     },
-    "send_filing_warning": "Gönderildi - ancak sonrasındaki temizleme başarısız oldu, eski bir taslak kalabilir."
+    "send_filing_warning": "Gönderildi - ancak sonrasındaki temizleme başarısız oldu, eski bir taslak kalabilir.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "Onayla",
@@ -998,7 +1002,14 @@
       "default_restored": "Varsayılan tema geri yüklendi",
       "default_name": "Varsayılan",
       "default_badge": "Varsayılan",
-      "admin_enforced": "Yönetici tarafından zorunlu"
+      "admin_enforced": "Yönetici tarafından zorunlu",
+      "theme": {
+        "label": "Tema",
+        "description": "Tercih ettiğiniz renk şemasını seçin",
+        "light": "Açık",
+        "dark": "Koyu",
+        "system": "Sistem"
+      }
     },
     "tab_groups": {
       "general": "Genel",
@@ -1064,13 +1075,6 @@
       },
       "title": "Görünüm",
       "description": "Web postanızın görünümünü özelleştirin",
-      "theme": {
-        "label": "Tema",
-        "description": "Tercih ettiğiniz renk şemasını seçin",
-        "light": "Açık",
-        "dark": "Koyu",
-        "system": "Sistem"
-      },
       "language": {
         "label": "Dil",
         "description": "Tercih ettiğiniz dili seçin"
@@ -1167,6 +1171,20 @@
       "cross_all": {
         "label": "Tüm hesaplar: Tüm postalar",
         "description": "Tüm hesaplar bölümünde, tüm hesaplardaki tüm postaları listeleyen bir giriş gösterir; önemsiz, gönderilmiş, arşiv, çöp ve taslaklar dışındaki tüm klasörleri kapsar."
+      },
+      "icon_set": {
+        "label": "Simge seti",
+        "description": "Arayüz genelinde kullanılan simge stilini seçin",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Icon color palette",
+        "description": "Choose whether icons use a monochromatic or colorful palette",
+        "monochrome": "Monochromatic (Default)",
+        "theme_accent": "Theme accent shades",
+        "rainbow": "Rainbow colors"
       }
     },
     "keywords": {
@@ -1217,11 +1235,12 @@
     "notifications": {
       "test_sound": "Bildirim sesini test et",
       "sounds": {
-        "default": "Varsayılan (Bip)",
+        "default": "Rahatla (Varsayılan)",
         "cheerful": "Neşeli",
         "involved": "Odaklı",
         "swift": "Hızlı Jest",
-        "relax": "Rahatla"
+        "relax": "Rahatla",
+        "beep": "Bip"
       },
       "sound_selection": {
         "title": "Bildirim Sesi",
@@ -1673,7 +1692,45 @@
         "title": "Benimle paylaşılanlar",
         "description": "Yönetebileceğiniz grup ve paylaşılan hesaplar. Filtrelerini, tatil yanıtlayıcısını, takvimlerini ve kişilerini düzenlemek için birini seçin.",
         "shared_label": "Paylaşılan hesap"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "Hesap Güvenliği",
@@ -2977,7 +3034,17 @@
       "success": "{count, plural, one {1 kişi içe aktarıldı} other {# kişi içe aktarıldı}}",
       "failed": "İçe aktarma başarısız",
       "close": "Kapat",
-      "file_too_large": "Dosya çok büyük (maks. 5 MB)"
+      "file_too_large": "Dosya çok büyük (maks. 5 MB)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "Kişileri Dışa Aktar",
@@ -3729,7 +3796,25 @@
     "open_folder_tree": "Klasör ağacını aç",
     "other_accounts": "Diğer hesaplar",
     "migration_title": "Dosyalarınız güncelleniyor…",
-    "migration_description": "Klasörler ve dosyalar doğru yapıya göre düzenleniyor. Bu yalnızca bir kez gerçekleşir."
+    "migration_description": "Klasörler ve dosyalar doğru yapıya göre düzenleniyor. Bu yalnızca bir kez gerçekleşir.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "Sertifikalarınız",

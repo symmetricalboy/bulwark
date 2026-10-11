@@ -333,12 +333,16 @@ export default function ProHome() {
     return () => window.removeEventListener('keydown', onSearchShortcut);
   }, []);
 
-  const handleRailNavigate = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => {
+  const handleRailNavigate = (itemId: 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings') => {
+    if (itemId === 'tasks') {
+      window.location.href = `${getPathPrefix()}/tasks`;
+      return true;
+    }
     openTab(itemId);
     return true;
   };
 
-  const railActiveItemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings' | null =
+  const railActiveItemId: 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings' | null =
     focusedActiveTab && (
       focusedActiveTab.kind === 'mail' || focusedActiveTab.kind === 'calendar'
       || focusedActiveTab.kind === 'contacts' || focusedActiveTab.kind === 'files'

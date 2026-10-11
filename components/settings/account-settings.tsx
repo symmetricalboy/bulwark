@@ -2,19 +2,32 @@
 
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, GripVertical, Plus, Star, AlertCircle, ChevronRight } from '@/components/icons';
+import {
+  Check,
+  GripVertical,
+  Plus,
+  Star,
+  AlertCircle,
+  ChevronRight,
+  Info,
+  Link as LinkIcon,
+  Trash2,
+} from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useAccountStore, type AccountEntry } from '@/stores/account-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import type { SharedAccount } from '@/lib/jmap/types';
-import { SettingsSection, SettingItem } from './settings-section';
+import { SettingsSection } from './settings-section';
 import { Avatar } from '@/components/ui/avatar';
 import { AtprotoHandle } from '@/components/ui/atproto-handle';
 import { Button } from '@/components/ui/button';
+import { AccountInfoDialog } from './account-info-dialog';
+import { LinkedAccountsModal } from './linked-accounts-modal';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useRouter } from '@/i18n/navigation';
 import { getMaxAccounts, isSameIdentity } from '@/lib/account-utils';
-import { formatFileSize, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { toUnicodeDomain, toUnicodeEmail } from '@/lib/idn';
 
 function hostnameOf(serverUrl: string): string {
@@ -33,11 +46,11 @@ function firstScopedTab(caps: SharedAccount['capabilities']): string | null {
 
 export function AccountSettings() {
   const t = useTranslations('settings.account');
-  const tCommon = useTranslations('common');
   const router = useRouter();
-  const { username, serverUrl, isDemoMode, primaryIdentity, authMode, client } = useAuthStore();
+  const { isDemoMode, client } = useAuthStore();
   const activeAccountId = useAuthStore((s) => s.activeAccountId);
   const switchAccount = useAuthStore((s) => s.switchAccount);
+  const removeAccount = useAuthStore((s) => s.removeAccount);
   const setManagedAccount = useManagedAccountStore((s) => s.setManagedAccount);
 
   // Shared/group accounts delegated to this session (excludes the user's own
@@ -50,17 +63,13 @@ export function AccountSettings() {
   const accounts = useAccountStore((s) => s.accounts);
   const setDefaultAccount = useAccountStore((s) => s.setDefaultAccount);
   const reorderAccounts = useAccountStore((s) => s.reorderAccounts);
-  const account = useAccountStore((s) => activeAccountId ? s.getAccountById(activeAccountId) : undefined);
 
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const draggedIndexRef = useRef<number | null>(null);
+  const [infoAccount, setInfoAccount] = useState<AccountEntry | null>(null);
+  const [linkedModalAccount, setLinkedModalAccount] = useState<AccountEntry | null>(null);
+  const [accountToRemove, setAccountToRemove] = useState<AccountEntry | null>(null);
 
-  const quotaPercentage = quota && quota.total > 0 ? Math.min(Math.round((quota.used / quota.total) * 100), 100) : 0;
-  // `account.displayName` is refreshed from the server on every login/restore
-  // (Stalwart principal "Full name" when available - #900); the identity name
-  // is only a fallback until that entry exists.
-  const displayName = account?.displayName || primaryIdentity?.name || (isDemoMode ? 'Demo User' : undefined);
-  const email = primaryIdentity?.email || account?.email || username;
   const max = getMaxAccounts();
 
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
@@ -91,14 +100,6 @@ export function AccountSettings() {
     setDragOverIndex(null);
   }, []);
 
-  const moveAccount = useCallback((from: number, to: number) => {
-    if (to < 0 || to >= accounts.length || from === to) return;
-    const next = accounts.map((a) => a.id);
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    reorderAccounts(next);
-  }, [accounts, reorderAccounts]);
-
   const handleSwitch = useCallback((id: string) => {
     if (id === activeAccountId) return;
     void switchAccount(id);
@@ -107,6 +108,12 @@ export function AccountSettings() {
   const handleAddAccount = useCallback(() => {
     router.push(`/login?mode=add-account` as never);
   }, [router]);
+
+  const handleConfirmRemove = useCallback(() => {
+    if (!accountToRemove) return;
+    removeAccount(accountToRemove.id);
+    setAccountToRemove(null);
+  }, [accountToRemove, removeAccount]);
 
   // Enter scoped settings mode for a shared/group account: set the managed
   // account, then steer the settings panel to its first editable tab via the
@@ -120,73 +127,11 @@ export function AccountSettings() {
 
   return (
     <div className="space-y-8">
-      <SettingsSection title={t('title')} description={t('description')}>
-        {/* Display Name */}
-        <SettingItem label={t('name_label')}>
-          <span className="text-sm text-foreground">{displayName || tCommon('unknown')}</span>
-        </SettingItem>
-
-        {/* Email Address */}
-        <SettingItem label={t('email.label')}>
-          <span className="text-sm text-foreground">{email ? toUnicodeEmail(email) : tCommon('unknown')}</span>
-        </SettingItem>
-
-        {/* Username / Login (show when it differs from email) */}
-        {username && username !== email && (
-          <SettingItem label={t('username_label')}>
-            <span className="text-sm text-foreground">{toUnicodeEmail(username)}</span>
-          </SettingItem>
-        )}
-
-        {/* Authentication Method */}
-        <SettingItem label={t('auth_method_label')}>
-          <span className="text-sm text-foreground">
-            {authMode === 'oauth'
-              ? t('auth_method_oauth')
-              : authMode === 'token' ? t('auth_method_token') : t('auth_method_basic')}
-          </span>
-        </SettingItem>
-
-        {/* Server */}
-        <SettingItem label={t('server.label')}>
-          <span className="text-sm text-foreground truncate max-w-xs">
-            {serverUrl || tCommon('unknown')}
-          </span>
-        </SettingItem>
-
-        {/* Storage */}
-        {quota && quota.total > 0 && (
-          <SettingItem
-            label={t('storage.label')}
-            description={t('storage.used', {
-              used: formatFileSize(quota.used),
-              total: formatFileSize(quota.total),
-            })}
-          >
-            <div className="flex flex-col items-end gap-1">
-              <span className="text-sm text-foreground">
-                {t('storage.percentage', { percent: quotaPercentage })}
-              </span>
-              <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-all"
-                  style={{ width: `${quotaPercentage}%` }}
-                />
-              </div>
-            </div>
-          </SettingItem>
-        )}
-
-        {/* Demo mode indicator */}
-        {isDemoMode && (
-          <SettingItem label={t('account_type_label')}>
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-600 dark:text-amber-400">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              {t('demo_account')}
-            </span>
-          </SettingItem>
-        )}
-      </SettingsSection>
+      {/* Header */}
+      <div className="pb-2 border-b border-border">
+        <h2 className="text-xl font-semibold text-foreground">{t('title')}</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">{t('description')}</p>
+      </div>
 
       {/* Logged-in accounts list */}
       {accounts.length > 0 && (
@@ -198,25 +143,25 @@ export function AccountSettings() {
                 account={a}
                 index={index}
                 isActive={a.id === activeAccountId}
-                isFirst={index === 0}
-                isLast={index === accounts.length - 1}
                 isDragOver={dragOverIndex === index}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
-                onMoveUp={() => moveAccount(index, index - 1)}
-                onMoveDown={() => moveAccount(index, index + 1)}
                 onSwitch={() => handleSwitch(a.id)}
                 onSetDefault={() => setDefaultAccount(a.id)}
+                onShowInfo={() => setInfoAccount(a)}
+                onShowLinkedAccounts={() => setLinkedModalAccount(a)}
+                onRemove={() => setAccountToRemove(a)}
                 labels={{
                   active: t('accounts.active'),
                   default: t('accounts.default_badge'),
                   setDefault: t('accounts.set_default'),
                   switchTo: t('accounts.switch_to'),
-                  moveUp: t('accounts.move_up'),
-                  moveDown: t('accounts.move_down'),
                   dragHandle: t('accounts.drag_handle'),
+                  accountInfo: t('info_button'),
+                  linkedAccounts: t('linked_accounts.button'),
+                  removeAccount: t('remove_button'),
                 }}
               />
             ))}
@@ -273,6 +218,42 @@ export function AccountSettings() {
           </div>
         </SettingsSection>
       )}
+
+      {/* Account Info Dialog */}
+      <AccountInfoDialog
+        isOpen={Boolean(infoAccount)}
+        onClose={() => setInfoAccount(null)}
+        account={infoAccount}
+        isActive={infoAccount?.id === activeAccountId}
+        quota={infoAccount?.id === activeAccountId ? quota : null}
+        isDemoMode={isDemoMode}
+      />
+
+      {/* Linked Accounts Modal */}
+      <LinkedAccountsModal
+        isOpen={Boolean(linkedModalAccount)}
+        onClose={() => setLinkedModalAccount(null)}
+        comailAccount={linkedModalAccount}
+      />
+
+      {/* Remove Account Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(accountToRemove)}
+        onClose={() => setAccountToRemove(null)}
+        onConfirm={handleConfirmRemove}
+        title={t('remove_confirm_title')}
+        message={
+          accountToRemove
+            ? t('remove_confirm_message', {
+                account: toUnicodeEmail(
+                  accountToRemove.email || accountToRemove.username || accountToRemove.label
+                ),
+              })
+            : ''
+        }
+        confirmText={t('remove_button')}
+        variant="destructive"
+      />
     </div>
   );
 }
@@ -281,25 +262,25 @@ interface AccountRowProps {
   account: AccountEntry;
   index: number;
   isActive: boolean;
-  isFirst: boolean;
-  isLast: boolean;
   isDragOver: boolean;
   onDragStart: (e: React.DragEvent, index: number) => void;
   onDragOver: (e: React.DragEvent, index: number) => void;
   onDrop: (e: React.DragEvent, index: number) => void;
   onDragEnd: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onSwitch: () => void;
   onSetDefault: () => void;
+  onShowInfo: () => void;
+  onShowLinkedAccounts: () => void;
+  onRemove: () => void;
   labels: {
     active: string;
     default: string;
     setDefault: string;
     switchTo: string;
-    moveUp: string;
-    moveDown: string;
     dragHandle: string;
+    accountInfo: string;
+    linkedAccounts: string;
+    removeAccount: string;
   };
 }
 
@@ -307,17 +288,16 @@ function AccountRow({
   account,
   index,
   isActive,
-  isFirst,
-  isLast,
   isDragOver,
   onDragStart,
   onDragOver,
   onDrop,
   onDragEnd,
-  onMoveUp,
-  onMoveDown,
   onSwitch,
   onSetDefault,
+  onShowInfo,
+  onShowLinkedAccounts,
+  onRemove,
   labels,
 }: AccountRowProps) {
   const rowName = account.displayName || account.label;
@@ -356,8 +336,22 @@ function AccountRow({
           fallbackColor={account.avatarColor}
         />
         {isActive && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-            <Check className="w-2.5 h-2.5 text-primary-foreground" />
+          <div
+            className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-white ring-2 ring-background flex items-center justify-center shadow-xs"
+            title={labels.active}
+          >
+            <svg
+              className="w-2.5 h-2.5 text-white"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" stroke="#ffffff" />
+            </svg>
           </div>
         )}
       </div>
@@ -404,7 +398,52 @@ function AccountRow({
         </div>
       </button>
 
-      <div className="flex items-center gap-0.5 flex-shrink-0">
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onShowLinkedAccounts();
+          }}
+          className="h-8 px-2.5 text-xs gap-1.5"
+          title={labels.linkedAccounts}
+        >
+          <LinkIcon className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>{labels.linkedAccounts}</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onShowInfo();
+          }}
+          className="h-8 px-2.5 text-xs gap-1.5"
+          title={labels.accountInfo}
+        >
+          <Info className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>{labels.accountInfo}</span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="h-8 px-2.5 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-border"
+          title={labels.removeAccount}
+        >
+          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+          <span>{labels.removeAccount}</span>
+        </Button>
+
         {!account.isDefault && (
           <button
             type="button"
@@ -416,31 +455,8 @@ function AccountRow({
             <Star className="w-3.5 h-3.5" />
           </button>
         )}
-        <button
-          type="button"
-          onClick={onMoveUp}
-          disabled={isFirst}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-          title={labels.moveUp}
-          aria-label={labels.moveUp}
-        >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 10l4-4 4 4" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onClick={onMoveDown}
-          disabled={isLast}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-          title={labels.moveDown}
-          aria-label={labels.moveDown}
-        >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M4 6l4 4 4-4" />
-          </svg>
-        </button>
       </div>
     </div>
   );
 }
+

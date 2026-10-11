@@ -7,14 +7,18 @@ import type { PushRelayOption, SettingsPolicy } from '@/lib/admin/types';
 // Hosted relay so self-hosters don't need their own VAPID + Firebase setup.
 // The built-in entry can be repointed at build time via NEXT_PUBLIC_PUSH_RELAY_URL.
 export const DEFAULT_RELAY_BASE_URL =
-  process.env.NEXT_PUBLIC_PUSH_RELAY_URL || 'https://notifications.relay.bulwarkmail.org';
+  normalizeRelayUrl(process.env.NEXT_PUBLIC_PUSH_RELAY_URL) || 'https://inbox.comail.at/push-relay';
 
 export type PushRelayPolicy = Partial<
   Pick<SettingsPolicy, 'pushRelays' | 'pushRelayUrl' | 'pushRelayUrlLocked'>
 >;
 
 export function normalizeRelayUrl(url: string | null | undefined): string {
-  return (url ?? '').trim().replace(/\/+$/, '');
+  let normalized = (url ?? '').trim().replace(/\/+$/, '');
+  if (normalized === 'https://inbox.comail.at' || normalized === 'http://inbox.comail.at') {
+    normalized = `${normalized}/push-relay`;
+  }
+  return normalized;
 }
 
 export function isValidRelayUrl(url: string | null | undefined): boolean {

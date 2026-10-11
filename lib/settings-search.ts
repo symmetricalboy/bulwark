@@ -50,7 +50,8 @@ export const tabSearchPaths: Record<Tab, string[]> = {
   language: ['settings.language_region'],
   notifications: ['settings.notifications'],
   appearance: [
-    'settings.appearance.theme',
+    'settings.appearance.icon_set',
+    'settings.appearance.icon_color_palette',
     'settings.appearance.font_size',
     'settings.appearance.list_density',
     'settings.appearance.animations',
@@ -141,7 +142,7 @@ export const tabKeywords: Record<Tab, string> = {
   account: 'profile email password user signin signout reorder rearrange drag dropdown switcher multi-account',
   language: 'locale region timezone date time format',
   notifications: 'sound alert push badge',
-  appearance: 'theme dark light font size accent color animation density',
+  appearance: 'font size accent color animation density icons iconset',
   layout: 'toolbar sidebar account switcher unified mailbox icons rail',
   reading: 'mark read preview thread conversation archive delete attachment open monospace mono font plain text',
   composing: 'editor signature plain text reply forward draft compose',
@@ -161,7 +162,7 @@ export const tabKeywords: Record<Tab, string> = {
   protocol_handlers: 'mailto webcal links default app protocol handler',
   sidebar_apps: 'apps webview iframe',
   about_data: 'export import storage quota privacy backup',
-  themes: 'custom theme css skin appearance',
+  themes: 'custom theme css skin appearance dark light system mode color',
   plugins: 'extensions addons',
   debug: 'logs developer console diagnostic',
 };

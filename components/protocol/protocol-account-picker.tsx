@@ -114,6 +114,7 @@ export function ProtocolAccountPicker({
                 <Avatar
                   name={account.displayName || account.label}
                   email={account.email || account.username}
+                  did={account.did}
                   size="md"
                   className="shrink-0"
                   disableFavicon

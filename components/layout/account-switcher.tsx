@@ -299,8 +299,22 @@ export function AccountSwitcher({ variant = "rail", className }: AccountSwitcher
                   <div className="relative flex-shrink-0">
                     <AccountAvatar account={account} size="md" />
                     {isActive && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                      <div
+                        className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-white ring-2 ring-background flex items-center justify-center shadow-xs"
+                        title="Active account"
+                      >
+                        <svg
+                          className="w-2.5 h-2.5 text-white"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="#ffffff"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" stroke="#ffffff" />
+                        </svg>
                       </div>
                     )}
                   </div>

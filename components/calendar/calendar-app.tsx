@@ -67,6 +67,8 @@ import { resolveCalendarActionClient } from "@/lib/calendar-action-client";
 import { getEventStartDate } from "@/lib/calendar-utils";
 import { displayNow } from "@/lib/timezone";
 import { useTaskStore } from "@/stores/task-store";
+import { useTasksAppStore } from "@/stores/tasks-app-store";
+import { GOOGLE_TASKS_CALENDAR_ID, COMAIL_TASKS_CALENDAR_ID } from "@/lib/google/tasks-mapper";
 import { useContactStore } from "@/stores/contact-store";
 import { cn } from "@/lib/utils";
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRights, CalendarTask } from "@/lib/jmap/types";
@@ -472,8 +474,9 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
 
   // Fetch tasks when tasks view is active or when tasks are shown on calendar grid
   useEffect(() => {
-    if (client && enableCalendarTasks && (normalizedViewMode === "tasks" || showTasksOnCalendar)) {
-      fetchTasksFn(client);
+    if (enableCalendarTasks && (normalizedViewMode === "tasks" || showTasksOnCalendar)) {
+      if (client) fetchTasksFn(client);
+      void useTasksAppStore.getState().initialize();
     }
   }, [client, enableCalendarTasks, normalizedViewMode, showTasksOnCalendar, fetchTasksFn]);
 
@@ -670,8 +673,13 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     setShowTaskModal(true);
   }, [closeEventPanelForTask]);
 
-  const handleToggleTaskComplete = useCallback((task: CalendarTask) => {
+  const handleToggleTaskComplete = useCallback(async (task: CalendarTask) => {
     if (client) toggleTaskCompleteFn(client, task);
+    const tasksAppStore = useTasksAppStore.getState();
+    const appTask = tasksAppStore.tasks.find((t) => t.id === task.id);
+    if (appTask) {
+      await tasksAppStore.toggleTaskComplete(task.id);
+    }
   }, [client, toggleTaskCompleteFn]);
 
   const handleSaveTask = useCallback(async (data: Partial<import("@/lib/jmap/types").CalendarTask>) => {
@@ -1414,10 +1422,14 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
   }, [events, selectedCalendarIds, showBirthdayCalendar, birthdayEvents]);
 
   // Tasks on the month, week and day grids follow the calendar filter like
-  // the events do (#1107).
+  // the events do (#1107). Google Tasks and general tasks are included when showTasksOnCalendar is on.
   const calendarTasks = useMemo(() => {
     if (!enableCalendarTasks || !showTasksOnCalendar) return undefined;
-    return filterTasksByCalendars(taskStore.tasks, selectedCalendarIds);
+    return taskStore.tasks.filter((task) => {
+      const ids = Object.keys(task.calendarIds ?? {});
+      if (ids.length === 0 || ids.includes(GOOGLE_TASKS_CALENDAR_ID) || ids.includes(COMAIL_TASKS_CALENDAR_ID) || ids.includes('tasks')) return true;
+      return ids.some((id) => selectedCalendarIds.includes(id));
+    });
   }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds]);
 
   useEffect(() => {

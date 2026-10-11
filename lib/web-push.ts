@@ -6,7 +6,7 @@
 
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import type { EmailPushConfig, Mailbox } from '@/lib/jmap/types';
-import { DEFAULT_RELAY_BASE_URL } from '@/lib/push-relays';
+import { DEFAULT_RELAY_BASE_URL, normalizeRelayUrl } from '@/lib/push-relays';
 import { IS_LITE } from '@/lib/lite';
 
 // Per-account keys: a single browser may be signed in to multiple accounts,
@@ -455,7 +455,7 @@ export async function enableWebPush(
     );
   }
 
-  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+  const relayBaseUrl = normalizeRelayUrl(params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL);
   if (!relayBaseUrl) throw new Error('relayBaseUrl is required');
 
   await ensurePermission();
@@ -501,7 +501,9 @@ export async function enableWebPush(
   // Builds before the relay key was introduced have no recorded value. Their
   // existing JMAP subscription was created with the currently selected relay,
   // so migrate that state in place instead of needlessly destroying it.
-  const relayChanged = previousRelayBaseUrl !== null && previousRelayBaseUrl !== relayBaseUrl;
+  const relayChanged =
+    previousRelayBaseUrl !== null &&
+    normalizeRelayUrl(previousRelayBaseUrl) !== relayBaseUrl;
 
   await registerWithRelay({
     relayBaseUrl,
@@ -626,7 +628,7 @@ export interface DisableWebPushParams {
 // PushSubscription. Any single failure is swallowed so the user always ends
 // up in a "disabled" state locally.
 export async function disableWebPush(params: DisableWebPushParams): Promise<void> {
-  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+  const relayBaseUrl = normalizeRelayUrl(params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL);
   const accountId = params.client.getAccountId();
 
   const subIdKey = subscriptionIdKey(accountId);
@@ -703,7 +705,7 @@ export async function listPushDevices(params: {
   client: IJMAPClient;
   relayBaseUrl?: string;
 }): Promise<PushDevice[]> {
-  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+  const relayBaseUrl = normalizeRelayUrl(params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL);
   const accountId = params.client.getAccountId();
   const thisDeviceClientId = typeof localStorage === 'undefined'
     ? null
@@ -734,7 +736,7 @@ export async function revokePushDevice(params: {
   device: Pick<PushDevice, 'id' | 'deviceClientId' | 'isThisDevice'>;
   relayBaseUrl?: string;
 }): Promise<void> {
-  const relayBaseUrl = (params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL).replace(/\/+$/, '');
+  const relayBaseUrl = normalizeRelayUrl(params.relayBaseUrl ?? DEFAULT_RELAY_BASE_URL);
 
   if (params.device.isThisDevice) {
     await disableWebPush({ client: params.client, relayBaseUrl });
@@ -764,14 +766,20 @@ export async function isWebPushEnabled(
   const sub = await registration.pushManager.getSubscription();
   if (sub === null || localStorage.getItem(subscriptionIdKey(accountId)) === null) return false;
   if (relayBaseUrl) {
-    const expected = relayBaseUrl.replace(/\/+$/, '');
-    if (localStorage.getItem(relayBaseUrlKey(accountId)) !== expected) return false;
+    const expected = normalizeRelayUrl(relayBaseUrl);
+    const stored = normalizeRelayUrl(localStorage.getItem(relayBaseUrlKey(accountId)));
+    if (stored !== expected) return false;
   }
   return true;
 }
 
 export function getWebPushDeviceClientId(accountId: string): string | null {
   return typeof localStorage === 'undefined' ? null : localStorage.getItem(deviceClientIdKey(accountId));
+}
+
+export function hasWebPushOptIn(accountId: string): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  return localStorage.getItem(subscriptionIdKey(accountId)) !== null;
 }
 
 // When each account was last re-synced during this page load. Once a day is

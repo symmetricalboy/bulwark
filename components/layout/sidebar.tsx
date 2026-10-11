@@ -190,6 +190,7 @@ function resolveRoleKey(role?: string, name?: string): string | undefined {
 
 function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean, roleKey?: string) {
   const base = "w-4 h-4 flex-shrink-0 transition-colors";
+  if (roleKey === "trash") return cn(base, "text-muted-foreground");
   if (isVirtual) return cn(base, "text-muted-foreground");
   if (colorful && roleKey && ROLE_ICON_COLOR[roleKey]) {
     return cn(base, ROLE_ICON_COLOR[roleKey]);

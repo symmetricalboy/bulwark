@@ -45,6 +45,7 @@ import { useDeepLinkUrl } from "@/hooks/use-deep-link-url";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
+import { useGoogleContacts } from "@/hooks/use-google-contacts";
 
 type View =
   | "list"
@@ -115,6 +116,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const [view, setView] = useState<View>("list");
   const [activeCategory, setActiveCategory] = useState<ContactCategory>("all");
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importSource, setImportSource] = useState<"google" | "file">("google");
   const [renamingAddressBook, setRenamingAddressBook] = useState<AddressBook | null>(null);
   const [creatingAddressBook, setCreatingAddressBook] = useState(false);
   const [sharingAddressBookId, setSharingAddressBookId] = useState<string | null>(null);
@@ -184,6 +186,9 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // outside the embedded shell.
   const { enabled: multiAccountEnabled, accountClients } = useProMultiAccountContacts();
 
+  // Load and sync Google contacts when Google account is connected
+  const googleContacts = useGoogleContacts();
+
   useEffect(() => {
     if (isEmbedded) return;
     if (client && supportsSync && !hasFetched.current) {
@@ -221,6 +226,10 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       new URLSearchParams(entry?.search ?? searchParams.toString()),
     );
     intentAppliedRef.current = true;
+    if (searchParams.get("import") === "google") {
+      setImportSource("google");
+      setShowImportDialog(true);
+    }
     if (!link) return;
     applyContactsDeepLinkRef.current(link);
   }, [searchParams, linkSegments, setSelectedContact]);
@@ -956,7 +965,14 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       onCreateGroup={handleCreateGroup}
                       onCreateContact={handleCreateNew}
                       onCreateAddressBook={client ? () => setCreatingAddressBook(true) : undefined}
-                      onImport={() => setShowImportDialog(true)}
+                      onImport={() => {
+                        setImportSource("google");
+                        setShowImportDialog(true);
+                      }}
+                      onImportGoogle={() => {
+                        setImportSource("google");
+                        setShowImportDialog(true);
+                      }}
                       onEditGroup={handleEditGroupFromSidebar}
                       onDeleteGroup={handleDeleteGroupFromSidebar}
                       onComposeGroup={handleComposeGroupFromSidebar}
@@ -1149,6 +1165,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
               existingContacts={contacts}
               onImport={handleImportContacts}
               onClose={() => setShowImportDialog(false)}
+              initialSource={importSource}
             />
           </div>
         </div>

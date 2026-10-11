@@ -4303,14 +4303,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 if (isMobile) setActiveView('viewer');
               }}
               className={cn(
-                "absolute z-40 rounded-full shadow-lg",
+                "absolute z-40 rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90",
                 isMobile ? "bottom-4 end-4 h-14 w-14" : "bottom-4 end-4 h-12 w-12"
               )}
               aria-label={t('sidebar.compose')}
               title={t('sidebar.compose_hint')}
               data-tour="compose-button"
             >
-              <PenSquare className={isMobile ? "h-6 w-6" : "h-5 w-5"} />
+              <PenSquare className={cn(isMobile ? "h-6 w-6" : "h-5 w-5", "text-primary-foreground")} />
             </Button>
           </div>
 

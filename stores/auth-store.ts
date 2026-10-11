@@ -10,6 +10,7 @@ import { subscriptionOwner, useCalendarStore } from './calendar-store';
 import { useFilterStore } from './filter-store';
 import { useSettingsStore } from './settings-store';
 import { useAccountStore, type AccountEntry } from './account-store';
+import { isComailAccount, resolveConnectedAtprotoDid } from '@/lib/atproto-avatar';
 import { fetchPrincipalDisplayName } from '@/lib/stalwart/principal';
 import { fetchConfig } from '@/hooks/use-config';
 import { debug } from '@/lib/debug';
@@ -233,6 +234,31 @@ function getClientRateLimitState(client: IJMAPClient | null): Pick<AuthState, 'i
 }
 
 /**
+ * Refresh the account's connected atproto DID from Bluesky's records (#1767).
+ *
+ * For accounts signed in via basic password or session restore where the DID
+ * was not already populated, this resolves the Bluesky identity by handle or
+ * actor and updates the account store so the avatar and Bluesky handle are
+ * displayed across the app.
+ *
+ * Best-effort and never throws: a failed lookup leaves the account unchanged.
+ */
+export async function syncAccountAtprotoIdentity(accountId: string): Promise<void> {
+  const account = useAccountStore.getState().getAccountById(accountId);
+  if (!account || !isComailAccount(account)) return;
+
+  try {
+    const did = await resolveConnectedAtprotoDid(account);
+    if (!did) return;
+    const current = useAccountStore.getState().getAccountById(accountId);
+    if (!current || current.did === did) return;
+    useAccountStore.getState().updateAccount(accountId, { did });
+  } catch {
+    // Fail open: leave account as-is
+  }
+}
+
+/**
  * Refresh the account registry's cached `displayName` from the server (#900).
  *
  * The name is captured once by `addAccount` (a no-op for an existing entry),
@@ -248,6 +274,7 @@ export async function syncAccountDisplayName(
   client: IJMAPClient,
   fallbackName?: string | null,
 ): Promise<void> {
+  void syncAccountAtprotoIdentity(accountId);
   const account = useAccountStore.getState().getAccountById(accountId);
   if (!account) return;
 

@@ -334,20 +334,26 @@ export function CalendarDayView({
                         <>
                           <div className="text-[10px] text-muted-foreground mb-1">{t("events.all_day")}</div>
                           <div className="space-y-1">
-                            {allDayEvents.map((ev) => {
+                            {allDayEvents.map((ev, evIndex) => {
                               const calId = getPrimaryCalendarId(ev);
+                              const cascadeDelay = Math.min(evIndex * 30, 300);
                               return (
-                                <EventCard
+                                <div
                                   key={ev.id}
-                                  event={ev}
-                                  calendar={calId ? calendarMap.get(calId) : undefined}
-                                  variant="chip"
-                                  onClick={(rect) => onSelectEvent(ev, rect)}
-                                  onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
-                                  onMouseLeave={onHoverLeave}
-                                  onContextMenu={onContextMenuEvent}
-                                  currentUserEmails={currentUserEmails}
-                                />
+                                  className="animate-cal-event-cascade"
+                                  style={{ animationDelay: `${cascadeDelay}ms` }}
+                                >
+                                  <EventCard
+                                    event={ev}
+                                    calendar={calId ? calendarMap.get(calId) : undefined}
+                                    variant="chip"
+                                    onClick={(rect) => onSelectEvent(ev, rect)}
+                                    onMouseEnter={(rect) => onHoverEvent?.(ev, rect)}
+                                    onMouseLeave={onHoverLeave}
+                                    onContextMenu={onContextMenuEvent}
+                                    currentUserEmails={currentUserEmails}
+                                  />
+                                </div>
                               );
                             })}
                           </div>
@@ -471,7 +477,7 @@ export function CalendarDayView({
                       />
                     )}
 
-                    {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }) => {
+                    {layouted.map(({ event: ev, column, totalColumns, startMinutes, endMinutes }, evIndex) => {
                       const durMin = Math.max(15, endMinutes - startMinutes);
                       const clip = clipToDisplayHours(startMinutes, endMinutes, hours);
                       const baseHeight = Math.max(24, (Math.max(15, clip.endMinutes - clip.startMinutes) / 60) * HOUR_HEIGHT);
@@ -487,12 +493,24 @@ export function CalendarDayView({
                       const leftPct = (column / totalColumns) * 100;
                       const widthPct = (1 / totalColumns) * 100;
 
+                      const cascadeDelay = Math.min(evIndex * 25, 400);
                       return (
                         <div
                           key={ev.id}
-                          className="absolute z-10 group/event"
+                          className={cn(
+                            "absolute z-10 group/event animate-cal-event-cascade",
+                            isResizing && "!animate-none"
+                          )}
                           data-calendar-event
-                          style={{ top, height, left: `${leftPct}%`, width: `${widthPct}%`, paddingLeft: 2, paddingRight: 2 }}
+                          style={{
+                            top,
+                            height,
+                            left: `${leftPct}%`,
+                            width: `${widthPct}%`,
+                            paddingLeft: 2,
+                            paddingRight: 2,
+                            animationDelay: isResizing ? undefined : `${cascadeDelay}ms`,
+                          }}
                         >
                           <EventCard
                             event={ev}

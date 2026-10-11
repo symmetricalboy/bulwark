@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Mail, Calendar, BookUser, HardDrive, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Wrench } from "@/components/icons";
+import { Mail, Calendar, BookUser, HardDrive, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Wrench, CheckSquare } from "@/components/icons";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
 import { useBuildersMembership } from "@/hooks/use-builders-membership";
@@ -12,7 +12,7 @@ import { usePathname, Link, useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendar-store";
 import { useEmailStore } from "@/stores/email-store";
-import { useSettingsStore } from "@/stores/settings-store";
+import { useSettingsStore, resolveNavOrder } from "@/stores/settings-store";
 import { usePolicyStore } from "@/stores/policy-store";
 import { useResolvedSidebarApps } from "@/hooks/use-resolved-sidebar-apps";
 import { useAuthStore } from "@/stores/auth-store";
@@ -57,13 +57,13 @@ interface NavigationRailProps {
    * Pro interface to open the route as a tab instead. The visual rail is
    * unchanged.
    */
-  onNavigate?: (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') => boolean | void;
+  onNavigate?: (itemId: 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings') => boolean | void;
   /**
    * When `onNavigate` is in use, this controls which nav item the rail
    * highlights as active (since the URL alone no longer reflects the
    * active app).
    */
-  activeItemId?: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings' | null;
+  activeItemId?: 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings' | null;
   /**
    * Pro shell only: renders a Search entry that opens the global search
    * palette (#641) instead of navigating anywhere.
@@ -340,20 +340,93 @@ export function NavigationRail({
     return () => { cancelled = true; };
   }, []);
 
-  const navItems: NavItem[] = [
+  const sidebarNavOrder = useSettingsStore((s) => s.sidebarNavOrder);
+  const setSidebarNavOrder = useSettingsStore((s) => s.setSidebarNavOrder);
+
+  const rawNavItems: NavItem[] = useMemo(() => [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
-    { id: "calendar", icon: Calendar, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
     { id: "contacts", icon: BookUser, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
+    { id: "calendar", icon: Calendar, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
+    { id: "tasks", icon: CheckSquare, labelKey: "tasks", href: "/tasks" },
     { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
-  ];
+  ], [inboxUnread, supportsContacts, contactsEnabled, supportsCalendar, calendarEnabled, supportsFiles, filesEnabled]);
+
+  const orderedNavItems = useMemo(() => {
+    const order = resolveNavOrder(sidebarNavOrder);
+    const map = new Map<string, NavItem>(rawNavItems.map((item: NavItem) => [item.id, item]));
+    const result: NavItem[] = [];
+    for (const id of order) {
+      const item = map.get(id);
+      if (item) {
+        result.push(item);
+        map.delete(id);
+      }
+    }
+    for (const item of map.values()) {
+      result.push(item);
+    }
+    return result;
+  }, [rawNavItems, sidebarNavOrder]);
+
+  const visibleItems: NavItem[] = orderedNavItems.filter((item: NavItem) => !item.hidden);
+
+  // Drag and drop state for rearrangable nav items
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dropIndicator, setDropIndicator] = useState<{ targetId: string; edge: 'before' | 'after' } | null>(null);
+  const isDraggingRef = useRef(false);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    isDraggingRef.current = true;
+    e.dataTransfer.setData('text/x-bulwark-nav-item', id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedItemId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetId: string, isVertical: boolean) => {
+    if (!draggedItemId || draggedItemId === targetId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = e.currentTarget.getBoundingClientRect();
+    const edge: 'before' | 'after' = isVertical
+      ? (e.clientY < rect.top + rect.height / 2 ? 'before' : 'after')
+      : (e.clientX < rect.left + rect.width / 2 ? 'before' : 'after');
+
+    setDropIndicator((prev) =>
+      prev && prev.targetId === targetId && prev.edge === edge
+        ? prev
+        : { targetId, edge }
+    );
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/x-bulwark-nav-item') || draggedItemId;
+    if (sourceId && sourceId !== targetId) {
+      const currentOrder = resolveNavOrder(sidebarNavOrder);
+      const withoutSource = currentOrder.filter((id) => id !== sourceId);
+      const targetIdx = withoutSource.indexOf(targetId);
+      if (targetIdx !== -1) {
+        const insertIdx = dropIndicator?.edge === 'before' ? targetIdx : targetIdx + 1;
+        withoutSource.splice(insertIdx, 0, sourceId);
+        setSidebarNavOrder(withoutSource);
+      }
+    }
+    handleDragEnd();
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemId(null);
+    setDropIndicator(null);
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 50);
+  };
 
   // When the host (e.g. the Pro shell) takes over navigation via `onNavigate`,
   // it tells us which item is active; otherwise we infer it from the URL.
   const isSettingsActive = onNavigate
     ? activeItemId === 'settings'
     : !activeAppId && pathname.startsWith("/settings");
-
-  const visibleItems = navItems.filter((item) => !item.hidden);
 
   const getIsActive = (href: string, itemId: string) => {
     if (activeAppId) return false;
@@ -366,8 +439,12 @@ export function NavigationRail({
     return pathname.startsWith(href);
   };
 
-  const handleNavClick = (itemId: 'mail' | 'calendar' | 'contacts' | 'files' | 'settings') =>
+  const handleNavClick = (itemId: 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings') =>
     (e: React.MouseEvent) => {
+      if (isDraggingRef.current) {
+        e.preventDefault();
+        return;
+      }
       if (onNavigate) {
         const intercepted = onNavigate(itemId);
         if (intercepted !== false) {
@@ -387,36 +464,53 @@ export function NavigationRail({
         role="navigation"
         aria-label={t("nav_label")}
       >
-        {visibleItems.map((item) => {
+        {visibleItems.map((item: NavItem) => {
           const isActive = getIsActive(item.href, item.id);
           const Icon = item.icon;
+          const isItemDragged = draggedItemId === item.id;
+          const showBefore = dropIndicator?.targetId === item.id && dropIndicator?.edge === 'before';
+          const showAfter = dropIndicator?.targetId === item.id && dropIndicator?.edge === 'after';
+
           return (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[44px] grow shrink-0 basis-[64px]",
-                "transition-colors duration-150",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+            <div key={item.id} className="relative flex min-h-[44px] grow shrink-0 basis-[64px]">
+              {showBefore && (
+                <span className="absolute top-1.5 bottom-1.5 -left-0.5 w-0.5 bg-primary rounded-full z-20 pointer-events-none" />
               )}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <div className="relative">
-                <Icon className="w-5 h-5" />
-                {item.badge != null && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground px-1">
-                    {item.badge > 99 ? "99+" : item.badge}
-                  </span>
+              <Link
+                href={item.href}
+                draggable
+                onDragStart={(e) => handleDragStart(e, item.id)}
+                onDragOver={(e) => handleDragOver(e, item.id, false)}
+                onDrop={(e) => handleDrop(e, item.id)}
+                onDragEnd={handleDragEnd}
+                onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings')}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 py-2 px-1 w-full min-h-[44px] cursor-grab active:cursor-grabbing",
+                  "transition-colors duration-150",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                  isItemDragged && "opacity-40"
                 )}
-                {isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
-                )}
-              </div>
-              <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
-            </Link>
+                aria-current={isActive ? "page" : undefined}
+              >
+                <div className="relative">
+                  <Icon className="w-5 h-5" />
+                  {item.badge != null && item.badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground px-1">
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full bg-primary" />
+                  )}
+                </div>
+                <span className="text-[10px] font-medium leading-tight truncate max-w-full">{t(item.labelKey)}</span>
+              </Link>
+              {showAfter && (
+                <span className="absolute top-1.5 bottom-1.5 -right-0.5 w-0.5 bg-primary rounded-full z-20 pointer-events-none" />
+              )}
+            </div>
           );
         })}
 
@@ -521,12 +615,27 @@ export function NavigationRail({
         const useDarkLogo = resolvedTheme === 'dark' || comailLightRail;
         const logoUrl = withBasePath(useDarkLogo ? (appLogoDarkUrl || appLogoLightUrl) : (appLogoLightUrl || appLogoDarkUrl));
         return logoUrl ? (
-          <div className="flex items-center justify-center py-3 px-1">
-            <img
-              src={logoUrl}
-              alt=""
-              className="w-8 h-8 object-contain"
-            />
+          <div className="flex flex-col items-center justify-center pt-2.5 pb-1 px-1 gap-1">
+            <span
+              data-testid="comail-alpha-badge"
+              className="px-1.5 py-0.5 text-[9px] font-bold tracking-wider leading-none rounded bg-orange-500 text-white uppercase select-none shadow-xs"
+            >
+              ALPHA
+            </span>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="flex items-center justify-center p-1 rounded-lg hover:opacity-80 active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              title="Refresh"
+              aria-label="Refresh Comail"
+              data-testid="comail-avatar-button"
+            >
+              <img
+                src={logoUrl}
+                alt="Comail"
+                className="w-8 h-8 object-contain"
+              />
+            </button>
           </div>
         ) : null;
       })()}
@@ -557,40 +666,58 @@ export function NavigationRail({
             {!collapsed && <span className="truncate">{tGlobalSearch("title")}</span>}
           </button>
         )}
-        {visibleItems.map((item) => {
+        {visibleItems.map((item: NavItem) => {
           const isActive = getIsActive(item.href, item.id);
           const Icon = item.icon;
+          const isItemDragged = draggedItemId === item.id;
+          const showBefore = dropIndicator?.targetId === item.id && dropIndicator?.edge === 'before';
+          const showAfter = dropIndicator?.targetId === item.id && dropIndicator?.edge === 'after';
+
           return (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'files' | 'settings')}
-              data-tour={`nav-${item.id}`}
-              className={cn(
-                "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
-                collapsed
-                  ? "justify-center w-10 h-10"
-                  : "px-2.5 text-sm",
-                "max-lg:min-h-[44px]",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            <div key={item.id} className="relative w-full">
+              {showBefore && (
+                <span className="absolute -top-1 left-2 right-2 h-0.5 bg-primary rounded-full z-20 pointer-events-none" />
               )}
-              aria-current={isActive ? "page" : undefined}
-              title={collapsed ? t(item.labelKey) : undefined}
-              style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
-            >
-              <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
-              {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
-              {item.badge != null && item.badge > 0 && (
-                <span className={cn(
-                  "absolute flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground px-1",
-                  collapsed ? "-top-0.5 -right-0.5" : "right-1.5"
-                )}>
-                  {item.badge > 99 ? "99+" : item.badge}
-                </span>
+              <Link
+                key={item.id}
+                href={item.href}
+                draggable
+                onDragStart={(e) => handleDragStart(e, item.id)}
+                onDragOver={(e) => handleDragOver(e, item.id, true)}
+                onDrop={(e) => handleDrop(e, item.id)}
+                onDragEnd={handleDragEnd}
+                onClick={handleNavClick(item.id as 'mail' | 'calendar' | 'contacts' | 'tasks' | 'files' | 'settings')}
+                data-tour={`nav-${item.id}`}
+                className={cn(
+                  "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-grab active:cursor-grabbing",
+                  collapsed
+                    ? "justify-center w-10 h-10"
+                    : "px-2.5 text-sm",
+                  "max-lg:min-h-[44px]",
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  isItemDragged && "opacity-40"
+                )}
+                aria-current={isActive ? "page" : undefined}
+                title={collapsed ? t(item.labelKey) : undefined}
+                style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
+              >
+                <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
+                {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
+                {item.badge != null && item.badge > 0 && (
+                  <span className={cn(
+                    "absolute flex items-center justify-center min-w-[16px] h-4 text-[10px] font-bold rounded-full bg-destructive text-destructive-foreground px-1",
+                    collapsed ? "-top-0.5 -right-0.5" : "right-1.5"
+                  )}>
+                    {item.badge > 99 ? "99+" : item.badge}
+                  </span>
+                )}
+              </Link>
+              {showAfter && (
+                <span className="absolute -bottom-1 left-2 right-2 h-0.5 bg-primary rounded-full z-20 pointer-events-none" />
               )}
-            </Link>
+            </div>
           );
         })}
 
@@ -771,13 +898,28 @@ export function NavigationRail({
                   <Avatar
                     name={account.displayName || account.label}
                     email={account.email || account.username}
+                    did={account.did}
                     size="sm"
                     disableFavicon
                     fallbackColor={account.avatarColor}
                   />
                   {isActive && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-primary flex items-center justify-center">
-                      <Check className="w-2 h-2 text-primary-foreground" />
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary text-white ring-2 ring-background flex items-center justify-center shadow-xs"
+                      title="Active account"
+                    >
+                      <svg
+                        className="w-2 h-2 text-white"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="#ffffff"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" stroke="#ffffff" />
+                      </svg>
                     </span>
                   )}
                 </button>

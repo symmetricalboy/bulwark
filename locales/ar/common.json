@@ -156,7 +156,8 @@
     "unified_all_starred": "كل المميز بنجمة",
     "unified_all_mail": "كل البريد",
     "remove_account": "إزالة الحساب",
-    "remove_account_confirm": "هل تريد إزالة {account} من هذا الجهاز؟ يمكنك إضافته مرة أخرى لاحقًا."
+    "remove_account_confirm": "هل تريد إزالة {account} من هذا الجهاز؟ يمكنك إضافته مرة أخرى لاحقًا.",
+    "tasks": "المهام"
   },
   "protocol_handlers": {
     "title": "التطبيقات الافتراضية",
@@ -783,7 +784,10 @@
       "background_color": "لون الخلفية",
       "remove_background_color": "إزالة لون الخلفية"
     },
-    "send_filing_warning": "تم الإرسال - لكن التنظيف بعد الإرسال فشل، وقد تبقى مسودة قديمة."
+    "send_filing_warning": "تم الإرسال - لكن التنظيف بعد الإرسال فشل، وقد تبقى مسودة قديمة.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "تأكيد",
@@ -1001,7 +1005,14 @@
       "default_restored": "تمت استعادة السمة الافتراضية",
       "default_name": "الافتراضية",
       "default_badge": "افتراضية",
-      "admin_enforced": "مفروضة من المسؤول"
+      "admin_enforced": "مفروضة من المسؤول",
+      "theme": {
+        "label": "السمة",
+        "description": "اختر نظام الألوان المفضل لديك",
+        "light": "فاتح",
+        "dark": "داكن",
+        "system": "النظام"
+      }
     },
     "tab_groups": {
       "general": "عام",
@@ -1067,13 +1078,6 @@
       },
       "title": "المظهر",
       "description": "تخصيص شكل ومظهر البريد الإلكتروني على الويب",
-      "theme": {
-        "label": "السمة",
-        "description": "اختر نظام الألوان المفضل لديك",
-        "light": "فاتح",
-        "dark": "داكن",
-        "system": "النظام"
-      },
       "language": {
         "label": "اللغة",
         "description": "اختر لغتك المفضلة"
@@ -1170,6 +1174,20 @@
       "cross_all": {
         "label": "كل البريد",
         "description": "إظهار عنصر \"كل البريد\" في صندوق البريد الموحّد يسرد كل البريد عبر المجلدات المحددة."
+      },
+      "icon_set": {
+        "label": "مجموعة الأيقونات",
+        "description": "اختر نمط الأيقونات المستخدم عبر الواجهة",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Icon color palette",
+        "description": "Choose whether icons use a monochromatic or colorful palette",
+        "monochrome": "Monochromatic (Default)",
+        "theme_accent": "Theme accent shades",
+        "rainbow": "Rainbow colors"
       }
     },
     "keywords": {
@@ -1220,11 +1238,12 @@
     "notifications": {
       "test_sound": "اختبار صوت الإشعار",
       "sounds": {
-        "default": "افتراضي (تنبيه)",
+        "default": "استرخاء (افتراضي)",
         "cheerful": "مرح",
         "involved": "متفاعل",
         "swift": "إيماءة سريعة",
-        "relax": "استرخاء"
+        "relax": "استرخاء",
+        "beep": "تنبيه"
       },
       "push": {
         "title": "الإشعارات في الخلفية",
@@ -1676,7 +1695,45 @@
         "title": "مشترك معي",
         "description": "الحسابات الجماعية والمشتركة التي يمكنك إدارتها. اختر واحدًا لتعديل مرشحاته، والرد التلقائي أثناء الغياب، والتقويمات، وجهات الاتصال.",
         "shared_label": "حساب مشترك"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "scoped": {
       "back": "العودة إلى حسابي",
@@ -2978,7 +3035,17 @@
       "success": "{count, plural, one {تم استيراد جهة اتصال واحدة} other {تم استيراد # جهة اتصال}}",
       "failed": "فشل الاستيراد",
       "close": "إغلاق",
-      "file_too_large": "الملف كبير جدًا (الحد الأقصى 5 ميغابايت)"
+      "file_too_large": "الملف كبير جدًا (الحد الأقصى 5 ميغابايت)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "تصدير جهات الاتصال",
@@ -3729,7 +3796,25 @@
     "disabled_description": "قد تتسبب عمليات رفع الملفات الكبيرة عبر WebDAV في زعزعة استقرار Stalwart/RocksDB، بما في ذلك انهيارات نفاد الذاكرة واستخدام غير قابل للاسترجاع لمساحة القرص. قد لا تُحذف الملفات المحذوفة فورًا من مخزن الكائنات الثنائية. لا يُنصح بهذه الميزة لبيئات الإنتاج.",
     "stability_warning": "قد تتسبب عمليات رفع الملفات الكبيرة في زعزعة استقرار الخادم. قد لا تُحذف الملفات المحذوفة فورًا من التخزين. استخدمها بحذر.",
     "migration_title": "جارٍ تحديث ملفاتك…",
-    "migration_description": "جارٍ تنظيم المجلدات والملفات في هيكلها الصحيح. يحدث هذا مرة واحدة فقط."
+    "migration_description": "جارٍ تنظيم المجلدات والملفات في هيكلها الصحيح. يحدث هذا مرة واحدة فقط.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "شهاداتك",

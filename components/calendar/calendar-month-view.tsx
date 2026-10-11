@@ -287,7 +287,7 @@ export function CalendarMonthView({
         onScroll={handleScroll}
       >
         <div ref={topSentinelRef} data-testid="month-top-sentinel" className="h-px flex-shrink-0" />
-        {weekSegments.map(({ week, segments, rowCount, dayEventRows, dayTasks, contentRows }) => (
+        {weekSegments.map(({ week, segments, rowCount, dayEventRows, dayTasks, contentRows }, weekIndex) => (
           <div key={dayKey(week[0])} data-week={dayKey(week[0])} className="relative flex-shrink-0 border-b border-border" role="row" style={{
             minHeight: showChips
               ? Math.max(rowMinHeight, overlayTop + 4 + contentRows * rowHeight + 8)
@@ -354,8 +354,8 @@ export function CalendarMonthView({
                         return (
                           <span
                             key={ev.id}
-                            className={cn("w-1.5 h-1.5 rounded-full", inactive && "opacity-40")}
-                            style={{ backgroundColor: evColor }}
+                            className={cn("w-1.5 h-1.5 rounded-full animate-cal-event-cascade", inactive && "opacity-40")}
+                            style={{ backgroundColor: evColor, animationDelay: `${Math.min((weekIndex * 35) + (dayIndex * 15), 400)}ms` }}
                           />
                         );
                       })}
@@ -366,8 +366,8 @@ export function CalendarMonthView({
                           <span
                             key={`task-${task.id}`}
                             data-calendar-task={task.id}
-                            className={cn("w-1.5 h-1.5 rounded-full border", task.progress === "completed" && "opacity-40")}
-                            style={{ borderColor: (calId && calendarMap.get(calId)?.color) || "#3b82f6" }}
+                            className={cn("w-1.5 h-1.5 rounded-full border animate-cal-event-cascade", task.progress === "completed" && "opacity-40")}
+                            style={{ borderColor: (calId && calendarMap.get(calId)?.color) || "#3b82f6", animationDelay: `${Math.min((weekIndex * 35) + (dayIndex * 15), 400)}ms` }}
                           />
                         );
                       })}
@@ -422,15 +422,17 @@ export function CalendarMonthView({
               <div className="absolute inset-x-0 pointer-events-none" style={{ top: overlayTop }}>
                 {segments.map((segment) => {
                   const calId = getPrimaryCalendarId(segment.event);
+                  const cascadeDelay = Math.min((weekIndex * 40) + (segment.startIndex * 20) + (segment.row * 15), 450);
                   return (
                     <div
                       key={`${segment.event.id}-${segment.startIndex}-${segment.row}`}
-                      className="absolute px-0.5 pointer-events-auto"
+                      className="absolute px-0.5 pointer-events-auto animate-cal-event-cascade"
                       style={{
                         left: `calc(${(segment.startIndex / 7) * 100}% + 1px)`,
                         width: `calc(${(segment.span / 7) * 100}% - 2px)`,
                         top: segment.row * rowHeight,
                         height: chipHeight,
+                        animationDelay: `${cascadeDelay}ms`,
                       }}
                     >
                       <EventCard
@@ -457,15 +459,17 @@ export function CalendarMonthView({
               <div className="absolute inset-x-0 pointer-events-none" style={{ top: overlayTop }}>
                 {dayTasks.map((dayTaskList, dayIndex) => dayTaskList.map((task, taskIndex) => {
                   const calId = Object.keys(task.calendarIds).find((id) => calendarMap.has(id));
+                  const taskDelay = Math.min((weekIndex * 40) + (dayIndex * 20) + (taskIndex * 15), 450);
                   return (
                     <div
                       key={`task-${task.id}`}
-                      className="absolute px-0.5 pointer-events-auto"
+                      className="absolute px-0.5 pointer-events-auto animate-cal-event-cascade"
                       style={{
                         left: `calc(${(dayIndex / 7) * 100}% + 1px)`,
                         width: `calc(${(1 / 7) * 100}% - 2px)`,
                         top: (dayEventRows[dayIndex] + taskIndex) * rowHeight,
                         height: chipHeight,
+                        animationDelay: `${taskDelay}ms`,
                       }}
                     >
                       <CalendarTaskChip

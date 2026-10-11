@@ -17,20 +17,6 @@ export function ServiceWorkerRegistration() {
       return;
     }
 
-    if (process.env.NODE_ENV !== "production") {
-      // In development, unregister any previously installed service worker
-      // and clear its caches so hot reload always serves fresh assets.
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        registrations.forEach((registration) => registration.unregister());
-      });
-      if ("caches" in window) {
-        caches.keys().then((keys) => {
-          keys.forEach((key) => caches.delete(key));
-        });
-      }
-      return;
-    }
-
     navigator.serviceWorker
       .register(`${BASE_PATH}/sw.js`, { scope: `${BASE_PATH}/` })
       .then((registration) => {

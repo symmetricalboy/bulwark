@@ -17,7 +17,7 @@ import JSZip from 'jszip';
 const ACCOUNT_ID = 'dev-account-001';
 const scheduledSubmissions: Array<{ id: string; emailId: string; identityId: string; sendAt: string; undoStatus: 'pending' | 'final' | 'canceled' }> = [];
 const emailCreationIds = new Map<string, string>();
-const DEFAULT_PUSH_RELAY_ORIGIN = 'https://notifications.relay.bulwarkmail.org';
+const DEFAULT_PUSH_RELAY_ORIGIN = 'https://inbox.comail.at/push-relay';
 
 interface MockPushSubscription {
   id: string;
@@ -2055,10 +2055,11 @@ async function handlePushSubscriptionSet(args: MethodArgs, callId: string): Prom
     for (const [creationId, data] of Object.entries(create)) {
       try {
         const url = new URL(String(data.url ?? ''));
-        const allowedOrigin = new URL(
+        const allowedUrl = new URL(
           process.env.NEXT_PUBLIC_PUSH_RELAY_URL || DEFAULT_PUSH_RELAY_ORIGIN,
-        ).origin;
-        if (url.origin !== allowedOrigin || !url.pathname.startsWith('/api/push/jmap/')) {
+        );
+        const allowedBasePath = allowedUrl.pathname.replace(/\/+$/, '');
+        if (url.origin !== allowedUrl.origin || !url.pathname.startsWith(`${allowedBasePath}/api/push/jmap/`)) {
           throw new Error('The dev mock only sends verification to the configured push relay');
         }
 

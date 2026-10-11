@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => ({
   policyState: {
     loaded: true,
     policy: {
-      pushRelayUrl: "https://notifications.relay.bulwarkmail.org",
+      pushRelayUrl: "https://inbox.comail.at/push-relay",
       pushRelays: [] as { label: string; url: string }[],
       pushRelayUrlLocked: false,
     },
@@ -50,10 +50,12 @@ vi.mock("@/stores/policy-store", () => ({
 }));
 
 vi.mock("@/lib/web-push", () => ({
-  DEFAULT_RELAY_BASE_URL: "https://notifications.relay.bulwarkmail.org",
+  DEFAULT_RELAY_BASE_URL: "https://inbox.comail.at/push-relay",
   enableWebPush: mocks.enableWebPush,
   isWebPushSupported: () => mocks.supported,
   isWebPushEnabled: mocks.isWebPushEnabled,
+  hasWebPushOptIn: (accountId: string) =>
+    localStorage.getItem(`bulwark.push.subscriptionId.v1.${accountId}`) !== null,
   resyncWebPush: mocks.resyncWebPush,
 }));
 
@@ -89,7 +91,7 @@ describe("PushNotificationPrompt", () => {
     mocks.settingsState.pushRelayUrl = "";
     mocks.policyState.loaded = true;
     mocks.policyState.policy.pushRelayUrl =
-      "https://notifications.relay.bulwarkmail.org";
+      "https://inbox.comail.at/push-relay";
     mocks.policyState.policy.pushRelays = [];
     mocks.policyState.policy.pushRelayUrlLocked = false;
     mocks.enableWebPush.mockReset().mockResolvedValue({ subscriptionId: "sub-1" });
@@ -122,10 +124,13 @@ describe("PushNotificationPrompt", () => {
 
     expect(mocks.enableWebPush).toHaveBeenCalledWith({
       client: mocks.authState.client,
-      relayBaseUrl: "https://notifications.relay.bulwarkmail.org",
+      relayBaseUrl: "https://inbox.comail.at/push-relay",
       accountLabel: "alice@example.com",
     });
     expect(screen.queryByText("title")).not.toBeInTheDocument();
+    expect(
+      localStorage.getItem("bulwark.push.onboarding.dismissed.v1.account-1"),
+    ).toBe("1");
   });
 
   it("registers with the relay the user picked from the admin list", async () => {
@@ -160,7 +165,7 @@ describe("PushNotificationPrompt", () => {
 
     expect(mocks.enableWebPush).toHaveBeenCalledWith(
       expect.objectContaining({
-        relayBaseUrl: "https://notifications.relay.bulwarkmail.org",
+        relayBaseUrl: "https://inbox.comail.at/push-relay",
       }),
     );
   });
@@ -181,7 +186,7 @@ describe("PushNotificationPrompt", () => {
     expect(mocks.resyncWebPush).toHaveBeenCalledTimes(1);
     expect(mocks.resyncWebPush).toHaveBeenCalledWith(
       expect.objectContaining({
-        relayBaseUrl: "https://notifications.relay.bulwarkmail.org",
+        relayBaseUrl: "https://inbox.comail.at/push-relay",
       }),
     );
     // Only the explicit Enable button may start the interactive flow.
@@ -198,6 +203,24 @@ describe("PushNotificationPrompt", () => {
 
   it("does not render when browser notifications are blocked", async () => {
     setNotificationPermission("denied");
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    expect(mocks.isWebPushEnabled).not.toHaveBeenCalled();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
+  });
+
+  it("does not render when browser notifications are already granted", async () => {
+    setNotificationPermission("granted");
+    render(<PushNotificationPrompt />);
+    await advancePromptDelay();
+
+    expect(mocks.isWebPushEnabled).not.toHaveBeenCalled();
+    expect(screen.queryByText("title")).not.toBeInTheDocument();
+  });
+
+  it("does not render when the account already has an opt-in subscription", async () => {
+    localStorage.setItem("bulwark.push.subscriptionId.v1.account-1", "sub-1");
     render(<PushNotificationPrompt />);
     await advancePromptDelay();
 

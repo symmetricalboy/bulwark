@@ -83,8 +83,9 @@ export function AccessApprovalDialog() {
           headers: { Accept: "application/json" },
         });
         // 404 is the expected response for every account outside the exact-DID
-        // rollout. Stop polling quietly so the feature is invisible to them.
-        if (response.status === 404 || response.status === 401) {
+        // rollout; 503 means the access-approval bridge is unconfigured in this
+        // environment. Stop polling quietly so the feature is invisible to them.
+        if (response.status === 404 || response.status === 401 || response.status === 503) {
           setDisabled(true);
           setRequest(null);
           return;

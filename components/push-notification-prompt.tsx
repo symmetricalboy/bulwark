@@ -9,6 +9,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import {
   enableWebPush,
+  hasWebPushOptIn,
   isWebPushEnabled,
   isWebPushSupported,
   resyncWebPush,
@@ -40,7 +41,7 @@ function wasDismissed(accountId: string): boolean {
   }
 }
 
-function dismissPermanently(accountId: string): void {
+export function dismissPermanently(accountId: string): void {
   try {
     localStorage.setItem(dismissedKey(accountId), "1");
   } catch {
@@ -155,8 +156,10 @@ export function PushNotificationPrompt() {
       || sessionDismissedAccountIds.has(accountId)
       || pwaPromptVisible
       || wasDismissed(accountId)
+      || hasWebPushOptIn(accountId)
       || !isWebPushSupported()
       || Notification.permission === "denied"
+      || Notification.permission === "granted"
     ) {
       return;
     }
@@ -199,6 +202,9 @@ export function PushNotificationPrompt() {
         accountLabel: username ?? undefined,
         inboxOnly: pushNotifyInboxOnly,
       });
+      if (accountId) {
+        dismissPermanently(accountId);
+      }
       setShowPrompt(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to enable push");

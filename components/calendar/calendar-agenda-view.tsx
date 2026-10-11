@@ -4,9 +4,9 @@ import { useMemo, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useDisplayDateFormatter } from "@/hooks/use-display-date-formatter";
 import { format, isTomorrow, startOfDay } from "date-fns";
-import { MapPin, Users } from "@/components/icons";
+import { MapPin, Users, Cake } from "@/components/icons";
 import { cn } from "@/lib/utils";
-import { getEventColor } from "./event-card";
+import { getEventColor, isBirthdayEvent } from "./event-card";
 import { getEventDayBounds, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, isDisplayToday } from "@/lib/timezone";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
@@ -203,7 +203,7 @@ export function CalendarAgendaView({
             </div>
           ) : (
           <div className="divide-y divide-border">
-            {group.events.map((ev) => {
+            {group.events.map((ev, evIndex) => {
               const calId = getPrimaryCalendarId(ev);
               const calendar = calId ? calendarMap.get(calId) : undefined;
               const color = getEventColor(ev, calendar);
@@ -216,6 +216,7 @@ export function CalendarAgendaView({
               const locationName = ev.locations
                 ? Object.values(ev.locations)[0]?.name
                 : null;
+              const cascadeDelay = Math.min((index * 40) + (evIndex * 25), 450);
 
               return (
                 <button
@@ -224,8 +225,8 @@ export function CalendarAgendaView({
                   onMouseEnter={(e) => onHoverEvent?.(ev, e.currentTarget.getBoundingClientRect())}
                   onMouseLeave={() => onHoverLeave?.()}
                   onContextMenu={onContextMenuEvent ? (e) => onContextMenuEvent(e, ev) : undefined}
-                  className="w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-start"
-                  style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
+                  className="w-full flex items-start px-4 hover:bg-muted/50 transition-colors text-start animate-cal-event-cascade"
+                  style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)', animationDelay: `${cascadeDelay}ms` }}
                 >
                   <div className="flex flex-col items-center pt-0.5 min-w-[60px]">
                     {ev.showWithoutTime ? (
@@ -249,7 +250,10 @@ export function CalendarAgendaView({
                   />
 
                   <div className="flex-1 min-w-0">
-                    <div className={cn("text-sm font-medium truncate", isInactive && "line-through text-muted-foreground")}>
+                    <div className={cn("text-sm font-medium truncate flex items-center gap-1.5", isInactive && "line-through text-muted-foreground")}>
+                      {isBirthdayEvent(ev, calendar) && (
+                        <Cake className="w-3.5 h-3.5 shrink-0 inline-block text-muted-foreground" />
+                      )}
                       {ev.title || t("events.no_title")}
                     </div>
                     {locationName && (

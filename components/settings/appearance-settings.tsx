@@ -1,8 +1,7 @@
 "use client";
 
 import { useTranslations } from 'next-intl';
-import { useThemeStore } from '@/stores/theme-store';
-import { useSettingsStore, type Density } from '@/stores/settings-store';
+import { useSettingsStore, type Density, type IconSet, type IconColorPalette } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
 import { useTour } from '@/components/tour/tour-provider';
@@ -68,24 +67,41 @@ export function AppearanceSettings() {
   const t = useTranslations('settings.appearance');
   const tAdvanced = useTranslations('settings.advanced');
   const tTour = useTranslations('tour');
-  const { theme, setTheme } = useThemeStore();
-  const { fontSize, density, animationsEnabled, senderFavicons, showAvatarsInJunk, showOnboardingOnNewDevices, updateSetting } = useSettingsStore();
+  const { fontSize, density, iconSet, iconColorPalette, animationsEnabled, senderFavicons, showAvatarsInJunk, showOnboardingOnNewDevices, updateSetting } = useSettingsStore();
   const { startTour, resetTourCompletion } = useTour();
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
 
   return (
     <SettingsSection title={t('title')} description={t('description')}>
-      <SettingItem label={t('theme.label')} description={t('theme.description')}>
+
+
+      {!isSettingHidden('iconSet') && (
+      <SettingItem label={t('icon_set.label')} description={t('icon_set.description')} locked={isSettingLocked('iconSet')}>
         <RadioGroup
-          value={theme}
-          onChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
+          value={iconSet}
+          onChange={(value) => updateSetting('iconSet', value as IconSet)}
           options={[
-            { value: 'light', label: t('theme.light') },
-            { value: 'dark', label: t('theme.dark') },
-            { value: 'system', label: t('theme.system') },
+            { value: 'tabler', label: t('icon_set.tabler') },
+            { value: 'material-symbols', label: t('icon_set.material_symbols') },
+            { value: 'lucide', label: t('icon_set.lucide') },
           ]}
         />
       </SettingItem>
+      )}
+
+      {!isSettingHidden('iconColorPalette') && (
+      <SettingItem label={t('icon_color_palette.label')} description={t('icon_color_palette.description')} locked={isSettingLocked('iconColorPalette')}>
+        <RadioGroup
+          value={iconColorPalette}
+          onChange={(value) => updateSetting('iconColorPalette', value as IconColorPalette)}
+          options={[
+            { value: 'monochrome', label: t('icon_color_palette.monochrome') },
+            { value: 'theme-accent', label: t('icon_color_palette.theme_accent') },
+            { value: 'rainbow', label: t('icon_color_palette.rainbow') },
+          ]}
+        />
+      </SettingItem>
+      )}
 
       {!isSettingHidden('fontSize') && (
       <SettingItem label={t('font_size.label')} description={t('font_size.description')} locked={isSettingLocked('fontSize')}>

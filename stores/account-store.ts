@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateAccountId, generateAvatarColor, getMaxAccounts } from '@/lib/account-utils';
+import { isComailAccount, resolveConnectedAtprotoDid } from '@/lib/atproto-avatar';
 
 export interface AccountEntry {
   /** Unique key: `${username}@${serverHostname}` */
@@ -48,6 +49,8 @@ export interface AccountEntry {
   did?: string;
   /** Timestamp of last successful login */
   lastLoginAt: number;
+  /** Timestamp when the account was first created/added to Bulwark */
+  createdAt?: number;
   /** Whether this account is currently connected */
   isConnected: boolean;
   /** Whether this account had a connection error */
@@ -122,6 +125,7 @@ export const useAccountStore = create<AccountState>()(
           cookieSlot,
           avatarColor,
           isDefault,
+          createdAt: entry.createdAt ?? Date.now(),
         };
 
         set((s) => ({
@@ -130,6 +134,17 @@ export const useAccountStore = create<AccountState>()(
           activeAccountId: s.activeAccountId ?? id,
           defaultAccountId: isDefault ? id : s.defaultAccountId,
         }));
+
+        if (isComailAccount(account)) {
+          void resolveConnectedAtprotoDid(account).then((did) => {
+            if (did) {
+              const current = get().getAccountById(id);
+              if (current && current.did !== did) {
+                get().updateAccount(id, { did });
+              }
+            }
+          });
+        }
 
         return id;
       },
@@ -252,11 +267,27 @@ export const useAccountStore = create<AccountState>()(
       // (#950).
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        state.accounts = state.accounts.map((a) => (
-          a.isConnected || a.hasError
-            ? { ...a, isConnected: false, hasError: false, errorMessage: undefined }
-            : a
-        ));
+        state.accounts = state.accounts.map((a) => ({
+          ...a,
+          createdAt: a.createdAt || (a.lastLoginAt > 0 ? a.lastLoginAt : Date.now()),
+          ...(a.isConnected || a.hasError
+            ? { isConnected: false, hasError: false, errorMessage: undefined }
+            : {}),
+        }));
+
+        // Auto-resolve connected ATProto DID for Comail accounts (or upgrade to spaces DID if available)
+        for (const acc of state.accounts) {
+          if (isComailAccount(acc)) {
+            void resolveConnectedAtprotoDid(acc).then((did) => {
+              if (did) {
+                const current = useAccountStore.getState().getAccountById(acc.id);
+                if (current && current.did !== did) {
+                  useAccountStore.getState().updateAccount(acc.id, { did });
+                }
+              }
+            });
+          }
+        }
       },
     }
   )

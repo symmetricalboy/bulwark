@@ -71,9 +71,14 @@ interface AppConfig extends ConfigData {
 
 let configCache: ConfigData | null = null;
 let configSlot: number | null = null;
+let configAccountId: string | null = null;
 
 function activeConfigSlot(): number {
   return useAccountStore.getState().getActiveAccount()?.cookieSlot ?? 0;
+}
+
+function activeConfigAccountId(): string | null {
+  return useAccountStore.getState().activeAccountId ?? null;
 }
 let configPromise: Promise<ConfigData> | null = null;
 
@@ -134,13 +139,17 @@ async function fetchServerConfig(slot: number): Promise<ConfigData> {
 export function resetConfigCache(): void {
   configCache = null;
   configPromise = null;
+  configSlot = null;
+  configAccountId = null;
 }
 
 export async function fetchConfig(): Promise<ConfigData> {
   const slot = activeConfigSlot();
-  if (configSlot !== slot) {
+  const accountId = activeConfigAccountId();
+  if (configSlot !== slot || configAccountId !== accountId) {
     resetConfigCache();
     configSlot = slot;
+    configAccountId = accountId;
   }
   // Return cached config if available
   if (configCache) {
@@ -155,13 +164,13 @@ export async function fetchConfig(): Promise<ConfigData> {
   // Start a new fetch
   configPromise = (IS_LITE ? fetchLiteConfig() : fetchServerConfig(slot))
     .then((data) => {
-      if (configSlot === slot) configCache = data;
+      if (configSlot === slot && configAccountId === accountId) configCache = data;
       // Fetch admin policy alongside config (non-blocking)
       usePolicyStore.getState().fetchPolicy();
       return data;
     })
     .finally(() => {
-      if (configSlot === slot) configPromise = null;
+      if (configSlot === slot && configAccountId === accountId) configPromise = null;
     });
 
   return configPromise;
@@ -177,63 +186,66 @@ export async function fetchConfig(): Promise<ConfigData> {
  */
 export function useConfig(): AppConfig {
   const slot = useAccountStore(state => state.getActiveAccount()?.cookieSlot ?? 0);
+  const accountId = useAccountStore(state => state.activeAccountId);
+  const isCacheValid = Boolean(configCache && configSlot === slot && configAccountId === (accountId ?? null));
+  const activeCache = isCacheValid ? configCache : null;
   const [config, setConfig] = useState<AppConfig>({
-    appName: configCache?.appName || 'Webmail',
-    jmapServerUrl: configCache?.jmapServerUrl || '',
-    oauthEnabled: configCache?.oauthEnabled || false,
-    oauthOnly: configCache?.oauthOnly || false,
-    oauthClientId: configCache?.oauthClientId || '',
-    oauthIssuerUrl: configCache?.oauthIssuerUrl || '',
-    oauthScopes: configCache?.oauthScopes || '',
-    rememberMeEnabled: configCache?.rememberMeEnabled || false,
-    settingsSyncEnabled: configCache?.settingsSyncEnabled || false,
-    stalwartFeaturesEnabled: configCache?.stalwartFeaturesEnabled ?? true,
-    identityManagementEnabled: configCache?.identityManagementEnabled ?? true,
-    stalwartJmapPassthroughEnabled: configCache?.stalwartJmapPassthroughEnabled ?? true,
-    devMode: configCache?.devMode || false,
-    faviconUrl: configCache?.faviconUrl || '/branding/comail/comail-favicon.png',
-    appLogoLightUrl: configCache?.appLogoLightUrl || '/branding/comail/cammie-mark.png',
-    appLogoDarkUrl: configCache?.appLogoDarkUrl || '/branding/comail/cammie-mark.png',
-    loginLogoLightUrl: configCache?.loginLogoLightUrl || '/branding/comail/cammie-mark.png',
-    loginLogoDarkUrl: configCache?.loginLogoDarkUrl || '/branding/comail/cammie-mark.png',
-    loginCompanyName: configCache?.loginCompanyName || '',
-    loginImprintUrl: configCache?.loginImprintUrl || '',
-    loginPrivacyPolicyUrl: configCache?.loginPrivacyPolicyUrl || '',
-    loginWebsiteUrl: configCache?.loginWebsiteUrl || '',
-    loginLogoMaxHeight: configCache?.loginLogoMaxHeight || '',
-    loginLogoMaxWidth: configCache?.loginLogoMaxWidth || '',
-    loginShowHeading: configCache?.loginShowHeading ?? true,
-    loginShowSubtitle: configCache?.loginShowSubtitle ?? true,
-    loginShowTotp: configCache?.loginShowTotp ?? true,
-    loginShowTokenLogin: configCache?.loginShowTokenLogin ?? false,
-    loginShowVersion: configCache?.loginShowVersion ?? true,
-    demoMode: configCache?.demoMode || false,
-    calendarEnabled: configCache?.calendarEnabled || false,
-    contactsEnabled: configCache?.contactsEnabled || false,
-    filesEnabled: configCache?.filesEnabled || false,
-    appsEnabled: configCache?.appsEnabled || false,
-    passwordSecurityEnabled: configCache?.passwordSecurityEnabled ?? true,
-    smimeEnabled: configCache?.smimeEnabled ?? true,
-    autoSsoEnabled: configCache?.autoSsoEnabled || false,
-    atprotoLoginUrl: configCache?.atprotoLoginUrl || '',
-    allowCustomJmapEndpoint: configCache?.allowCustomJmapEndpoint || false,
-    jmapServers: configCache?.jmapServers || [],
-    jmapServerAutoPickByDomain: configCache?.jmapServerAutoPickByDomain || false,
-    embeddedMode: configCache?.embeddedMode || false,
-    parentOrigin: configCache?.parentOrigin || '',
-    byomcEnabled: configCache?.byomcEnabled || false,
-    byomcImapHost: configCache?.byomcImapHost || '',
-    byomcSmtpHost: configCache?.byomcSmtpHost || '',
-    byomcAppPasswordApiUrl: configCache?.byomcAppPasswordApiUrl || '',
-    buildersEnabled: configCache?.buildersEnabled || false,
-    sourceCodeUrl: configCache?.sourceCodeUrl || '',
-    isLoading: !configCache,
+    appName: activeCache?.appName || 'Webmail',
+    jmapServerUrl: activeCache?.jmapServerUrl || '',
+    oauthEnabled: activeCache?.oauthEnabled || false,
+    oauthOnly: activeCache?.oauthOnly || false,
+    oauthClientId: activeCache?.oauthClientId || '',
+    oauthIssuerUrl: activeCache?.oauthIssuerUrl || '',
+    oauthScopes: activeCache?.oauthScopes || '',
+    rememberMeEnabled: activeCache?.rememberMeEnabled || false,
+    settingsSyncEnabled: activeCache?.settingsSyncEnabled || false,
+    stalwartFeaturesEnabled: activeCache?.stalwartFeaturesEnabled ?? true,
+    identityManagementEnabled: activeCache?.identityManagementEnabled ?? true,
+    stalwartJmapPassthroughEnabled: activeCache?.stalwartJmapPassthroughEnabled ?? true,
+    devMode: activeCache?.devMode || false,
+    faviconUrl: activeCache?.faviconUrl || '/branding/comail/comail-favicon.png',
+    appLogoLightUrl: activeCache?.appLogoLightUrl || '/branding/comail/cammie-mark.png',
+    appLogoDarkUrl: activeCache?.appLogoDarkUrl || '/branding/comail/cammie-mark.png',
+    loginLogoLightUrl: activeCache?.loginLogoLightUrl || '/branding/comail/cammie-mark.png',
+    loginLogoDarkUrl: activeCache?.loginLogoDarkUrl || '/branding/comail/cammie-mark.png',
+    loginCompanyName: activeCache?.loginCompanyName || '',
+    loginImprintUrl: activeCache?.loginImprintUrl || '',
+    loginPrivacyPolicyUrl: activeCache?.loginPrivacyPolicyUrl || '',
+    loginWebsiteUrl: activeCache?.loginWebsiteUrl || '',
+    loginLogoMaxHeight: activeCache?.loginLogoMaxHeight || '',
+    loginLogoMaxWidth: activeCache?.loginLogoMaxWidth || '',
+    loginShowHeading: activeCache?.loginShowHeading ?? true,
+    loginShowSubtitle: activeCache?.loginShowSubtitle ?? true,
+    loginShowTotp: activeCache?.loginShowTotp ?? true,
+    loginShowTokenLogin: activeCache?.loginShowTokenLogin ?? false,
+    loginShowVersion: activeCache?.loginShowVersion ?? true,
+    demoMode: activeCache?.demoMode || false,
+    calendarEnabled: activeCache?.calendarEnabled || false,
+    contactsEnabled: activeCache?.contactsEnabled || false,
+    filesEnabled: activeCache?.filesEnabled || false,
+    appsEnabled: activeCache?.appsEnabled || false,
+    passwordSecurityEnabled: activeCache?.passwordSecurityEnabled ?? true,
+    smimeEnabled: activeCache?.smimeEnabled ?? true,
+    autoSsoEnabled: activeCache?.autoSsoEnabled || false,
+    atprotoLoginUrl: activeCache?.atprotoLoginUrl || '',
+    allowCustomJmapEndpoint: activeCache?.allowCustomJmapEndpoint || false,
+    jmapServers: activeCache?.jmapServers || [],
+    jmapServerAutoPickByDomain: activeCache?.jmapServerAutoPickByDomain || false,
+    embeddedMode: activeCache?.embeddedMode || false,
+    parentOrigin: activeCache?.parentOrigin || '',
+    byomcEnabled: activeCache?.byomcEnabled || false,
+    byomcImapHost: activeCache?.byomcImapHost || '',
+    byomcSmtpHost: activeCache?.byomcSmtpHost || '',
+    byomcAppPasswordApiUrl: activeCache?.byomcAppPasswordApiUrl || '',
+    buildersEnabled: activeCache?.buildersEnabled || false,
+    sourceCodeUrl: activeCache?.sourceCodeUrl || '',
+    isLoading: !activeCache,
     error: null,
   });
 
   useEffect(() => {
     // If already cached, no need to fetch
-    if (configCache && configSlot === slot) {
+    if (configCache && configSlot === slot && configAccountId === (accountId ?? null)) {
       setConfig({
         appName: configCache.appName,
         jmapServerUrl: configCache.jmapServerUrl,
@@ -357,7 +369,7 @@ export function useConfig(): AppConfig {
         }));
       });
     return () => { cancelled = true; };
-  }, [slot]);
+  }, [slot, accountId]);
 
   return config;
 }

@@ -5,7 +5,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users, PackageCheck, LockKeyhole, Type, HardDrive } from "@/components/icons";
+import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users, PackageCheck, LockKeyhole, Type, HardDrive, GoogleDriveIcon } from "@/components/icons";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { debug } from "@/lib/debug";
 import { toast } from "@/stores/toast-store";
@@ -35,6 +35,9 @@ import { PluginSlot } from "@/components/plugins/plugin-slot";
 import { Avatar } from "@/components/ui/avatar";
 import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { FilePickerDialog } from "@/components/files/file-picker-dialog";
+import { GoogleDrivePickerDialog } from "@/components/files/google-drive-picker-dialog";
+import { downloadGoogleDriveFileBlob } from "@/lib/google/google-drive-client";
+import type { GoogleDriveFile } from "@/lib/google/types";
 import type { IJMAPClient } from "@/lib/jmap/client-interface";
 import type { FileNode } from "@/lib/jmap/types";
 import { useContactStore, getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
@@ -693,6 +696,7 @@ export function EmailComposer({
   // The Files account being browsed for attachments, fixed when the picker
   // opens so the picked blobs are tagged with the login that owns them.
   const [filesPicker, setFilesPicker] = useState<{ client: IJMAPClient; accountId?: string } | null>(null);
+  const [showGoogleDrivePicker, setShowGoogleDrivePicker] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [showAllAttachments, setShowAllAttachments] = useState(false);
@@ -1912,6 +1916,29 @@ export function EmailComposer({
       })),
     ]);
   }, [filesPicker, t]);
+
+  const handleGoogleDriveFilesPicked = useCallback(async (pickedFiles: GoogleDriveFile[]) => {
+    setShowGoogleDrivePicker(false);
+    if (pickedFiles.length === 0) return;
+
+    toast.info(t('downloading_from_drive') || 'Fetching files from Google Drive...');
+
+    const downloadedFiles: File[] = [];
+    for (const file of pickedFiles) {
+      try {
+        const { blob, filename, mimeType } = await downloadGoogleDriveFileBlob(file.id);
+        const f = new File([blob], filename, { type: mimeType });
+        downloadedFiles.push(f);
+      } catch (err) {
+        console.error('Failed to download Google Drive file for attachment:', err);
+        toast.error(t('download_error') || 'Failed to download file from Google Drive');
+      }
+    }
+
+    if (downloadedFiles.length > 0) {
+      await addFiles(downloadedFiles);
+    }
+  }, [addFiles, t]);
 
   // Inline preview for composer attachments, reusing the message viewer's
   // FilePreviewModal (so previewability and the open-in-new-tab safety gate are
@@ -3411,6 +3438,17 @@ export function EmailComposer({
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setShowGoogleDrivePicker(true)}
+              className="h-9 w-9"
+              title={t('attach_from_google_drive')}
+              aria-label={t('attach_from_google_drive')}
+              data-testid="composer-attach-from-google-drive"
+            >
+              <GoogleDriveIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={togglePlainTextMode}
               className={cn(
                 "h-9 w-9",
@@ -3581,6 +3619,14 @@ export function EmailComposer({
           client={filesPicker.client}
           onClose={() => setFilesPicker(null)}
           onPick={handleFilesPicked}
+        />
+      )}
+
+      {showGoogleDrivePicker && (
+        <GoogleDrivePickerDialog
+          isOpen={showGoogleDrivePicker}
+          onClose={() => setShowGoogleDrivePicker(false)}
+          onPick={handleGoogleDriveFilesPicked}
         />
       )}
 

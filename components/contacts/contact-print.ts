@@ -81,7 +81,7 @@ export function printContact(contact: ContactCard, displayName?: string): void {
   section("Notes", notes.map(n => row("", n.note || "")));
 
   const photoTag = photoUri
-    ? `<img class="photo" src="${escapeHtml(photoUri)}" alt="" />`
+    ? `<img class="photo" src="${escapeHtml(photoUri)}" alt="" referrerpolicy="no-referrer" />`
     : `<div class="photo placeholder">${escapeHtml((name || "?").charAt(0).toUpperCase())}</div>`;
 
   const html = `<!doctype html>

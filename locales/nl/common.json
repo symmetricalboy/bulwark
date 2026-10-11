@@ -156,7 +156,8 @@
     "unified_all_starred": "Alle met ster",
     "unified_all_mail": "Alle e-mail",
     "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
+    "tasks": "Taken"
   },
   "protocol_handlers": {
     "title": "Standaardapps",
@@ -783,7 +784,10 @@
       "background_color": "Achtergrondkleur",
       "remove_background_color": "Achtergrondkleur verwijderen"
     },
-    "send_filing_warning": "Verzonden - maar het opruimen daarna is mislukt, mogelijk blijft een oud concept staan."
+    "send_filing_warning": "Verzonden - maar het opruimen daarna is mislukt, mogelijk blijft een oud concept staan.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",
@@ -998,7 +1002,14 @@
       "default_restored": "Standaardthema hersteld",
       "default_name": "Standaard",
       "default_badge": "Standaard",
-      "admin_enforced": "Afgedwongen door beheerder"
+      "admin_enforced": "Afgedwongen door beheerder",
+      "theme": {
+        "label": "Thema",
+        "description": "Kies je voorkeurkleurenschema",
+        "light": "Licht",
+        "dark": "Donker",
+        "system": "Systeem"
+      }
     },
     "tab_groups": {
       "general": "Algemeen",
@@ -1064,13 +1075,6 @@
       },
       "title": "Uiterlijk",
       "description": "Pas het uiterlijk van je webmail aan",
-      "theme": {
-        "label": "Thema",
-        "description": "Kies je voorkeurkleurenschema",
-        "light": "Licht",
-        "dark": "Donker",
-        "system": "Systeem"
-      },
       "language": {
         "label": "Taal",
         "description": "Kies je voorkeurstaal"
@@ -1167,6 +1171,20 @@
       "cross_all": {
         "label": "Alle accounts: Alle e-mail",
         "description": "Toont een item in de sectie Alle accounts met alle e-mail van alle accounts, in alle mappen behalve ongewenst, verzonden, archief, prullenbak en concepten."
+      },
+      "icon_set": {
+        "label": "Pictogrammenset",
+        "description": "Kies de stijl van pictogrammen die in de interface wordt gebruikt",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Icoon kleurenpalet",
+        "description": "Kies of pictogrammen een monochroom of kleurrijk palet gebruiken",
+        "monochrome": "Monochroom (Standaard)",
+        "theme_accent": "Thema-accenttinten",
+        "rainbow": "Regenboogkleuren"
       }
     },
     "keywords": {
@@ -1217,11 +1235,12 @@
     "notifications": {
       "test_sound": "Meldingsgeluid testen",
       "sounds": {
-        "default": "Standaard (Pieptoon)",
+        "default": "Ontspannen (Standaard)",
         "cheerful": "Vrolijk",
         "involved": "Uitgebreid",
         "swift": "Snel gebaar",
-        "relax": "Ontspannen"
+        "relax": "Ontspannen",
+        "beep": "Pieptoon"
       },
       "sound_selection": {
         "title": "Meldingsgeluid",
@@ -1673,7 +1692,45 @@
         "title": "Gedeeld met mij",
         "description": "Groeps- en gedeelde accounts die u kunt beheren. Selecteer er een om de filters, afwezigheidsassistent, agenda's en contacten te bewerken.",
         "shared_label": "Gedeeld account"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "Accountbeveiliging",
@@ -2977,7 +3034,17 @@
       "success": "{count, plural, one {1 contact geïmporteerd} other {# contacten geïmporteerd}}",
       "failed": "Import mislukt",
       "close": "Sluiten",
-      "file_too_large": "Bestand is te groot (max 5 MB)"
+      "file_too_large": "Bestand is te groot (max 5 MB)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "Contacten exporteren",
@@ -3686,7 +3753,25 @@
     "open_folder_tree": "Mappenstructuur openen",
     "other_accounts": "Andere accounts",
     "migration_title": "Je bestanden worden bijgewerkt…",
-    "migration_description": "Mappen en bestanden worden in de juiste structuur georganiseerd. Dit gebeurt slechts één keer."
+    "migration_description": "Mappen en bestanden worden in de juiste structuur georganiseerd. Dit gebeurt slechts één keer.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "Uw certificaten",

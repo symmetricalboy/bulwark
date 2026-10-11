@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star } from "@/components/icons";
+import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star, GoogleIcon } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
@@ -24,6 +24,7 @@ interface ContactsSidebarProps {
   onCreateContact: () => void;
   onCreateAddressBook?: () => void;
   onImport?: () => void;
+  onImportGoogle?: () => void;
   onEditGroup?: (groupId: string) => void;
   onDeleteGroup?: (groupId: string) => void;
   onComposeGroup?: (groupId: string, field: "to" | "cc" | "bcc") => void;
@@ -95,6 +96,7 @@ export function ContactsSidebar({
   onCreateContact,
   onCreateAddressBook,
   onImport,
+  onImportGoogle,
   onEditGroup,
   onDeleteGroup,
   onComposeGroup,
@@ -319,6 +321,15 @@ export function ContactsSidebar({
                 >
                   <Upload className="w-4 h-4" />
                   {t("import.title")}
+                </button>
+              )}
+              {onImportGoogle && (
+                <button
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
+                  onClick={() => { setShowMenu(false); onImportGoogle(); }}
+                >
+                  <GoogleIcon className="w-4 h-4" />
+                  {t("import.import_google")}
                 </button>
               )}
             </div>
@@ -874,7 +885,11 @@ function AddressBookItem({
       )}
       style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
     >
-      <Book className="w-4 h-4 flex-shrink-0" />
+      {book.id.startsWith('google:') ? (
+        <GoogleIcon className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        <Book className="w-4 h-4 flex-shrink-0" />
+      )}
       <span className="truncate">{book.name}</span>
       {!book.isShared && Object.keys(book.shareWith || {}).length > 0 && (
         <Users className="w-3 h-3 text-muted-foreground flex-shrink-0 ms-auto" />

@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { useContactStore, getContactPhotoUri, normalizeContactPhotoUri, TRUSTED_SENDERS_BOOK_NAME } from '../contact-store';
+import {
+  useContactStore,
+  getContactPhotoUri,
+  normalizeContactPhotoUri,
+  TRUSTED_SENDERS_BOOK_NAME,
+  DEFAULT_COMAIL_ADDRESS_BOOK_NAME,
+  normalizeDefaultAddressBookName,
+} from '../contact-store';
 import type { ContactCard } from '@/lib/jmap/types';
 import type { IJMAPClient } from '@/lib/jmap/client-interface';
 
@@ -169,7 +176,7 @@ describe('contact-store', () => {
 
     it('should move the default flag to the chosen book', async () => {
       const books = [
-        { id: 'ab-1', name: 'Personal', isDefault: true },
+        { id: 'ab-1', name: 'Comail Contacts', isDefault: true },
         { id: 'ab-2', name: 'Work', isDefault: false },
       ];
       useContactStore.setState({ addressBooks: books });
@@ -193,7 +200,7 @@ describe('contact-store', () => {
       };
       useContactStore.setState({
         addressBooks: [
-          { id: 'local-1::ab-1', originalId: 'ab-1', localAccountId: 'local-1', name: 'Personal', isDefault: true },
+          { id: 'local-1::ab-1', originalId: 'ab-1', localAccountId: 'local-1', name: 'Comail Contacts', isDefault: true },
           book,
         ],
       });
@@ -218,7 +225,7 @@ describe('contact-store', () => {
 
     it('should surface the error and keep the previous default on failure', async () => {
       const books = [
-        { id: 'ab-1', name: 'Personal', isDefault: true },
+        { id: 'ab-1', name: 'Comail Contacts', isDefault: true },
         { id: 'ab-2', name: 'Work', isDefault: false },
       ];
       useContactStore.setState({ addressBooks: books });
@@ -821,7 +828,7 @@ describe('contact-store', () => {
       // "Contact has to belong to at least one address book".
       useContactStore.setState({
         addressBooks: [
-          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Personal', isDefault: true },
+          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Comail Contacts', isDefault: true },
         ],
         contacts: [makeContact({
           id: 'me@host::c-1',
@@ -896,7 +903,7 @@ describe('contact-store', () => {
 
     it('leaves raw ids untouched in single-account mode', async () => {
       useContactStore.setState({
-        addressBooks: [{ id: 'ab-1', name: 'Personal', isDefault: true }],
+        addressBooks: [{ id: 'ab-1', name: 'Comail Contacts', isDefault: true }],
         contacts: [makeContact({ id: 'c-1' })],
       });
       const client = makeClient();
@@ -913,7 +920,7 @@ describe('contact-store', () => {
     it('strips the local-account prefix on create too', async () => {
       useContactStore.setState({
         addressBooks: [
-          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Personal', isDefault: true },
+          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Comail Contacts', isDefault: true },
         ],
       });
       const client = makeClient();
@@ -933,7 +940,7 @@ describe('contact-store', () => {
       const target = { id: 'me@host::ab-2', originalId: 'ab-2', localAccountId: 'me@host', name: 'Work' };
       useContactStore.setState({
         addressBooks: [
-          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Personal', isDefault: true },
+          { id: 'me@host::ab-1', originalId: 'ab-1', localAccountId: 'me@host', name: 'Comail Contacts', isDefault: true },
           target,
         ],
         contacts: [makeContact({
@@ -971,6 +978,51 @@ describe('contact-store', () => {
       const persisted = partialize(state);
       expect(persisted.contacts).toEqual([]);
       expect(persisted.supportsSync).toBe(true);
+    });
+  });
+
+  describe('default Comail Address Book naming', () => {
+    it('normalizes legacy Personal or Address Book default names to Comail Contacts', () => {
+      expect(
+        normalizeDefaultAddressBookName({ id: 'b1', name: 'Personal', isDefault: true }).name,
+      ).toBe('Comail Contacts');
+
+      expect(
+        normalizeDefaultAddressBookName({ id: 'b2', name: 'Address Book', isDefault: true }).name,
+      ).toBe('Comail Contacts');
+
+      expect(
+        normalizeDefaultAddressBookName({ id: 'b3', name: '', isDefault: true }).name,
+      ).toBe('Comail Contacts');
+    });
+
+    it('preserves custom names on default address books', () => {
+      expect(
+        normalizeDefaultAddressBookName({ id: 'b1', name: 'Family', isDefault: true }).name,
+      ).toBe('Family');
+    });
+
+    it('does not normalize shared address books', () => {
+      expect(
+        normalizeDefaultAddressBookName({ id: 'b1', name: 'Personal', isDefault: true, isShared: true }).name,
+      ).toBe('Personal');
+    });
+
+    it('fetchAddressBooks normalizes default address book and updates server', async () => {
+      const mockClient = {
+        getAllAddressBooks: vi.fn().mockResolvedValue([
+          { id: 'ab-1', name: 'Personal', isDefault: true, myRights: { mayWrite: true } },
+          { id: 'ab-2', name: 'Work', isDefault: false },
+        ]),
+        updateAddressBook: vi.fn().mockResolvedValue(undefined),
+      };
+
+      await useContactStore.getState().fetchAddressBooks(mockClient as unknown as IJMAPClient);
+
+      const books = useContactStore.getState().addressBooks;
+      expect(books.find((b) => b.id === 'ab-1')?.name).toBe('Comail Contacts');
+      expect(books.find((b) => b.id === 'ab-2')?.name).toBe('Work');
+      expect(mockClient.updateAddressBook).toHaveBeenCalledWith('ab-1', { name: 'Comail Contacts' });
     });
   });
 });

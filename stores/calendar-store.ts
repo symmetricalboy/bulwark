@@ -27,6 +27,18 @@ import { apiFetch } from '@/lib/browser-navigation';
 import { explainServerAuthError } from '@/lib/server-auth-status';
 import { BIRTHDAY_CALENDAR_ID } from '@/lib/birthday-calendar';
 import { getClientByLocalAccountId } from './client-registry';
+import { useSettingsStore } from './settings-store';
+
+function applyPreferredDefault(calendars: Calendar[]): Calendar[] {
+  const preferredDefaultId = useSettingsStore.getState().defaultCalendarId;
+  if (!preferredDefaultId || !calendars.some((c) => c.id === preferredDefaultId)) {
+    return calendars;
+  }
+  return calendars.map((c) => ({
+    ...c,
+    isDefault: c.id === preferredDefaultId,
+  }));
+}
 
 /**
  * When the Pro shell aggregates calendars/events from every connected
@@ -44,6 +56,14 @@ function resolveAccountClient<T extends IJMAPClient>(active: T, localAccountId?:
   if (!localAccountId) return active;
   const lookup = getClientByLocalAccountId(localAccountId) as T | undefined;
   return lookup ?? active;
+}
+
+function resolveOptionalAccountClient(active?: IJMAPClient | null, localAccountId?: string): IJMAPClient | undefined {
+  if (localAccountId) {
+    const lookup = getClientByLocalAccountId(localAccountId);
+    if (lookup) return lookup;
+  }
+  return active ?? undefined;
 }
 
 /**
@@ -622,8 +642,8 @@ interface CalendarStore {
   deleteEvent: (client: IJMAPClient, id: string, sendSchedulingMessages?: boolean) => Promise<void>;
   rsvpEvent: (client: IJMAPClient, eventId: string, participantId: string, status: string, replyTo?: Record<string, string> | null, scope?: 'occurrence' | 'series') => Promise<void>;
   importEvents: (client: IJMAPClient, events: Partial<CalendarEvent>[], calendarId: string) => Promise<number>;
-  updateCalendar: (client: IJMAPClient, calendarId: string, updates: Partial<Calendar>) => Promise<void>;
-  setDefaultCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
+  updateCalendar: (client: IJMAPClient | null | undefined, calendarId: string, updates: Partial<Calendar>) => Promise<void>;
+  setDefaultCalendar: (client: IJMAPClient | null | undefined, calendarId: string) => Promise<void>;
   shareCalendar: (client: IJMAPClient, calendarId: string, principalId: string, rights: CalendarRights | null) => Promise<void>;
   createCalendar: (client: IJMAPClient, calendar: Partial<Calendar>, options?: CreateCalendarOptions) => Promise<Calendar | null>;
   removeCalendar: (client: IJMAPClient, calendarId: string) => Promise<void>;
@@ -709,12 +729,14 @@ export const useCalendarStore = create<CalendarStore>()(
           // calendars stay out of the event grid.
           const defaultSelected = calendars.filter(c => !c.isTasksOnly && !c.spaceConsentRequired).map(c => c.id);
           const selectedIds = get().selectedCalendarIds.filter((id) => !calendars.some((calendar) => calendar.id === id && calendar.spaceConsentRequired));
+          const existingExternalCals = get().calendars.filter(c => c.id.startsWith('google:'));
+          const mergedCalendars = applyPreferredDefault([...calendars, ...existingExternalCals]);
           set({
-            calendars,
+            calendars: mergedCalendars,
             isLoading: false,
             selectedCalendarIds: selectionAfterFetch(
               selectedIds,
-              calendars,
+              mergedCalendars,
               defaultSelected,
               // Shared calendars' ids are `<accountId>:<id>` (getAllCalendars).
               failedAccountIds.map((accountId) => `${accountId}:`),
@@ -787,13 +809,15 @@ export const useCalendarStore = create<CalendarStore>()(
             }),
           );
           const calendars = results.flat();
+          const existingExternalCals = get().calendars.filter(c => c.id.startsWith('google:'));
+          const mergedCalendars = applyPreferredDefault([...calendars, ...existingExternalCals]);
           set({
-            calendars,
+            calendars: mergedCalendars,
             isLoading: false,
             selectedCalendarIds: selectionAfterFetch(
-              get().selectedCalendarIds.filter((id) => !calendars.some((calendar) => calendar.id === id && calendar.spaceConsentRequired)),
-              calendars,
-              calendars.filter(c => !c.spaceConsentRequired).map(c => c.id),
+              get().selectedCalendarIds.filter((id) => !mergedCalendars.some((calendar) => calendar.id === id && calendar.spaceConsentRequired)),
+              mergedCalendars,
+              mergedCalendars.filter(c => !c.spaceConsentRequired).map(c => c.id),
               unloadedPrefixes,
             ),
           });
@@ -1408,15 +1432,29 @@ export const useCalendarStore = create<CalendarStore>()(
       setSelectedDate: (date) => set({ selectedDate: date }),
       setViewMode: (mode) => set({ viewMode: getSafeCalendarViewMode(mode) }),
 
-      updateCalendar: async (client, calendarId, updates) => {
+      updateCalendar: async (client: IJMAPClient | null | undefined, calendarId, updates) => {
         set({ error: null });
         try {
           const cal = get().calendars.find(c => c.id === calendarId);
           if (cal?.source === 'atproto-space') throw new SpaceCalendarError('Space calendar metadata cannot be changed', 'unsupported_operation', 501);
+
+          if (calendarId.startsWith('google:') || cal?.localAccountId?.startsWith('google:')) {
+            const { updateGoogleCalendar } = await import('@/lib/google/google-calendar-client');
+            const targetId = cal?.originalId || calendarId;
+            await updateGoogleCalendar(targetId, updates);
+            set((state) => ({
+              calendars: state.calendars.map(c =>
+                c.id === calendarId ? { ...c, ...updates } : c
+              ),
+            }));
+            return;
+          }
+
           const realId = cal?.originalId || stripLocalAccountPrefix(calendarId, cal?.localAccountId);
           const targetAccountId = cal?.accountId;
-          client = resolveAccountClient(client, cal?.localAccountId);
-          await client.updateCalendar(realId, updates, targetAccountId);
+          const resolvedClient = resolveOptionalAccountClient(client, cal?.localAccountId);
+          if (!resolvedClient) throw new Error('JMAP client not available');
+          await resolvedClient.updateCalendar(realId, updates, targetAccountId);
           set((state) => ({
             calendars: state.calendars.map(c =>
               c.id === calendarId ? { ...c, ...updates } : c
@@ -1429,29 +1467,33 @@ export const useCalendarStore = create<CalendarStore>()(
         }
       },
 
-      setDefaultCalendar: async (client, calendarId) => {
+      setDefaultCalendar: async (client: IJMAPClient | null | undefined, calendarId) => {
         set({ error: null });
         try {
           const cal = get().calendars.find(c => c.id === calendarId);
           if (cal?.source === 'atproto-space') throw new SpaceCalendarError('Space calendars cannot be set as the JMAP default', 'unsupported_operation', 501);
-          const realId = cal?.originalId || stripLocalAccountPrefix(calendarId, cal?.localAccountId);
-          const targetAccountId = cal?.accountId;
-          client = resolveAccountClient(client, cal?.localAccountId);
-          await client.setDefaultCalendar(realId, targetAccountId);
-          set((state) => ({
-            calendars: state.calendars.map(c => {
-              if (c.id === calendarId) return { ...c, isDefault: true };
-              // Only one default per account - clear the flag on siblings of
-              // the same local account / shared-account scope.
-              if (
-                c.isDefault
-                && (c.localAccountId ?? null) === (cal?.localAccountId ?? null)
-                && (c.accountId ?? null) === (cal?.accountId ?? null)
-              ) {
-                return { ...c, isDefault: false };
+
+          const isGoogle = calendarId.startsWith('google:') || cal?.localAccountId?.startsWith('google:');
+          if (!isGoogle) {
+            const realId = cal?.originalId || stripLocalAccountPrefix(calendarId, cal?.localAccountId);
+            const targetAccountId = cal?.accountId;
+            const resolvedClient = resolveOptionalAccountClient(client, cal?.localAccountId);
+            if (resolvedClient?.setDefaultCalendar) {
+              try {
+                await resolvedClient.setDefaultCalendar(realId, targetAccountId);
+              } catch (err) {
+                debug.warn('calendar', 'client.setDefaultCalendar error:', err);
               }
-              return c;
-            }),
+            }
+          }
+
+          useSettingsStore.getState().setDefaultCalendarId(calendarId);
+
+          set((state) => ({
+            calendars: state.calendars.map(c => ({
+              ...c,
+              isDefault: c.id === calendarId,
+            })),
           }));
         } catch (error) {
           debug.error('Failed to set default calendar:', error);

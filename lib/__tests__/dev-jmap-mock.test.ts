@@ -216,7 +216,7 @@ describe('dev-jmap mock server', () => {
               create: {
                 new: {
                   deviceClientId: 'browser-device-1',
-                  url: 'https://notifications.relay.bulwarkmail.org/api/push/jmap/browser-device-1',
+                  url: 'https://inbox.comail.at/push-relay/api/push/jmap/browser-device-1',
                   types: ['Email'],
                   expires: '2030-01-01T00:00:00.000Z',
                 },

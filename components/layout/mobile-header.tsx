@@ -48,13 +48,19 @@ function ComailMasthead({ title, onMenu, onCompose }: { title: string; onMenu: (
       </Button>
 
       {/* Cammie mark — transparent, sits directly on the teal bar (matches the desktop rail) */}
-      <span className="flex h-7 w-7 items-center justify-center flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="flex h-7 w-7 items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#8fd2e8] rounded"
+        title="Refresh"
+        aria-label="Refresh Comail"
+      >
         {logoUrl ? (
           <img src={logoUrl} alt="" className="h-7 w-7 object-contain" />
         ) : (
           <span className="font-serif text-[#ecefcf] text-lg leading-none" style={{ fontFamily: 'var(--comail-font-display), serif' }}>c</span>
         )}
-      </span>
+      </button>
 
       {/* Wordmark: cream "comail" with lifted-cyan "c" */}
       <span
@@ -79,6 +85,8 @@ function ComailMasthead({ title, onMenu, onCompose }: { title: string; onMenu: (
           <Plus className="h-5 w-5" />
         </Button>
       )}
+
+      <AccountSwitcher variant="header" />
     </header>
   );
 }
@@ -228,7 +236,7 @@ export function MobileHeader({
             className="h-11 w-11 text-primary"
             aria-label={t('mobile.compose')}
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-5 w-5 text-primary" />
           </Button>
         )}
 

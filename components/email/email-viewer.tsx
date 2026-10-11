@@ -3024,7 +3024,7 @@ export function EmailViewer({
           <p className="text-muted-foreground">{t('no_conversation_description')}</p>
           {onCompose && (
             <Button onClick={onCompose} className="mt-6" title={t('compose_hint')}>
-              <PenSquare className="w-4 h-4 me-2" />
+              <PenSquare className="w-4 h-4 me-2 text-primary-foreground" />
               {t('compose')}
             </Button>
           )}

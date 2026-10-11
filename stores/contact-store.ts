@@ -243,6 +243,24 @@ export function getContactPhotoUri(contact: ContactCard): string | undefined {
 }
 
 export const TRUSTED_SENDERS_BOOK_NAME = 'Trusted Senders';
+export const DEFAULT_COMAIL_ADDRESS_BOOK_NAME = 'Comail Contacts';
+
+/**
+ * Stalwart provisions an initial address book with the name 'Personal' (or
+ * 'Address Book') on first access. In Comail, the default address book is
+ * named "Comail Contacts".
+ */
+export function normalizeDefaultAddressBookName(book: AddressBook, allBooks?: AddressBook[]): AddressBook {
+  const isTheDefault = book.isDefault || (allBooks && allBooks.length === 1 && !book.isShared);
+  if (
+    isTheDefault &&
+    !book.isShared &&
+    (book.name === 'Personal' || book.name === 'Address Book' || !book.name)
+  ) {
+    return { ...book, name: DEFAULT_COMAIL_ADDRESS_BOOK_NAME };
+  }
+  return book;
+}
 
 /** In-flight trusted senders load, shared by all callers to keep it single-flight. */
 let trustedSendersLoadPromise: Promise<void> | null = null;
@@ -453,7 +471,10 @@ export const useContactStore = create<ContactStore>()(
         set({ isLoading: true, error: null });
         try {
           const contacts = await client.getAllContacts();
-          set({ contacts, isLoading: false });
+          set((state) => {
+            const googleContacts = state.contacts.filter((c) => c.id.startsWith('google:'));
+            return { contacts: [...contacts, ...googleContacts], isLoading: false };
+          });
         } catch (error) {
           console.error('Failed to fetch contacts:', error);
           set({ error: 'Failed to fetch contacts', isLoading: false });
@@ -484,8 +505,24 @@ export const useContactStore = create<ContactStore>()(
 
       fetchAddressBooks: async (client) => {
         try {
-          const addressBooks = await client.getAllAddressBooks();
-          set({ addressBooks });
+          const rawBooks = await client.getAllAddressBooks();
+          const addressBooks = rawBooks.map((b) => normalizeDefaultAddressBookName(b, rawBooks));
+          const legacyDefault = rawBooks.find(
+            (b) =>
+              (b.isDefault || (rawBooks.length === 1 && !b.isShared)) &&
+              !b.isShared &&
+              (b.name === 'Personal' || b.name === 'Address Book')
+          );
+          if (legacyDefault && legacyDefault.myRights?.mayWrite !== false && typeof client.updateAddressBook === 'function') {
+            const originalId = legacyDefault.originalId || stripLocalAccountPrefix(legacyDefault.id, legacyDefault.localAccountId);
+            client.updateAddressBook(originalId, { name: DEFAULT_COMAIL_ADDRESS_BOOK_NAME }).catch((err) => {
+              debug.error('Failed to rename default address book on server:', err);
+            });
+          }
+          set((state) => {
+            const googleBooks = state.addressBooks.filter((b) => b.id.startsWith('google:'));
+            return { addressBooks: [...addressBooks, ...googleBooks] };
+          });
         } catch (error) {
           console.error('Failed to fetch address books:', error);
           set({ error: 'Failed to fetch address books' });
@@ -506,7 +543,10 @@ export const useContactStore = create<ContactStore>()(
               }
             }),
           );
-          set({ contacts: results.flat(), isLoading: false });
+          set((state) => {
+            const googleContacts = state.contacts.filter((c) => c.id.startsWith('google:'));
+            return { contacts: [...results.flat(), ...googleContacts], isLoading: false };
+          });
         } catch (error) {
           console.error('Failed to fetch all-account contacts:', error);
           set({ error: 'Failed to fetch contacts', isLoading: false });
@@ -519,14 +559,30 @@ export const useContactStore = create<ContactStore>()(
             accounts.map(async ({ client, localAccountId }) => {
               try {
                 const list = await client.getAllAddressBooks();
-                return prefixAddressBooksWithLocalAccount(list, localAccountId);
+                const normalized = list.map((b) => normalizeDefaultAddressBookName(b, list));
+                const legacyDefault = list.find(
+                  (b) =>
+                    (b.isDefault || (list.length === 1 && !b.isShared)) &&
+                    !b.isShared &&
+                    (b.name === 'Personal' || b.name === 'Address Book')
+                );
+                if (legacyDefault && legacyDefault.myRights?.mayWrite !== false && typeof client.updateAddressBook === 'function') {
+                  const originalId = legacyDefault.originalId || stripLocalAccountPrefix(legacyDefault.id, legacyDefault.localAccountId);
+                  client.updateAddressBook(originalId, { name: DEFAULT_COMAIL_ADDRESS_BOOK_NAME }).catch((err) => {
+                    debug.error('Failed to rename default address book on server:', err);
+                  });
+                }
+                return prefixAddressBooksWithLocalAccount(normalized, localAccountId);
               } catch (error) {
                 debug.error(`Failed to fetch address books for account ${localAccountId}:`, error);
                 return [] as AddressBook[];
               }
             }),
           );
-          set({ addressBooks: results.flat() });
+          set((state) => {
+            const googleBooks = state.addressBooks.filter((b) => b.id.startsWith('google:'));
+            return { addressBooks: [...results.flat(), ...googleBooks] };
+          });
         } catch (error) {
           console.error('Failed to fetch all-account address books:', error);
           set({ error: 'Failed to fetch address books' });

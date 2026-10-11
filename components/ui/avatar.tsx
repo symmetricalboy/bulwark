@@ -150,6 +150,7 @@ function getProfilePictureUrl(email: string, domain: string, devMode: boolean, n
 interface AvatarProps {
   name?: string;
   email?: string;
+  src?: string;
   contactPhotoUri?: string;
   /**
    * atproto DID of the account this avatar represents. When present (and not in
@@ -168,8 +169,9 @@ interface AvatarProps {
   fallbackColor?: string;
 }
 
-export function Avatar({ name, email, contactPhotoUri, did, size = "md", className, disableImages = false, disableFavicon = false, fallbackColor }: AvatarProps) {
+export function Avatar({ name, email, src, contactPhotoUri, did, size = "md", className, disableImages = false, disableFavicon = false, fallbackColor }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
+  const [contactPhotoFailed, setContactPhotoFailed] = useState(false);
   const [pluginAvatarUrl, setPluginAvatarUrl] = useState<string | null>(null);
   const [pluginAvatarFailed, setPluginAvatarFailed] = useState(false);
   const [atprotoAvatarUrl, setAtprotoAvatarUrl] = useState<string | null>(null);
@@ -177,6 +179,11 @@ export function Avatar({ name, email, contactPhotoUri, did, size = "md", classNa
   const senderFavicons = useSettingsStore((s) => s.senderFavicons);
   const contacts = useContactStore((s) => s.contacts);
   const { devMode, demoMode } = useConfig();
+
+  useEffect(() => {
+    setImgError(false);
+    setContactPhotoFailed(false);
+  }, [contactPhotoUri, email]);
 
   // Ask plugins (e.g. Gravatar) to resolve an avatar URL for this email address.
   // Runs whenever email or name changes; resets plugin avatar state on each change.
@@ -193,24 +200,37 @@ export function Avatar({ name, email, contactPhotoUri, did, size = "md", classNa
   }, [email, name]);
 
   // Resolve the member's atproto (Bluesky) profile photo from the public
-  // appview when a DID is supplied. Non-blocking and fail-open: on any error
-  // (or absent avatar) we mark it failed and fall through to the rest of the
-  // chain. Skipped entirely in demo mode so the demo never hits the appview.
-  // The resolver caches per-DID, so this does not refetch on every render.
+  // appview when a DID is supplied (or when this is a Comail account without
+  // an already-populated DID). Non-blocking and fail-open: on any error (or
+  // absent avatar) we mark it failed and fall through to the rest of the chain.
+  // Skipped entirely in demo mode so the demo never hits the appview.
+  // The resolver caches per-DID/actor, so this does not refetch on every render.
   useEffect(() => {
     setAtprotoAvatarUrl(null);
     setAtprotoAvatarFailed(false);
-    if (!did || demoMode) return;
+    if (demoMode) return;
     let cancelled = false;
-    resolveAtprotoAvatar(did)
-      .then((url) => {
-        if (cancelled) return;
-        if (url) setAtprotoAvatarUrl(url);
-        else setAtprotoAvatarFailed(true);
-      })
-      .catch(() => { if (!cancelled) setAtprotoAvatarFailed(true); });
+
+    if (did) {
+      resolveAtprotoAvatar(did)
+        .then((url) => {
+          if (cancelled) return;
+          if (url) setAtprotoAvatarUrl(url);
+          else setAtprotoAvatarFailed(true);
+        })
+        .catch(() => { if (!cancelled) setAtprotoAvatarFailed(true); });
+    } else if (disableFavicon && (email?.toLowerCase().endsWith("@comail.at") || (name && !name.includes(" ") && name.includes(".")))) {
+      resolveAtprotoAvatar({ displayName: name, email })
+        .then((url) => {
+          if (cancelled) return;
+          if (url) setAtprotoAvatarUrl(url);
+          else setAtprotoAvatarFailed(true);
+        })
+        .catch(() => { if (!cancelled) setAtprotoAvatarFailed(true); });
+    }
+
     return () => { cancelled = true; };
-  }, [did, demoMode]);
+  }, [did, email, name, disableFavicon, demoMode]);
 
   // Look up contact photo by email from the contact store
   const resolvedContactPhoto = useMemo(() => {
@@ -283,15 +303,25 @@ export function Avatar({ name, email, contactPhotoUri, did, size = "md", classNa
   const customAvatar = devMode && email ? CUSTOM_AVATARS[email.toLowerCase()] : null;
   const pluginAvatar = pluginAvatarFailed ? null : pluginAvatarUrl;
   const atprotoAvatar = atprotoAvatarFailed ? null : atprotoAvatarUrl;
-  const photoSrc = atprotoAvatar || resolvedContactPhoto || pluginAvatar || customAvatar || profilePic || null;
+  const contactAvatar = contactPhotoFailed ? null : resolvedContactPhoto;
+  const photoSrc = !imgError ? (src || atprotoAvatar || contactAvatar || pluginAvatar || customAvatar || profilePic || null) : null;
   const faviconSrc = !imgError && !domainFailed && showFavicon ? withBasePath(`/api/favicon?domain=${encodeURIComponent(faviconDomain!)}`) : null;
   const imgSrc = disableImages ? null : (photoSrc || faviconSrc);
   const isFavicon = imgSrc !== null && imgSrc === faviconSrc;
 
   const handleImgError = useCallback(() => {
+    if (src && imgSrc === src) {
+      setImgError(true);
+      return;
+    }
     // If the atproto avatar just failed to load, mark it and fall through.
     if (atprotoAvatar && imgSrc === atprotoAvatar) {
       setAtprotoAvatarFailed(true);
+      return;
+    }
+    // If the contact photo just failed, fall through to plugin/custom/profile/favicon/initials
+    if (contactAvatar && imgSrc === contactAvatar) {
+      setContactPhotoFailed(true);
       return;
     }
     // If the plugin avatar just failed, mark it and fall through to the next source
@@ -301,10 +331,10 @@ export function Avatar({ name, email, contactPhotoUri, did, size = "md", classNa
     }
     setImgError(true);
     // If this was a favicon URL (not a contact photo, plugin avatar, custom avatar or profile pic), remember the domain
-    if (faviconDomain && !resolvedContactPhoto && !pluginAvatar && !customAvatar && !profilePic) {
+    if (faviconDomain && !contactAvatar && !pluginAvatar && !customAvatar && !profilePic) {
       failedFaviconDomains.add(faviconDomain);
     }
-  }, [imgSrc, atprotoAvatar, pluginAvatar, faviconDomain, resolvedContactPhoto, customAvatar, profilePic]);
+  }, [imgSrc, atprotoAvatar, contactAvatar, pluginAvatar, faviconDomain, customAvatar, profilePic]);
 
   return (
     <div
@@ -320,6 +350,7 @@ export function Avatar({ name, email, contactPhotoUri, did, size = "md", classNa
         <img
           src={imgSrc}
           alt=""
+          referrerPolicy="no-referrer"
           className="w-full h-full object-cover"
           onError={handleImgError}
           // /api/favicon returns a 1x1 transparent PNG (HTTP 200) when no real

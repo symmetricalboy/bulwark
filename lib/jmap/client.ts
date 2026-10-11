@@ -6494,7 +6494,12 @@ export class JMAPClient implements IJMAPClient {
       if (response.methodResponses?.[0]?.[0] === "Calendar/get") {
         const calendars = (response.methodResponses[0][1].list || []) as Calendar[];
         const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, calendars.map((c) => c.id));
-        return calendars.map((cal) => ({ ...cal, isTasksOnly: tasksOnly.has(cal.id) }));
+        const ownerEmail = this.username;
+        return calendars.map((cal) => {
+          const isStalwartDefault = cal.name === 'Stalwart Calendar' || (cal.isDefault && (!cal.name || cal.name === 'Stalwart Calendar' || cal.name === 'Default'));
+          const calName = isStalwartDefault && ownerEmail ? ownerEmail : cal.name;
+          return { ...cal, name: calName, isTasksOnly: tasksOnly.has(cal.id) };
+        });
       }
       return [];
     } catch (error) {
@@ -6599,15 +6604,24 @@ export class JMAPClient implements IJMAPClient {
 
         const rawCalendars = (result.list || []) as Calendar[];
         const tasksOnly = await this.getTasksOnlyCalendarIds(accountId, rawCalendars.map((c) => c.id));
-        const calendars = rawCalendars.map((cal) => ({
-          ...cal,
-          id: isPrimary ? cal.id : `${accountId}:${cal.id}`,
-          originalId: cal.id,
-          accountId,
-          accountName: account?.name || (isPrimary ? this.username : accountId),
-          isShared: !isPrimary,
-          isTasksOnly: tasksOnly.has(cal.id),
-        }));
+        const ownerEmail = account?.name || (isPrimary ? this.username : accountId);
+        const calendars = rawCalendars.map((cal) => {
+          const isStalwartDefault = isPrimary && (cal.name === 'Stalwart Calendar' || (cal.isDefault && (!cal.name || cal.name === 'Stalwart Calendar' || cal.name === 'Default')));
+          const calName = isStalwartDefault && ownerEmail ? ownerEmail : cal.name;
+          if (isStalwartDefault && ownerEmail && cal.name === 'Stalwart Calendar') {
+            void this.updateCalendar(cal.id, { name: ownerEmail }).catch(() => {});
+          }
+          return {
+            ...cal,
+            id: isPrimary ? cal.id : `${accountId}:${cal.id}`,
+            originalId: cal.id,
+            name: calName,
+            accountId,
+            accountName: ownerEmail,
+            isShared: !isPrimary,
+            isTasksOnly: tasksOnly.has(cal.id),
+          };
+        });
         allCalendars.push(...calendars);
       } catch (error) {
         if (isPrimary) throw error;

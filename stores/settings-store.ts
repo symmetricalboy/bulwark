@@ -158,6 +158,8 @@ async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void>
 
 export type FontSize = 'small' | 'medium' | 'large';
 export type Density = 'extra-compact' | 'compact' | 'regular' | 'comfortable';
+export type IconSet = 'tabler' | 'material-symbols' | 'lucide';
+export type IconColorPalette = 'monochrome' | 'theme-accent' | 'rainbow';
 /** @deprecated Use Density instead */
 export type ListDensity = Density;
 export type DeleteAction = 'trash' | 'trash-and-read' | 'permanent';
@@ -365,6 +367,8 @@ interface SettingsState {
   // Appearance
   fontSize: FontSize;
   density: Density;
+  iconSet: IconSet;
+  iconColorPalette: IconColorPalette;
   animationsEnabled: boolean;
   // Message-list ordering (#718): prioritised sort levels mapped onto the JMAP
   // Email/query sort; empty = chronological. Scope: Inbox only or every folder.
@@ -450,6 +454,10 @@ interface SettingsState {
   // Contact Birthday Calendar
   showBirthdayCalendar: boolean;
   birthdayCalendarColor: string;
+
+  // Global default calendar preference
+  defaultCalendarId: string | null;
+  setDefaultCalendarId: (id: string | null) => void;
 
   // Per-viewer color overrides for shared calendars, keyed by
   // sharedCalendarColorKey(). Lets each recipient recolor calendars shared
@@ -557,6 +565,7 @@ interface SettingsState {
   // Sidebar Apps
   sidebarApps: SidebarApp[];
   keepAppsLoaded: boolean;
+  sidebarNavOrder: string[];
 
   // Onboarding
   onboardingCompleted: boolean; // Welcome banner dismissed
@@ -613,6 +622,7 @@ interface SettingsState {
   updateSidebarApp: (id: string, updates: Partial<Omit<SidebarApp, 'id'>>) => void;
   removeSidebarApp: (id: string) => void;
   reorderSidebarApps: (apps: SidebarApp[]) => void;
+  setSidebarNavOrder: (order: string[]) => void;
 
   // Settings sync
   enableSync: (username: string, serverUrl: string) => void;
@@ -627,10 +637,26 @@ interface SettingsState {
   forgetSyncedSettings: () => void;
 }
 
+export const DEFAULT_NAV_ORDER = ['mail', 'contacts', 'calendar', 'tasks', 'files'] as const;
+
+export function resolveNavOrder(order?: string[] | null): string[] {
+  const defaults = [...DEFAULT_NAV_ORDER];
+  if (!order || !Array.isArray(order) || order.length === 0) return defaults;
+  const valid = order.filter((id) => defaults.includes(id as (typeof DEFAULT_NAV_ORDER)[number]));
+  for (const id of defaults) {
+    if (!valid.includes(id)) {
+      valid.push(id);
+    }
+  }
+  return valid;
+}
+
 const DEFAULT_SETTINGS = {
   // Appearance
   fontSize: 'medium' as FontSize,
   density: 'regular' as Density,
+  iconSet: 'tabler' as IconSet,
+  iconColorPalette: 'monochrome' as IconColorPalette,
   animationsEnabled: true,
   messageListOrder: [] as SortLevel[],
   messageListOrderScope: 'inbox' as MessageListOrderScope,
@@ -706,6 +732,8 @@ const DEFAULT_SETTINGS = {
   // Contact Birthday Calendar
   showBirthdayCalendar: false,
   birthdayCalendarColor: '#eab308',
+
+  defaultCalendarId: null,
 
   sharedCalendarColors: {} as Record<string, string>,
 
@@ -807,6 +835,7 @@ const DEFAULT_SETTINGS = {
   // Sidebar Apps
   sidebarApps: [] as SidebarApp[],
   keepAppsLoaded: false,
+  sidebarNavOrder: [...DEFAULT_NAV_ORDER] as string[],
 
   // Onboarding
   onboardingCompleted: false,
@@ -896,6 +925,8 @@ export const useSettingsStore = create<SettingsState>()(
         const settings = {
           fontSize: state.fontSize,
           density: state.density,
+          iconSet: state.iconSet,
+          iconColorPalette: state.iconColorPalette,
           animationsEnabled: state.animationsEnabled,
           messageListOrder: state.messageListOrder,
           messageListOrderScope: state.messageListOrderScope,
@@ -952,6 +983,7 @@ export const useSettingsStore = create<SettingsState>()(
           showTasksOnCalendar: state.showTasksOnCalendar,
           showBirthdayCalendar: state.showBirthdayCalendar,
           birthdayCalendarColor: state.birthdayCalendarColor,
+          defaultCalendarId: state.defaultCalendarId,
           sharedCalendarColors: state.sharedCalendarColors,
           groupContactsByLetter: state.groupContactsByLetter,
           sortContactsByLastName: state.sortContactsByLastName,
@@ -996,6 +1028,7 @@ export const useSettingsStore = create<SettingsState>()(
           attachmentImagePreviewsEnabled: state.attachmentImagePreviewsEnabled,
           sidebarApps: state.sidebarApps,
           keepAppsLoaded: state.keepAppsLoaded,
+          sidebarNavOrder: state.sidebarNavOrder,
           onboardingCompleted: state.onboardingCompleted,
           tourCompleted: state.tourCompleted,
           showOnboardingOnNewDevices: state.showOnboardingOnNewDevices,
@@ -1033,6 +1066,12 @@ export const useSettingsStore = create<SettingsState>()(
           // Apply settings
           Object.keys(settings).forEach((key) => {
             if (key in DEFAULT_SETTINGS) {
+              if (key === 'iconSet' && settings[key] !== 'tabler' && settings[key] !== 'material-symbols' && settings[key] !== 'lucide') {
+                return;
+              }
+              if (key === 'iconColorPalette' && settings[key] !== 'monochrome' && settings[key] !== 'theme-accent' && settings[key] !== 'rainbow') {
+                return;
+              }
               if (key === 'subAddressDelimiter' && !isValidSubAddressDelimiter(settings[key])) {
                 return;
               }
@@ -1142,6 +1181,10 @@ export const useSettingsStore = create<SettingsState>()(
         set({ sharedCalendarColors: rest });
       },
 
+      setDefaultCalendarId: (defaultCalendarId: string | null) => {
+        set({ defaultCalendarId });
+      },
+
       // Trusted senders methods
       addTrustedSender: (email: string) => {
         // Parse "Name <email>" format to extract just the email address
@@ -1228,6 +1271,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       reorderSidebarApps: (apps: SidebarApp[]) => {
         set({ sidebarApps: apps });
+      },
+
+      setSidebarNavOrder: (order: string[]) => {
+        set({ sidebarNavOrder: order });
       },
 
       // Settings sync methods
@@ -1368,6 +1415,7 @@ export const useSettingsStore = create<SettingsState>()(
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
               state.messageListOrderScope = 'inbox';
             }
+            state.sidebarNavOrder = resolveNavOrder(state.sidebarNavOrder);
             applyFontSize(state.fontSize);
             applyDensity(state.density);
             applyAnimations(state.animationsEnabled);

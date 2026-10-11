@@ -156,7 +156,8 @@
     "unified_all_starred": "모든 별표",
     "unified_all_mail": "모든 메일",
     "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
+    "tasks": "할 일"
   },
   "protocol_handlers": {
     "title": "기본 앱",
@@ -783,7 +784,10 @@
       "background_color": "배경색",
       "remove_background_color": "배경색 제거"
     },
-    "send_filing_warning": "보냈지만 전송 후 정리에 실패했습니다. 오래된 임시 보관 메일이 남아 있을 수 있습니다."
+    "send_filing_warning": "보냈지만 전송 후 정리에 실패했습니다. 오래된 임시 보관 메일이 남아 있을 수 있습니다.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "확인",
@@ -998,7 +1002,14 @@
       "default_restored": "기본 테마로 복원되었습니다",
       "default_name": "기본",
       "default_badge": "기본",
-      "admin_enforced": "관리자가 지정함"
+      "admin_enforced": "관리자가 지정함",
+      "theme": {
+        "label": "테마",
+        "description": "선호하는 색상 테마를 선택해 주세요",
+        "light": "라이트",
+        "dark": "다크",
+        "system": "시스템"
+      }
     },
     "tab_groups": {
       "general": "일반",
@@ -1064,13 +1075,6 @@
       },
       "title": "화면 설정",
       "description": "웹메일의 디자인과 화면을 내 취향에 맞게 꾸며보세요",
-      "theme": {
-        "label": "테마",
-        "description": "선호하는 색상 테마를 선택해 주세요",
-        "light": "라이트",
-        "dark": "다크",
-        "system": "시스템"
-      },
       "language": {
         "label": "언어",
         "description": "사용할 언어를 선택해 주세요"
@@ -1167,6 +1171,20 @@
       "cross_all": {
         "label": "모든 계정: 모든 메일",
         "description": "모든 계정 섹션에 모든 계정의 모든 메일을 나열하는 항목을 표시합니다. 스팸, 보낸편지함, 보관함, 휴지통, 임시보관함을 제외한 모든 폴더가 대상입니다."
+      },
+      "icon_set": {
+        "label": "아이콘 세트",
+        "description": "인터페이스 전체에서 사용할 아이콘 스타일을 선택합니다",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "아이콘 색상 팔레트",
+        "description": "아이콘에 단색 또는 컬러 팔레트를 사용할지 선택합니다",
+        "monochrome": "단색 (기본값)",
+        "theme_accent": "테마 악센트 음영",
+        "rainbow": "무지개 색상"
       }
     },
     "keywords": {
@@ -1217,11 +1235,12 @@
     "notifications": {
       "test_sound": "알림음 테스트",
       "sounds": {
-        "default": "기본 (비프음)",
+        "default": "차분하게 (기본)",
         "cheerful": "밝게",
         "involved": "경쾌하게",
         "swift": "빠르게",
-        "relax": "차분하게"
+        "relax": "차분하게",
+        "beep": "비프음"
       },
       "sound_selection": {
         "title": "알림음",
@@ -1673,7 +1692,45 @@
         "title": "나와 공유됨",
         "description": "관리할 수 있는 그룹 및 공유 계정입니다. 하나를 선택하여 필터, 부재 중 자동 응답, 캘린더, 연락처를 편집하세요.",
         "shared_label": "공유 계정"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "계정 보안",
@@ -2977,7 +3034,17 @@
       "success": "{count}개의 연락처를 성공적으로 가져왔어요",
       "failed": "가져오기 실패",
       "close": "닫기",
-      "file_too_large": "파일이 너무 커요 (최대 5MB)"
+      "file_too_large": "파일이 너무 커요 (최대 5MB)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "연락처 내보내기",
@@ -3686,7 +3753,25 @@
     "open_folder_tree": "폴더 트리 열기",
     "other_accounts": "다른 계정",
     "migration_title": "파일 업데이트 중…",
-    "migration_description": "폴더와 파일을 올바른 구조로 정리하고 있습니다. 이 작업은 한 번만 수행됩니다."
+    "migration_description": "폴더와 파일을 올바른 구조로 정리하고 있습니다. 이 작업은 한 번만 수행됩니다.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "내 인증서",

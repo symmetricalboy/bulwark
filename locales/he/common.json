@@ -155,7 +155,8 @@
     "unified_all_starred": "הכל מסומנים",
     "unified_all_mail": "הכל דוא״ל",
     "remove_account": "הסרת חשבון",
-    "remove_account_confirm": "להסיר את {account} מהמכשיר הזה? ניתן להוסיף אותו שוב מאוחר יותר."
+    "remove_account_confirm": "להסיר את {account} מהמכשיר הזה? ניתן להוסיף אותו שוב מאוחר יותר.",
+    "tasks": "משימות"
   },
   "sidebar_apps": {
     "modal_title": "אפליקציות בסרגל הצד",
@@ -748,7 +749,10 @@
       "background_color": "צבע רקע",
       "remove_background_color": "הסר צבע רקע"
     },
-    "send_filing_warning": "נשלח - אך הניקוי שלאחר השליחה נכשל, ייתכן שתישאר טיוטה ישנה."
+    "send_filing_warning": "נשלח - אך הניקוי שלאחר השליחה נכשל, ייתכן שתישאר טיוטה ישנה.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "אשר",
@@ -963,7 +967,14 @@
       "default_restored": "ערכת הנושא המוגדרת כברירת מחדל שוחזרה",
       "default_name": "ברירת מחדל",
       "default_badge": "ברירת מחדל",
-      "admin_enforced": "נאכף על ידי המנהל"
+      "admin_enforced": "נאכף על ידי המנהל",
+      "theme": {
+        "label": "נושא",
+        "description": "בחר את ערכת הצבעים המועדפת עליך",
+        "light": "בהיר",
+        "dark": "כהה",
+        "system": "מערכת"
+      }
     },
     "tab_groups": {
       "general": "כללי",
@@ -1029,13 +1040,6 @@
       },
       "title": "מראה",
       "description": "התאם אישית את המראה והתחושה של דואר האינטרנט שלך",
-      "theme": {
-        "label": "נושא",
-        "description": "בחר את ערכת הצבעים המועדפת עליך",
-        "light": "בהיר",
-        "dark": "כהה",
-        "system": "מערכת"
-      },
       "language": {
         "label": "שָׂפָה",
         "description": "בחר את השפה המועדפת עליך"
@@ -1132,6 +1136,20 @@
       "cross_all": {
         "label": "כל החשבונות: כל הדוא״ל",
         "description": "הצג ערך בסעיף כל החשבונות המפרט את כל הדוא״ל בכל חשבון, המשתרע על כל התיקיות למעט זבל, נשלח, ארכיון, אשפה וטיוטות."
+      },
+      "icon_set": {
+        "label": "ערכת סמלים",
+        "description": "בחר את סגנון הסמלים בממשק",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Icon color palette",
+        "description": "Choose whether icons use a monochromatic or colorful palette",
+        "monochrome": "Monochromatic (Default)",
+        "theme_accent": "Theme accent shades",
+        "rainbow": "Rainbow colors"
       }
     },
     "keywords": {
@@ -1182,11 +1200,12 @@
     "notifications": {
       "test_sound": "צליל הודעת בדיקה",
       "sounds": {
-        "default": "ברירת מחדל (ביפ)",
+        "default": "תירגע (ברירת מחדל)",
         "cheerful": "עליז",
         "involved": "מעורב",
         "swift": "מחווה מהירה",
-        "relax": "תירגע"
+        "relax": "תירגע",
+        "beep": "ביפ"
       },
       "sound_selection": {
         "title": "צליל התראה",
@@ -1638,7 +1657,45 @@
         "title": "משותף איתי",
         "description": "חשבונות קבוצתיים ומשותפים שאתה יכול לנהל. בחר אחד כדי לערוך את המסננים, המגיב לחופשה, לוחות השנה והאנשים שלו.",
         "shared_label": "חשבון משותף"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "אבטחת חשבון",
@@ -2887,7 +2944,17 @@
       "success": "{count, plural, one {יובא איש קשר אחד} other {יובאו # אנשי קשר}}",
       "failed": "הייבוא נכשל",
       "close": "לִסְגוֹר",
-      "file_too_large": "הקובץ גדול מדי (מקסימום 5MB)"
+      "file_too_large": "הקובץ גדול מדי (מקסימום 5MB)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "ייצוא אנשי קשר",
@@ -3610,7 +3677,25 @@
     "shared_by": "משותף על ידי {name}",
     "open_folder_tree": "פתח עץ תיקייה",
     "migration_title": "עדכון הקבצים שלך…",
-    "migration_description": "ארגון תיקיות וקבצים לתוך המבנה הנכון שלהם. זה קורה רק פעם אחת."
+    "migration_description": "ארגון תיקיות וקבצים לתוך המבנה הנכון שלהם. זה קורה רק פעם אחת.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "התעודות שלך",

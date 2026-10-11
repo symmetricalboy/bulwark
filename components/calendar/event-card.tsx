@@ -5,11 +5,33 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent, Calendar } from "@/lib/jmap/types";
 import { format } from "date-fns";
-import { Users } from "@/components/icons";
+import { Users, Cake } from "@/components/icons";
 import { getParticipantCount, isDeclinedByUser } from "@/lib/calendar-participants";
 import { getEventEndDate, getEventStartDate } from "@/lib/calendar-utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { readableTextOn } from "@/lib/color-transform";
+import { BIRTHDAY_CALENDAR_ID } from "@/lib/birthday-calendar";
+
+export function isBirthdayEvent(event: CalendarEvent, calendar?: Calendar): boolean {
+  if (calendar) {
+    if (
+      calendar.id === BIRTHDAY_CALENDAR_ID ||
+      calendar.id.endsWith('::#birthdays') ||
+      calendar.originalId === '#birthdays' ||
+      calendar.name.toLowerCase() === 'birthdays'
+    ) {
+      return true;
+    }
+  }
+  const calIds = Object.keys(event.calendarIds || {});
+  return calIds.some(
+    (id) =>
+      id === BIRTHDAY_CALENDAR_ID ||
+      id.endsWith('::#birthdays') ||
+      id.includes('#birthdays') ||
+      id.includes('contacts@group.v.calendar.google.com'),
+  );
+}
 
 interface EventCardProps {
   event: CalendarEvent;
@@ -148,6 +170,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
   } : {};
 
   const handleContextMenu = onContextMenu ? (e: React.MouseEvent) => onContextMenu(e, event) : undefined;
+  const isBirthday = isBirthdayEvent(event, calendar);
 
   if (variant === "chip") {
     return (
@@ -167,7 +190,10 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         )}
         style={{ ...eventFillStyle(color, { inactive: isInactive, selected: isSelected }), ...style }}
       >
-        <span className={cn("truncate", isInactive && "line-through")}>{event.title || t("events.no_title")}</span>
+        <span className={cn("truncate flex items-center gap-1", isInactive && "line-through")}>
+          {isBirthday && <Cake className="w-3.5 h-3.5 shrink-0 inline-block text-current" />}
+          {event.title || t("events.no_title")}
+        </span>
       </button>
     );
   }
@@ -192,6 +218,7 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
         style={{ ...eventFillStyle(color, { inactive: isInactive, selected: isSelected }), ...style }}
       >
         <div className="flex items-center gap-1 min-w-0">
+          {isBirthday && <Cake className="w-3.5 h-3.5 shrink-0 inline-block text-current" />}
           {showTimeInMonthView && !event.showWithoutTime && (
             <span className="flex-shrink-0 font-normal opacity-85">{format(startDate, timeFmt)}</span>
           )}
@@ -218,7 +245,10 @@ export function EventCard({ event, calendar, variant, onClick, onMouseEnter, onM
       )}
       style={{ ...eventFillStyle(color, { inactive: isInactive, separated: true, selected: isSelected }), ...style }}
     >
-      <div className={cn("font-medium truncate", isInactive && "line-through")}>{event.title || t("events.no_title")}</div>
+      <div className={cn("font-medium truncate flex items-center gap-1", isInactive && "line-through")}>
+        {isBirthday && <Cake className="w-3.5 h-3.5 shrink-0 inline-block text-current" />}
+        {event.title || t("events.no_title")}
+      </div>
       {/* Shorter blocks have no room for a second line at the 60px hour. */}
       {!event.showWithoutTime && durationMinutes >= 45 && (
         <div className="opacity-85 text-[10.5px]">

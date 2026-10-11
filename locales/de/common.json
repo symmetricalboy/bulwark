@@ -156,7 +156,8 @@
     "unified_all_starred": "Alle markierten",
     "unified_all_mail": "Alle Mails",
     "remove_account": "Konto entfernen",
-    "remove_account_confirm": "{account} von diesem Gerät entfernen? Sie können das Konto später wieder hinzufügen."
+    "remove_account_confirm": "{account} von diesem Gerät entfernen? Sie können das Konto später wieder hinzufügen.",
+    "tasks": "Aufgaben"
   },
   "protocol_handlers": {
     "title": "Standard-Apps",
@@ -783,7 +784,10 @@
       "background_color": "Hintergrundfarbe",
       "remove_background_color": "Hintergrundfarbe entfernen"
     },
-    "send_filing_warning": "Gesendet - aber das Aufräumen danach schlug fehl, evtl. bleibt ein alter Entwurf sichtbar."
+    "send_filing_warning": "Gesendet - aber das Aufräumen danach schlug fehl, evtl. bleibt ein alter Entwurf sichtbar.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",
@@ -998,7 +1002,14 @@
       "default_restored": "Standarddesign wiederhergestellt",
       "default_name": "Standard",
       "default_badge": "Standard",
-      "admin_enforced": "Vom Administrator erzwungen"
+      "admin_enforced": "Vom Administrator erzwungen",
+      "theme": {
+        "label": "Design",
+        "description": "Wählen Sie Ihr bevorzugtes Farbschema",
+        "light": "Hell",
+        "dark": "Dunkel",
+        "system": "System"
+      }
     },
     "tab_groups": {
       "general": "Allgemein",
@@ -1064,13 +1075,6 @@
       },
       "title": "Darstellung",
       "description": "Passen Sie das Aussehen Ihres Webmails an",
-      "theme": {
-        "label": "Design",
-        "description": "Wählen Sie Ihr bevorzugtes Farbschema",
-        "light": "Hell",
-        "dark": "Dunkel",
-        "system": "System"
-      },
       "language": {
         "label": "Sprache",
         "description": "Wählen Sie Ihre bevorzugte Sprache"
@@ -1167,6 +1171,20 @@
       "cross_all": {
         "label": "Alle Konten: Alle Mails",
         "description": "Zeigt in der Sektion „All accounts“ einen Eintrag mit allen Mails über alle Konten, über alle Ordner außer Junk, Gesendet, Archiv, Papierkorb und Entwürfe."
+      },
+      "icon_set": {
+        "label": "Symbolsatz",
+        "description": "Wählen Sie den Symbolstil für die Benutzeroberfläche",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Symbol-Farbpalette",
+        "description": "Wählen Sie, ob Symbole monochrom oder farbig dargestellt werden",
+        "monochrome": "Monochrom (Standard)",
+        "theme_accent": "Theme-Akzenttöne",
+        "rainbow": "Regenbogenfarben"
       }
     },
     "keywords": {
@@ -1217,11 +1235,12 @@
     "notifications": {
       "test_sound": "Benachrichtigungston testen",
       "sounds": {
-        "default": "Standard (Piepton)",
+        "default": "Entspannt (Standard)",
         "cheerful": "Fröhlich",
         "involved": "Aufwendig",
         "swift": "Schnelle Geste",
-        "relax": "Entspannt"
+        "relax": "Entspannt",
+        "beep": "Piepton"
       },
       "sound_selection": {
         "title": "Benachrichtigungston",
@@ -1673,7 +1692,45 @@
         "title": "Mit mir geteilt",
         "description": "Gruppen- und freigegebene Konten, die Sie verwalten können. Wählen Sie eines aus, um dessen Filter, Abwesenheitsnotiz, Kalender und Kontakte zu bearbeiten.",
         "shared_label": "Freigegebenes Konto"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "Kontosicherheit",
@@ -2977,7 +3034,17 @@
       "success": "{count, plural, one {1 Kontakt importiert} other {# Kontakte importiert}}",
       "failed": "Import fehlgeschlagen",
       "close": "Schließen",
-      "file_too_large": "Datei ist zu groß (max. 5 MB)"
+      "file_too_large": "Datei ist zu groß (max. 5 MB)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "Kontakte exportieren",
@@ -3686,7 +3753,25 @@
     "open_folder_tree": "Ordnerbaum öffnen",
     "other_accounts": "Andere Konten",
     "migration_title": "Ihre Dateien werden aktualisiert…",
-    "migration_description": "Ordner und Dateien werden in die richtige Struktur gebracht. Dies geschieht nur einmal."
+    "migration_description": "Ordner und Dateien werden in die richtige Struktur gebracht. Dies geschieht nur einmal.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "Ihre Zertifikate",

@@ -65,7 +65,7 @@ describe('ContactsSidebar — compose to group', () => {
 });
 
 const books: AddressBook[] = [
-  { id: 'ab-1', name: 'Personal', isDefault: true },
+  { id: 'ab-1', name: 'Comail Contacts', isDefault: true },
   { id: 'ab-2', name: 'Work' },
   { id: 'ab-3', name: 'Team', isShared: true, accountId: 'account-2', accountName: 'Team account' },
 ];
@@ -99,7 +99,7 @@ describe('ContactsSidebar - set default address book', () => {
 
   it('hides it for the book that is already the default', () => {
     renderBooksSidebar();
-    fireEvent.contextMenu(screen.getByText('Personal'));
+    fireEvent.contextMenu(screen.getByText('Comail Contacts'));
 
     expect(screen.queryByText('address_books.set_default')).not.toBeInTheDocument();
   });

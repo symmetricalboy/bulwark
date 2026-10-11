@@ -156,7 +156,8 @@
     "unified_all_starred": "すべてのスター付き",
     "unified_all_mail": "すべてのメール",
     "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
+    "tasks": "タスク"
   },
   "protocol_handlers": {
     "title": "既定のアプリ",
@@ -783,7 +784,10 @@
       "background_color": "背景色",
       "remove_background_color": "背景色を削除"
     },
-    "send_filing_warning": "送信されましたが、送信後の整理に失敗しました。古い下書きが残る場合があります。"
+    "send_filing_warning": "送信されましたが、送信後の整理に失敗しました。古い下書きが残る場合があります。",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -998,7 +1002,14 @@
       "default_restored": "デフォルトのテーマに戻しました",
       "default_name": "デフォルト",
       "default_badge": "デフォルト",
-      "admin_enforced": "管理者により固定"
+      "admin_enforced": "管理者により固定",
+      "theme": {
+        "label": "テーマ",
+        "description": "お好みの配色を選択",
+        "light": "ライト",
+        "dark": "ダーク",
+        "system": "システム"
+      }
     },
     "tab_groups": {
       "general": "一般",
@@ -1064,13 +1075,6 @@
       },
       "title": "外観",
       "description": "ウェブメールの見た目をカスタマイズ",
-      "theme": {
-        "label": "テーマ",
-        "description": "お好みの配色を選択",
-        "light": "ライト",
-        "dark": "ダーク",
-        "system": "システム"
-      },
       "language": {
         "label": "言語",
         "description": "お好みの言語を選択"
@@ -1167,6 +1171,20 @@
       "cross_all": {
         "label": "すべてのアカウント: すべてのメール",
         "description": "「すべてのアカウント」セクションに、すべてのアカウントのすべてのメールを一覧表示する項目を表示します。迷惑メール、送信済み、アーカイブ、ゴミ箱、下書きを除くすべてのフォルダーが対象です。"
+      },
+      "icon_set": {
+        "label": "アイコンセット",
+        "description": "インターフェース全体で使用されるアイコンスタイルを選択します",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "アイコンカラーパレット",
+        "description": "アイコンにモノクロまたはカラフルなパレットを使用するかを選択します",
+        "monochrome": "モノクロ（デフォルト）",
+        "theme_accent": "テーマアクセントシェード",
+        "rainbow": "レインボーカラー"
       }
     },
     "keywords": {
@@ -1217,11 +1235,12 @@
     "notifications": {
       "test_sound": "通知音をテスト",
       "sounds": {
-        "default": "デフォルト（ビープ）",
+        "default": "リラックス（デフォルト）",
         "cheerful": "チアフル",
         "involved": "インボルブド",
         "swift": "スウィフトジェスチャー",
-        "relax": "リラックス"
+        "relax": "リラックス",
+        "beep": "ビープ"
       },
       "sound_selection": {
         "title": "通知音",
@@ -1673,7 +1692,45 @@
         "title": "自分と共有",
         "description": "管理できるグループアカウントと共有アカウントです。1つ選択して、フィルター、不在応答、カレンダー、連絡先を編集します。",
         "shared_label": "共有アカウント"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "アカウントセキュリティ",
@@ -2977,7 +3034,17 @@
       "success": "{count, plural, other {#件の連絡先をインポートしました}}",
       "failed": "インポートに失敗しました",
       "close": "閉じる",
-      "file_too_large": "ファイルが大きすぎます（最大5 MB）"
+      "file_too_large": "ファイルが大きすぎます（最大5 MB）",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "連絡先をエクスポート",
@@ -3686,7 +3753,25 @@
     "open_folder_tree": "フォルダーツリーを開く",
     "other_accounts": "その他のアカウント",
     "migration_title": "ファイルを更新しています…",
-    "migration_description": "フォルダーとファイルを適切な構造に整理しています。これは一度だけ行われます。"
+    "migration_description": "フォルダーとファイルを適切な構造に整理しています。これは一度だけ行われます。",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "あなたの証明書",

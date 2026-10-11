@@ -156,7 +156,8 @@
     "unified_all_starred": "All starred",
     "unified_all_mail": "All mail",
     "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
+    "tasks": "Tasks"
   },
   "protocol_handlers": {
     "title": "Default apps",
@@ -639,6 +640,9 @@
     "attach_photos": "Photos & Videos",
     "attach_files": "Files",
     "attach_from_files": "Attach from Files",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive",
     "files_picker": {
       "attach": "{count, plural, =0 {Attach} one {Attach 1 file} other {Attach # files}}",
       "empty_folder": "This folder is empty",
@@ -965,7 +969,7 @@
       "email": "Email Behavior",
       "composer": "Composer",
       "privacy": "Privacy & Security",
-      "account": "Account",
+      "account": "Accounts",
       "identities": "Identities",
       "vacation": "Out of Office",
       "advanced": "Advanced",
@@ -1001,7 +1005,14 @@
       "default_restored": "Default theme restored",
       "default_name": "Default",
       "default_badge": "Default",
-      "admin_enforced": "Admin enforced"
+      "admin_enforced": "Admin enforced",
+      "theme": {
+        "label": "Appearance",
+        "description": "Choose your preferred color scheme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      }
     },
     "tab_groups": {
       "general": "General",
@@ -1067,13 +1078,6 @@
       },
       "title": "Appearance",
       "description": "Customize the look and feel of your webmail",
-      "theme": {
-        "label": "Theme",
-        "description": "Choose your preferred color scheme",
-        "light": "Light",
-        "dark": "Dark",
-        "system": "System"
-      },
       "language": {
         "label": "Language",
         "description": "Choose your preferred language"
@@ -1170,6 +1174,20 @@
       "cross_all": {
         "label": "All mail",
         "description": "Show an All mail entry in the Unified Mailbox listing all mail across the selected folders."
+      },
+      "icon_set": {
+        "label": "Icon set",
+        "description": "Choose the icon style used throughout the interface",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Icon colors",
+        "description": "Choose whether icons use a monochromatic or colorful palette",
+        "monochrome": "Monochrome",
+        "theme_accent": "Accent",
+        "rainbow": "Rainbow"
       }
     },
     "keywords": {
@@ -1220,11 +1238,12 @@
     "notifications": {
       "test_sound": "Test notification sound",
       "sounds": {
-        "default": "Default (Beep)",
+        "default": "Relaxed (Default)",
         "cheerful": "Cheerful",
         "involved": "Involved",
         "swift": "Swift Gesture",
-        "relax": "Relax"
+        "relax": "Relaxed",
+        "beep": "Beep"
       },
       "push": {
         "title": "Background Notifications",
@@ -1633,8 +1652,8 @@
       }
     },
     "account": {
-      "title": "Account",
-      "description": "View your account information",
+      "title": "Accounts",
+      "description": "View and manage your accounts and connected external services",
       "name_label": "Display Name",
       "username_label": "Username",
       "account_type_label": "Account Type",
@@ -1643,6 +1662,21 @@
       "auth_method_basic": "Password",
       "auth_method_token": "Access token",
       "demo_account": "Demo Account",
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "remove_button": "Remove",
+      "remove_confirm_title": "Remove account",
+      "remove_confirm_message": "Remove {account} from this device? You can add it back later.",
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
       "email": {
         "label": "Email Address",
         "value": "{email}"
@@ -1671,6 +1705,32 @@
         "move_down": "Move down",
         "drag_handle": "Drag to reorder",
         "add": "Add account"
+      },
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
       },
       "shared_accounts": {
         "title": "Shared with me",
@@ -2734,7 +2794,7 @@
       "title": "Shared"
     },
     "address_books": {
-      "create": "New address book",
+      "create": "New Address Book",
       "created": "Address book created",
       "create_failed": "Failed to create address book",
       "title": "My Address Books",
@@ -2978,6 +3038,16 @@
       "success": "{count, plural, one {1 contact imported} other {# contacts imported}}",
       "failed": "Import failed",
       "close": "Close",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)",
       "file_too_large": "File is too large (max 5 MB)"
     },
     "export": {
@@ -3611,6 +3681,26 @@
     "hint": "Click any email on the left to get started, or take the tour below."
   },
   "files": {
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "shared_with_me": "Shared with me",
+    "starred": "Starred",
+    "recent": "Recent",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading...",
     "office_edit": "Edit document",
     "office_loading": "Opening document editor…",
     "office_error": "The document editor could not be opened.",

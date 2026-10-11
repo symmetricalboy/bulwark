@@ -132,4 +132,15 @@ describe('AccessApprovalDialog', () => {
     expect(window.location.search).toBe('');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+
+  it('stops polling quietly when the access approval bridge returns 503 (unconfigured)', async () => {
+    fetchMock.mockResolvedValue(response(503, { error: 'access approval bridge not configured' }));
+
+    render(<AccessApprovalDialog />);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
 });

@@ -156,7 +156,8 @@
     "unified_all_starred": "全部已加星號",
     "unified_all_mail": "全部郵件",
     "remove_account": "移除帳號",
-    "remove_account_confirm": "要從這部裝置移除 {account} 嗎？您稍後仍可重新新增。"
+    "remove_account_confirm": "要從這部裝置移除 {account} 嗎？您稍後仍可重新新增。",
+    "tasks": "任務"
   },
   "protocol_handlers": {
     "title": "預設應用程式",
@@ -783,7 +784,10 @@
       "background_color": "背景顏色",
       "remove_background_color": "移除背景顏色"
     },
-    "send_filing_warning": "郵件已傳送，但寄送後清理失敗，可能仍保留舊草稿。"
+    "send_filing_warning": "郵件已傳送，但寄送後清理失敗，可能仍保留舊草稿。",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -1001,7 +1005,14 @@
       "default_restored": "已還原預設主題",
       "default_name": "預設",
       "default_badge": "預設",
-      "admin_enforced": "管理員強制"
+      "admin_enforced": "管理員強制",
+      "theme": {
+        "label": "主題",
+        "description": "選擇您喜歡的配色方案",
+        "light": "淺色",
+        "dark": "深色",
+        "system": "系統"
+      }
     },
     "tab_groups": {
       "general": "一般",
@@ -1067,13 +1078,6 @@
       },
       "title": "外觀",
       "description": "自訂網頁郵件的外觀與使用感受",
-      "theme": {
-        "label": "主題",
-        "description": "選擇您喜歡的配色方案",
-        "light": "淺色",
-        "dark": "深色",
-        "system": "系統"
-      },
       "language": {
         "label": "語言",
         "description": "選擇您偏好的語言"
@@ -1170,6 +1174,20 @@
       "cross_all": {
         "label": "所有郵件",
         "description": "在整合信箱顯示「所有郵件」項目，列出所選信件匣中的所有郵件。"
+      },
+      "icon_set": {
+        "label": "圖示集",
+        "description": "選擇在整個介面中使用的圖示樣式",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "圖示調色盤",
+        "description": "選擇圖示使用單色還是彩色調色盤",
+        "monochrome": "單色（預設）",
+        "theme_accent": "主題輔色色調",
+        "rainbow": "彩虹色彩"
       }
     },
     "keywords": {
@@ -1220,11 +1238,12 @@
     "notifications": {
       "test_sound": "測試通知聲音",
       "sounds": {
-        "default": "預設（蜂鳴聲）",
+        "default": "放鬆（預設）",
         "cheerful": "快樂",
         "involved": "沉浸",
         "swift": "輕快手勢",
-        "relax": "放鬆"
+        "relax": "放鬆",
+        "beep": "蜂鳴聲"
       },
       "push": {
         "title": "背景通知",
@@ -1676,7 +1695,45 @@
         "title": "與我共用",
         "description": "您可以管理的群組與共用帳號。選取一個帳號，即可編輯其篩選規則、休假自動回覆、行事曆與聯絡人。",
         "shared_label": "共用帳號"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "scoped": {
       "back": "回到我的帳號",
@@ -2978,7 +3035,17 @@
       "success": "{count, plural, one {已匯入 1 位聯絡人} other {已匯入 # 位聯絡人}}",
       "failed": "匯入失敗",
       "close": "關閉",
-      "file_too_large": "檔案太大（最大 5 MB）"
+      "file_too_large": "檔案太大（最大 5 MB）",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "匯出聯絡人",
@@ -3729,7 +3796,25 @@
     "disabled_description": "透過 WebDAV 上傳大檔案可能導致 Stalwart/RocksDB 不穩定，包括記憶體不足當機及無法回收的磁碟空間。刪除檔案後，blob 儲存空間可能不會立即清除。本功能不建議用於正式環境。",
     "stability_warning": "上傳大檔案可能導致伺服器不穩定。刪除檔案後，儲存空間可能不會立即清除。請謹慎使用。",
     "migration_title": "正在更新您的檔案…",
-    "migration_description": "正在將資料夾與檔案整理成正確結構。這只會執行一次。"
+    "migration_description": "正在將資料夾與檔案整理成正確結構。這只會執行一次。",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "您的憑證",

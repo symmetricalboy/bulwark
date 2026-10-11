@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ContactCard } from "@/lib/jmap/types";
-import { getContactDisplayName, getContactPrimaryEmail } from "@/stores/contact-store";
+import { getContactDisplayName, getContactPrimaryEmail, getContactPhotoUri } from "@/stores/contact-store";
 
 interface ContactGroupFormProps {
   group?: ContactCard | null;
@@ -147,7 +147,7 @@ export function ContactGroupForm({
                     )}>
                       {isSelected && <Check className="w-3 h-3" />}
                     </div>
-                    <Avatar name={cName} email={cEmail} size="sm" />
+                    <Avatar name={cName} email={cEmail} contactPhotoUri={getContactPhotoUri(contact)} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate">{cName}</div>
                       {cEmail && (

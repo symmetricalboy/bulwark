@@ -15,7 +15,7 @@ export function createDemoAddressBooks(): AddressBook[] {
   return [
     {
       id: 'demo-addressbook-personal',
-      name: 'Personal',
+      name: 'Comail Contacts',
       isDefault: true,
       isSubscribed: true,
       sortOrder: 1,
@@ -34,7 +34,7 @@ export function createDemoAddressBooks(): AddressBook[] {
 
 export function createDemoContacts(): ContactCard[] {
   return [
-    // ── Personal address book ──────────────────────────────────
+    // ── Comail Contacts address book ────────────────────────────
     {
       id: 'demo-contact-1',
       addressBookIds: { 'demo-addressbook-personal': true },

@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_RELAY_BASE_URL,
+  normalizeRelayUrl,
   resolveActiveRelayUrl,
   resolveDefaultRelayUrl,
   resolvePushRelayOptions,
@@ -11,7 +12,7 @@ describe('resolvePushRelayOptions', () => {
   it('always offers the built-in relay first', () => {
     const options = resolvePushRelayOptions({});
     expect(options).toEqual([
-      { label: 'notifications.relay.bulwarkmail.org', url: DEFAULT_RELAY_BASE_URL },
+      { label: 'inbox.comail.at', url: DEFAULT_RELAY_BASE_URL },
     ]);
   });
 
@@ -72,5 +73,23 @@ describe('resolveActiveRelayUrl', () => {
     expect(
       resolveActiveRelayUrl({ ...policy, pushRelayUrlLocked: true }, DEFAULT_RELAY_BASE_URL),
     ).toBe('https://push.company.example');
+  });
+});
+
+describe('normalizeRelayUrl', () => {
+  it('trims whitespace and strips trailing slashes', () => {
+    expect(normalizeRelayUrl('  https://example.com///  ')).toBe('https://example.com');
+  });
+
+  it('normalizes bare inbox.comail.at to the push-relay path', () => {
+    expect(normalizeRelayUrl('https://inbox.comail.at')).toBe('https://inbox.comail.at/push-relay');
+    expect(normalizeRelayUrl('https://inbox.comail.at/')).toBe('https://inbox.comail.at/push-relay');
+    expect(normalizeRelayUrl('http://inbox.comail.at')).toBe('http://inbox.comail.at/push-relay');
+  });
+
+  it('preserves existing subpaths', () => {
+    expect(normalizeRelayUrl('https://inbox.comail.at/push-relay')).toBe(
+      'https://inbox.comail.at/push-relay',
+    );
   });
 });

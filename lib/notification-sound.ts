@@ -1,14 +1,14 @@
 import { debug } from '@/lib/debug';
 import { withBasePath } from '@/lib/browser-navigation';
 
-export type NotificationSoundChoice = 'default' | 'cheerful' | 'involved' | 'swift' | 'relax';
+export type NotificationSoundChoice = 'default' | 'cheerful' | 'involved' | 'swift' | 'beep' | 'relax';
 
 export const NOTIFICATION_SOUNDS: { id: NotificationSoundChoice; file?: string }[] = [
-  { id: 'default' },
+  { id: 'default', file: '/notification/relax-message-tone.mp3' },
   { id: 'cheerful', file: '/notification/cheerful-527.mp3' },
   { id: 'involved', file: '/notification/involved-notification.mp3' },
   { id: 'swift', file: '/notification/notification-tone-swift-gesture.mp3' },
-  { id: 'relax', file: '/notification/relax-message-tone.mp3' },
+  { id: 'beep' },
 ];
 
 function playBeep() {
@@ -53,7 +53,7 @@ function playFile(file: string) {
 
 export function playNotificationSound(sound?: NotificationSoundChoice) {
   try {
-    const choice = sound ?? 'default';
+    const choice = sound === 'relax' ? 'default' : (sound ?? 'default');
     const entry = NOTIFICATION_SOUNDS.find((s) => s.id === choice);
 
     if (entry?.file) {

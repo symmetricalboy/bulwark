@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useThemeStore } from '@/stores/theme-store';
-import { SettingsSection } from './settings-section';
+import { SettingsSection, SettingItem, RadioGroup } from './settings-section';
 import { cn } from '@/lib/utils';
 import { Check, Lock } from '@/components/icons';
 import { toast } from '@/stores/toast-store';
@@ -11,8 +11,8 @@ import { usePolicyStore } from '@/stores/policy-store';
 
 export function ThemesSettings() {
   const t = useTranslations('settings.themes');
-  const { installedThemes, activeThemeId, activateTheme } = useThemeStore();
-  const { isThemeDisabled, getThemePolicy, getForcedThemeId, isThemeForceEnabled } = usePolicyStore();
+  const { installedThemes, activeThemeId, activateTheme, theme, setTheme } = useThemeStore();
+  const { isThemeDisabled, getThemePolicy, getForcedThemeId, isThemeForceEnabled, isSettingLocked, isSettingHidden } = usePolicyStore();
   const themePolicy = getThemePolicy();
   const forcedThemeId = getForcedThemeId(installedThemes.map((theme) => theme.id));
 
@@ -32,6 +32,9 @@ export function ThemesSettings() {
   const visibleThemes = installedThemes.filter(
     theme => !isThemeDisabled(theme.id, !!theme.builtIn)
   );
+
+  const defaultTheme = visibleThemes.find(t => t.id === 'builtin-comail');
+  const otherThemes = visibleThemes.filter(t => t.id !== 'builtin-comail');
 
   useEffect(() => {
     if (forcedThemeId && activeThemeId !== forcedThemeId) {
@@ -65,6 +68,23 @@ export function ThemesSettings() {
 
   return (
     <SettingsSection title={t('title')} description={t('description')}>
+      {!isSettingHidden('theme') && (
+        <SettingItem
+          label={t('theme.label')}
+          description={t('theme.description')}
+          locked={isSettingLocked('theme')}
+        >
+          <RadioGroup
+            value={theme}
+            onChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
+            options={[
+              { value: 'light', label: t('theme.light') },
+              { value: 'dark', label: t('theme.dark') },
+              { value: 'system', label: t('theme.system') },
+            ]}
+          />
+        </SettingItem>
+      )}
 
       {forcedThemeId && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
@@ -74,9 +94,31 @@ export function ThemesSettings() {
 
       {/* Theme Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {/* Default theme card */}
+        {/* Default theme (comail brand theme) */}
+        {defaultTheme && (() => {
+          const isForceEnabled = defaultTheme.id === forcedThemeId || defaultTheme.forceEnabled || isThemeForceEnabled(defaultTheme.id);
+          return (
+            <ThemeCard
+              key={defaultTheme.id}
+              name={defaultTheme.name}
+              author={defaultTheme.author}
+              preview={defaultTheme.preview}
+              css={defaultTheme.css}
+              isDark={isDark}
+              isActive={activeThemeId === defaultTheme.id}
+              isBuiltIn={defaultTheme.builtIn}
+              isDefault={themePolicy.defaultThemeId === defaultTheme.id}
+              isForceEnabled={isForceEnabled}
+              disabled={Boolean(forcedThemeId) && !isForceEnabled}
+              variants={defaultTheme.variants}
+              onActivate={() => handleActivate(defaultTheme.id)}
+            />
+          );
+        })()}
+
+        {/* Bulwark base theme */}
         <ThemeCard
-          name={t('default_name')}
+          name="Bulwark"
           author="Bulwark"
           isDefaultTheme
           variants={['light', 'dark']}
@@ -88,8 +130,8 @@ export function ThemesSettings() {
           onActivate={() => handleActivate(null)}
         />
 
-        {/* Installed themes */}
-        {visibleThemes.map(theme => {
+        {/* Other themes */}
+        {otherThemes.map(theme => {
           const isForceEnabled = theme.id === forcedThemeId || theme.forceEnabled || isThemeForceEnabled(theme.id);
           return (
             <ThemeCard
@@ -134,7 +176,6 @@ interface ThemeCardProps {
 
 function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActive, isDefault, isForceEnabled, disabled, variants, onActivate }: ThemeCardProps) {
   const t = useTranslations('settings.themes');
-  const tVariant = useTranslations('settings.appearance.theme');
   const colors = resolveThemeColors({ css, variants, isDark: !!isDark, isDefaultTheme: !!isDefaultTheme });
   return (
     <div data-search-label={name} className="relative">
@@ -162,8 +203,8 @@ function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActiv
 
         {/* Info */}
         <div className="w-full">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-sm font-medium text-foreground truncate">{name}</span>
+          <div className="flex items-center justify-between gap-1.5 min-h-[1.75rem]">
+            <span className="text-base font-semibold text-foreground truncate">{name}</span>
             <div className="flex items-center gap-1 flex-shrink-0">
               {isForceEnabled && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium flex items-center gap-0.5" title={t('admin_enforced')}>
@@ -176,15 +217,8 @@ function ThemeCard({ name, author, preview, css, isDark, isDefaultTheme, isActiv
               {isActive && <Check className="w-4 h-4 text-primary" />}
             </div>
           </div>
-          <span className="text-xs text-muted-foreground truncate block">{author}</span>
-          {variants && (
-            <div className="flex gap-1 mt-1">
-              {variants.map(v => (
-                <span key={v} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                  {tVariant(v)}
-                </span>
-              ))}
-            </div>
+          {author && author !== 'Built-in' && author !== name && (
+            <span className="text-xs text-muted-foreground truncate block mt-0.5">{author}</span>
           )}
         </div>
       </button>

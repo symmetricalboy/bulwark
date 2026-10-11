@@ -57,6 +57,31 @@
   --color-chart-4: #ef4444;
   --color-chart-5: #8b5cf6;
 
+  /* Icon Rainbow Palette */
+  --icon-rainbow-blue: #2563eb;
+  --icon-rainbow-emerald: #059669;
+  --icon-rainbow-amber: #d97706;
+  --icon-rainbow-purple: #7c3aed;
+  --icon-rainbow-pink: #db2777;
+  --icon-rainbow-cyan: #0891b2;
+  --icon-rainbow-orange: #ea580c;
+  --icon-rainbow-indigo: #4f46e5;
+  --icon-rainbow-teal: #0d9488;
+  --icon-rainbow-red: #dc2626;
+  --icon-rainbow-lime: #65a30d;
+  --icon-rainbow-fuchsia: #c026d3;
+
+  /* Icon Theme Accent Shades */
+  --theme-accent-base: var(--color-unread, var(--color-primary, #3b82f6));
+  --icon-accent-shade-1: var(--theme-accent-base);
+  --icon-accent-shade-2: color-mix(in srgb, var(--theme-accent-base) 80%, #000000);
+  --icon-accent-shade-3: color-mix(in srgb, var(--theme-accent-base) 70%, var(--color-foreground, #18181b));
+  --icon-accent-shade-4: color-mix(in srgb, var(--theme-accent-base) 85%, #6366f1);
+  --icon-accent-shade-5: color-mix(in srgb, var(--theme-accent-base) 80%, #f59e0b);
+  --icon-accent-shade-6: color-mix(in srgb, var(--theme-accent-base) 80%, #06b6d4);
+  --icon-accent-shade-7: color-mix(in srgb, var(--theme-accent-base) 60%, var(--color-foreground, #18181b));
+  --icon-accent-shade-8: color-mix(in srgb, var(--theme-accent-base) 85%, #ec4899);
+
   /* Settings variables */
   --font-size-base: 16px;
   --list-item-height: 48px;
@@ -121,6 +146,31 @@
   --color-chart-3: #fbbf24;
   --color-chart-4: #f87171;
   --color-chart-5: #a78bfa;
+
+  /* Icon Rainbow Palette */
+  --icon-rainbow-blue: #60a5fa;
+  --icon-rainbow-emerald: #34d399;
+  --icon-rainbow-amber: #fbbf24;
+  --icon-rainbow-purple: #a78bfa;
+  --icon-rainbow-pink: #f472b6;
+  --icon-rainbow-cyan: #22d3ee;
+  --icon-rainbow-orange: #fb923c;
+  --icon-rainbow-indigo: #818cf8;
+  --icon-rainbow-teal: #2dd4bf;
+  --icon-rainbow-red: #f87171;
+  --icon-rainbow-lime: #a3e635;
+  --icon-rainbow-fuchsia: #e879f9;
+
+  /* Icon Theme Accent Shades */
+  --theme-accent-base: var(--color-unread, var(--color-primary, #60a5fa));
+  --icon-accent-shade-1: var(--theme-accent-base);
+  --icon-accent-shade-2: color-mix(in srgb, var(--theme-accent-base) 85%, #ffffff);
+  --icon-accent-shade-3: color-mix(in srgb, var(--theme-accent-base) 70%, #ffffff);
+  --icon-accent-shade-4: color-mix(in srgb, var(--theme-accent-base) 85%, #818cf8);
+  --icon-accent-shade-5: color-mix(in srgb, var(--theme-accent-base) 80%, #fbbf24);
+  --icon-accent-shade-6: color-mix(in srgb, var(--theme-accent-base) 80%, #22d3ee);
+  --icon-accent-shade-7: color-mix(in srgb, var(--theme-accent-base) 60%, var(--color-foreground, #fafafa));
+  --icon-accent-shade-8: color-mix(in srgb, var(--theme-accent-base) 85%, #f472b6);
 }
 
 @theme inline {
@@ -745,6 +795,23 @@ optgroup {
   animation: cal-slide-in-left 0.25s ease-out;
 }
 
+/* Calendar event cascade entrance animation */
+@keyframes cal-event-cascade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-cal-event-cascade {
+  animation: cal-event-cascade 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
 /* Reduced motion: respect user OS preference */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -953,3 +1020,30 @@ optgroup {
 [dir="rtl"] .tabler-icon-layout-sidebar-right {
   transform: scaleX(-1);
 }
+
+/* Material Symbols font icon styling */
+.material-symbols-outlined {
+  font-feature-settings: "liga" 1;
+  -webkit-font-feature-settings: "liga" 1;
+}
+svg text.material-symbols-outlined {
+  fill: currentColor;
+}
+
+/* Accessibility: High contrast icons inside solid colored buttons & actions */
+.bg-primary svg,
+button.bg-primary svg,
+.bg-destructive svg,
+button.bg-destructive svg,
+[data-tour="compose-button"] svg {
+  color: inherit !important;
+}
+
+.bg-primary svg text.material-symbols-outlined,
+button.bg-primary svg text.material-symbols-outlined,
+.bg-destructive svg text.material-symbols-outlined,
+button.bg-destructive svg text.material-symbols-outlined,
+[data-tour="compose-button"] svg text.material-symbols-outlined {
+  fill: currentColor !important;
+}
+

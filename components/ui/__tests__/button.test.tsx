@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { Button } from '../button';
+import { PenSquare } from '@/components/icons';
 
 describe('Button', () => {
   it('renders with children text', () => {
@@ -32,5 +33,20 @@ describe('Button', () => {
 
     rerender(<Button variant="destructive">Destructive</Button>);
     expect(screen.getByText('Destructive')).toBeInTheDocument();
+  });
+
+  it('guarantees high-contrast icon rendering inside default and destructive buttons', () => {
+    // Render an icon inside a primary Button
+    const { container } = render(
+      <Button variant="default">
+        <PenSquare data-testid="compose-icon" />
+        Compose
+      </Button>
+    );
+
+    const svg = container.querySelector('svg');
+    expect(svg).toBeInTheDocument();
+    // The icon must not have an inline style overriding the color with an accent shade
+    expect(svg?.style.color).toBe('');
   });
 });

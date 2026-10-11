@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { IconContrastContext } from "@/contexts/icon-contrast-context";
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -8,7 +9,21 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "md", ...props }, ref) => {
+  ({ className, variant = "default", size = "md", children, ...props }, ref) => {
+    const isSolid =
+      variant === "default" ||
+      variant === "destructive" ||
+      className?.includes("bg-primary") ||
+      className?.includes("bg-destructive");
+
+    const content = isSolid ? (
+      <IconContrastContext.Provider value={{ inheritColor: true }}>
+        {children}
+      </IconContrastContext.Provider>
+    ) : (
+      children
+    );
+
     return (
       <button
         className={cn(
@@ -17,12 +32,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "disabled:pointer-events-none disabled:opacity-50",
           {
             default:
-              "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow",
+              "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow [&_svg]:text-current",
             ghost: "hover:bg-accent hover:text-accent-foreground",
             outline:
               "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
             destructive:
-              "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
+              "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm [&_svg]:text-current",
           }[variant],
           {
             sm: "h-9 px-3 text-sm",
@@ -34,7 +49,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         ref={ref}
         {...props}
-      />
+      >
+        {content}
+      </button>
     );
   }
 );

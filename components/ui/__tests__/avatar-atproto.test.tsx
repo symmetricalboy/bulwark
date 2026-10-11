@@ -10,9 +10,9 @@ vi.mock('@/hooks/use-config', () => ({
 // The atproto resolver is exercised directly in atproto-avatar.test.ts; here we
 // mock it to drive the Avatar's resolution chain deterministically and to assert
 // that demo mode never calls it.
-const resolveAtprotoAvatar = vi.fn<(did: string) => Promise<string | null>>();
+const resolveAtprotoAvatar = vi.fn<(target: unknown) => Promise<string | null>>();
 vi.mock('@/lib/atproto-avatar', () => ({
-  resolveAtprotoAvatar: (did: string) => resolveAtprotoAvatar(did),
+  resolveAtprotoAvatar: (target: unknown) => resolveAtprotoAvatar(target),
 }));
 
 import { Avatar } from '../avatar';
@@ -98,5 +98,24 @@ describe('Avatar atproto profile photo', () => {
 
     expect(container.textContent).toBe('DU');
     expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('resolves atproto avatar for a Comail account email even when DID is not passed', async () => {
+    resolveAtprotoAvatar.mockResolvedValue(ATPROTO_AVATAR);
+
+    const { container } = render(
+      <Avatar name="symmetricalboy" email="email@comail.at" disableFavicon />
+    );
+
+    const img = await waitFor(() => {
+      const el = container.querySelector('img');
+      if (!el) throw new Error('no img yet');
+      return el as HTMLImageElement;
+    });
+    expect(img.getAttribute('src')).toBe(ATPROTO_AVATAR);
+    expect(resolveAtprotoAvatar).toHaveBeenCalledWith({
+      displayName: 'symmetricalboy',
+      email: 'email@comail.at',
+    });
   });
 });

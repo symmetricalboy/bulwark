@@ -156,7 +156,8 @@
     "unified_all_starred": "Усі позначені",
     "unified_all_mail": "Уся пошта",
     "remove_account": "Remove account",
-    "remove_account_confirm": "Remove {account} from this device? You can add it back later."
+    "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
+    "tasks": "завдання"
   },
   "protocol_handlers": {
     "title": "Програми за замовчуванням",
@@ -783,7 +784,10 @@
       "background_color": "Колір фону",
       "remove_background_color": "Прибрати колір фону"
     },
-    "send_filing_warning": "Надіслано - але подальше очищення не вдалося, може залишитися застаріла чернетка."
+    "send_filing_warning": "Надіслано - але подальше очищення не вдалося, може залишитися застаріла чернетка.",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "downloading_from_drive": "Fetching files from Google Drive...",
+    "download_error": "Failed to download file from Google Drive"
   },
   "confirm_dialog": {
     "confirm": "Підтвердити",
@@ -998,7 +1002,14 @@
       "default_restored": "Тему за замовчуванням відновлено",
       "default_name": "За замовчуванням",
       "default_badge": "За замовчуванням",
-      "admin_enforced": "Встановлено адміністратором"
+      "admin_enforced": "Встановлено адміністратором",
+      "theme": {
+        "label": "Тема",
+        "description": "Виберіть бажану колірну схему",
+        "light": "світло",
+        "dark": "Темний",
+        "system": "система"
+      }
     },
     "tab_groups": {
       "general": "Загальний",
@@ -1064,13 +1075,6 @@
       },
       "title": "Зовнішній вигляд",
       "description": "Налаштуйте зовнішній вигляд вашої веб-пошти",
-      "theme": {
-        "label": "Тема",
-        "description": "Виберіть бажану колірну схему",
-        "light": "світло",
-        "dark": "Темний",
-        "system": "система"
-      },
       "language": {
         "label": "Мова",
         "description": "Виберіть бажану мову"
@@ -1167,6 +1171,20 @@
       "cross_all": {
         "label": "Усі облікові записи: Уся пошта",
         "description": "Показує у розділі «Усі облікові записи» запис з усіма листами з усіх облікових записів, по всіх теках, окрім спаму, надісланих, архіву, кошика та чернеток."
+      },
+      "icon_set": {
+        "label": "Набір значків",
+        "description": "Виберіть стиль значків, який використовується в інтерфейсі",
+        "tabler": "Tabler",
+        "material_symbols": "Material Symbols",
+        "lucide": "Lucide"
+      },
+      "icon_color_palette": {
+        "label": "Icon color palette",
+        "description": "Choose whether icons use a monochromatic or colorful palette",
+        "monochrome": "Monochromatic (Default)",
+        "theme_accent": "Theme accent shades",
+        "rainbow": "Rainbow colors"
       }
     },
     "keywords": {
@@ -1217,11 +1235,12 @@
     "notifications": {
       "test_sound": "Тестовий звук сповіщення",
       "sounds": {
-        "default": "За замовчуванням (звуковий сигнал)",
+        "default": "Розслабтеся (За замовчуванням)",
         "cheerful": "Веселий",
         "involved": "Залучений",
         "swift": "Швидкий жест",
-        "relax": "Розслабтеся"
+        "relax": "Розслабтеся",
+        "beep": "Звуковий сигнал"
       },
       "sound_selection": {
         "title": "Звук сповіщення",
@@ -1673,7 +1692,45 @@
         "title": "Доступні мені",
         "description": "Групові та спільні облікові записи, якими ви можете керувати. Виберіть один, щоб змінити його фільтри, автовідповідач, календарі та контакти.",
         "shared_label": "Спільний обліковий запис"
-      }
+      },
+      "info_button": "Details",
+      "info_dialog_title": "Account Details",
+      "status_label": "Status",
+      "status_connected": "Connected",
+      "status_disconnected": "Disconnected",
+      "status_error": "Connection error",
+      "linked_accounts": {
+        "button": "Linked Accounts",
+        "title": "Linked Accounts",
+        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "add_account": "Connect Google Account",
+        "add_another": "Connect another Google Account",
+        "empty_title": "No external accounts linked yet",
+        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
+        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "reconnect": "Reconnect",
+        "remove": "Remove",
+        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
+        "connected_at": "Connected {time}",
+        "apps_heading": "Apps populated into Comail",
+        "apps": {
+          "calendar": "Calendar",
+          "calendar_desc": "Sync Google Calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "drive": "Drive",
+          "drive_desc": "Browse, view, and attach Google Drive files",
+          "contacts": "Contacts",
+          "contacts_desc": "Sync Google Contacts into your address book"
+        }
+      },
+      "account_age_label": "Account Age",
+      "age_today": "Less than 1 day",
+      "age_days": "{count, plural, one {1 day} other {# days}}",
+      "age_months": "{count, plural, one {1 month} other {# months}}",
+      "age_years": "{count, plural, one {1 year} other {# years}}",
+      "age_years_months": "{years, plural, one {1 year} other {# years}}, {months, plural, one {1 month} other {# months}}"
     },
     "security": {
       "title": "Безпека облікового запису",
@@ -2977,7 +3034,17 @@
       "success": "{count, plural, one {1 контакт імпортовано} few {# контакти імпортовано} many {# контактів імпортовано} other {# контактів імпортовано}}",
       "failed": "Помилка імпорту",
       "close": "Закрити",
-      "file_too_large": "Файл завеликий (макс. 5 МБ)"
+      "file_too_large": "Файл завеликий (макс. 5 МБ)",
+      "import_google": "Import from Google Contacts",
+      "google_subtitle": "Connect your Google account to import contacts directly into Comail.",
+      "google_signin": "Sign in with Google",
+      "google_fetching": "Loading Google Contacts...",
+      "google_fetch_button": "Load Google Contacts",
+      "google_connected_as": "Connected as {email}",
+      "google_empty": "No Google Contacts found in this account.",
+      "google_error": "Failed to load Google Contacts. Please check your connection and try again.",
+      "source_google": "Google Contacts",
+      "source_file": "vCard File (.vcf)"
     },
     "export": {
       "title": "Експортувати контакти",
@@ -3686,7 +3753,25 @@
     "open_folder_tree": "Відкрити дерево тек",
     "other_accounts": "Інші облікові записи",
     "migration_title": "Оновлення ваших файлів…",
-    "migration_description": "Папки та файли впорядковуються у правильну структуру. Це відбувається лише один раз."
+    "migration_description": "Папки та файли впорядковуються у правильну структуру. Це відбувається лише один раз.",
+    "google_drive": "Google Drive",
+    "attach_from_google_drive": "Attach from Google Drive",
+    "my_drive": "My Drive",
+    "starred": "Starred",
+    "connect_google_drive": "Connect Google Drive",
+    "connect_google_drive_desc": "Connect your Google Account to access, view, download, and attach your Google Drive files directly inside Bulwark.",
+    "connect_button": "Connect Google Account",
+    "open_in_google_drive": "Open in Google Drive",
+    "open_google_drive": "Open Google Drive",
+    "star": "Star",
+    "unstar": "Unstar",
+    "bulwark_files": "Files",
+    "empty_folder": "This folder is empty",
+    "no_search_results": "No files found matching your search",
+    "no_files": "No files in this folder",
+    "clear_selection": "Clear selection",
+    "close": "Close",
+    "loading": "Loading..."
   },
   "smime": {
     "your_certificates": "Ваші сертифікати",
