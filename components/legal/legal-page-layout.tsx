@@ -124,7 +124,7 @@ export function LegalSection({
 }) {
   return (
     <section className="space-y-3 pt-2">
-      <span className="text-[11px] font-mono tracking-widest uppercase text-primary/90 dark:text-primary-foreground/80 block font-semibold">
+      <span className="text-[11px] font-mono tracking-widest uppercase text-blue-600 dark:text-blue-400 block font-semibold">
         {marker}
       </span>
       <h2
