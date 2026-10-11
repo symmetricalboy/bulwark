@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { logger } from '@/lib/logger';
 import type { UpdateStatus, VersionCheckStateFile } from './types';
@@ -62,6 +62,17 @@ export function effectiveEndpoint(state: VersionCheckStateFile): string {
 }
 
 export function getCurrentVersion(): string {
+  if (process.env.VITEST || process.env.NODE_ENV === 'test') {
+    return (process.env.NEXT_PUBLIC_APP_VERSION || '').trim();
+  }
+  try {
+    const versionFile = path.join(process.cwd(), 'VERSION');
+    if (existsSync(versionFile)) {
+      return readFileSync(versionFile, 'utf8').trim();
+    }
+  } catch {
+    // fallback
+  }
   return (process.env.NEXT_PUBLIC_APP_VERSION || '').trim();
 }
 

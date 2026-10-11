@@ -4,8 +4,8 @@ Comail Bulwark is [Comail](https://comail.at)'s fork of
 [Bulwark Webmail](https://github.com/bulwarkmail/webmail), a JMAP webmail client
 for [Stalwart Mail Server](https://stalw.art/).
 
-This repository contains a checked source snapshot of Comail Bulwark 1.13.0,
-based on upstream commit `3d48b122046a5898189012e610bf35e2a7ddab3e`.
+This repository contains a checked source snapshot of Comail Bulwark 1.14.1,
+based on upstream commit `2534c4fde590977387442b0216ba39d3e799b16f`.
 It includes Comail sign-in, branding, S/MIME, tests, and pinned build inputs.
 Private deployment automation and private Git history are excluded.
 Automated source publishing is not active yet.
