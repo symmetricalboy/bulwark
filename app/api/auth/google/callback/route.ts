@@ -10,6 +10,41 @@ import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
+function getSafeReturnTo(returnTo: unknown): string {
+  if (
+    typeof returnTo === 'string' &&
+    returnTo.startsWith('/') &&
+    !returnTo.startsWith('//') &&
+    !returnTo.includes('\\')
+  ) {
+    return returnTo;
+  }
+  return '/calendar';
+}
+
+function createRedirectResponse(
+  returnTo: string,
+  paramKey: string,
+  paramValue: string,
+  status = 303
+): NextResponse {
+  // Use a relative Location header so the browser resolves it against the
+  // public request URL. NextResponse.redirect(new URL(returnTo, request.url))
+  // would absolutise to the container's internal bind (http://0.0.0.0:3000)
+  // when running in Docker behind a reverse proxy.
+  const safePath = getSafeReturnTo(returnTo);
+  const target = new URL(safePath, 'http://localhost');
+  target.searchParams.set(paramKey, paramValue);
+  const relativeLocation = `${target.pathname}${target.search}${target.hash}`;
+
+  return new NextResponse(null, {
+    status,
+    headers: {
+      Location: relativeLocation,
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get('code');
@@ -22,8 +57,8 @@ export async function GET(request: NextRequest) {
   if (stateRaw) {
     try {
       const parsed = JSON.parse(Buffer.from(stateRaw, 'base64url').toString('utf8'));
-      if (parsed.returnTo && typeof parsed.returnTo === 'string' && parsed.returnTo.startsWith('/')) {
-        returnTo = parsed.returnTo;
+      if (parsed.returnTo) {
+        returnTo = getSafeReturnTo(parsed.returnTo);
       }
       if (parsed.comailAccountId && typeof parsed.comailAccountId === 'string') {
         comailAccountId = parsed.comailAccountId;
@@ -38,9 +73,7 @@ export async function GET(request: NextRequest) {
 
   if (error || !code) {
     logger.warn('Google OAuth callback returned error or missing code', { error });
-    const redirectUrl = new URL(returnTo, request.url);
-    redirectUrl.searchParams.set('google_error', error || 'access_denied');
-    return NextResponse.redirect(redirectUrl);
+    return createRedirectResponse(returnTo, 'google_error', error || 'access_denied');
   }
 
   try {
@@ -103,10 +136,7 @@ export async function GET(request: NextRequest) {
 
     const encrypted = encryptGoogleSessionData(sessionData);
 
-    const redirectUrl = new URL(returnTo, request.url);
-    redirectUrl.searchParams.set('google_connected', 'true');
-
-    const response = NextResponse.redirect(redirectUrl);
+    const response = createRedirectResponse(returnTo, 'google_connected', 'true');
     response.cookies.set({
       name: GOOGLE_SESSION_COOKIE,
       value: encrypted,
@@ -120,8 +150,6 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (err) {
     logger.error('Error during Google OAuth callback', { err });
-    const redirectUrl = new URL(returnTo, request.url);
-    redirectUrl.searchParams.set('google_error', 'token_exchange_failed');
-    return NextResponse.redirect(redirectUrl);
+    return createRedirectResponse(returnTo, 'google_error', 'token_exchange_failed');
   }
 }
