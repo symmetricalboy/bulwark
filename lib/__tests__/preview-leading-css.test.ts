@@ -43,6 +43,13 @@ describe('cleanPreview', () => {
     expect(cleanPreview('.x{color:red} ...')).toBe('');
     expect(cleanPreview(null)).toBe('');
   });
+
+  it('strips common email signatures and mobile footers from previews', () => {
+    expect(cleanPreview('Here is the report\n\n-- \nAlice Example\nVP of Engineering')).toBe('Here is the report');
+    expect(cleanPreview('Sounds good to me!\n\nSent from my iPhone')).toBe('Sounds good to me!');
+    expect(cleanPreview('Let us discuss tomorrow.\n\nGet Outlook for iOS')).toBe('Let us discuss tomorrow.');
+    expect(cleanPreview('Thanks!\n\nSent from Mail for Windows')).toBe('Thanks!');
+  });
 });
 
 describe('stripLeadingCss pseudo-classes', () => {

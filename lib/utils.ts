@@ -321,9 +321,25 @@ export function stripLeadingCss(text: string): string {
   return rest;
 }
 
-/** A message preview ready to show: no leading padding, no leading style sheet. */
+const COMMON_FOOTER_PATTERNS = [
+  /\n\s*--[ \t]*[\r\n][\s\S]*$/,
+  /\n\s*Sent from my (?:iPhone|iPad|Galaxy|device)[\s\S]*$/i,
+  /\n\s*Get Outlook for (?:iOS|Android)[\s\S]*$/i,
+  /\n\s*Sent from Mail for Windows[\s\S]*$/i,
+];
+
+export function stripSignatureFromPreview(text: string): string {
+  let cleaned = text;
+  for (const pattern of COMMON_FOOTER_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  return cleaned.trim();
+}
+
+/** A message preview ready to show: no leading padding, no leading style sheet, signatures stripped. */
 export function cleanPreview(text: string | null | undefined): string {
-  return stripInvisibleLeading(stripLeadingCss(stripInvisibleLeading(text ?? '')));
+  const withoutCss = stripInvisibleLeading(stripLeadingCss(stripInvisibleLeading(text ?? '')));
+  return stripSignatureFromPreview(withoutCss);
 }
 
 export function truncateText(text: string, maxLength: number): string {

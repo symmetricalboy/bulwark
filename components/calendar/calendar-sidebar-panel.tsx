@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Globe, ListTodo, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, Shuffle, Check, Calendar as CalendarIcon, ExternalLink, MoreVertical } from "@/components/icons";
+import { ChevronDown, ChevronRight, Globe, Pencil, RefreshCw, Share2, Star, Trash2, Cake, User, Users, Plus, Eraser, Palette, Shuffle, Check, ExternalLink, MoreVertical } from "@/components/icons";
 import { Link } from "@/i18n/navigation";
 import { cn, formatDateTime } from "@/lib/utils";
 import { withBasePath } from "@/lib/browser-navigation";
@@ -110,7 +110,6 @@ export function CalendarSidebarPanel({
   const showTasksOnCalendar = useSettingsStore((s) => s.showTasksOnCalendar);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
   const tasks = useTaskStore((s) => s.tasks);
-  const setViewMode = useCalendarStore((s) => s.setViewMode);
 
   const pendingTaskCount = useMemo(() => tasks.filter(t => t.progress !== 'completed' && t.progress !== 'cancelled').length, [tasks]);
   const overdueTaskCount = useMemo(() => {
@@ -547,36 +546,8 @@ export function CalendarSidebarPanel({
 
   return (
     <div className="mt-4">
-      {/* ── ALL Section ──────────────────────────────────────── */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1 px-1">
-          <button
-            onClick={() => toggleSection('all')}
-            className="flex items-center gap-1.5 flex-1 min-w-0 text-start py-0.5 text-muted-foreground hover:text-foreground transition-colors group"
-            title={!collapsedSections['all'] ? "Collapse All Calendars" : "Expand All Calendars"}
-          >
-            {!collapsedSections['all'] ? (
-              <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-            )}
-            <CalendarIcon className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-            <span className="text-xs font-medium uppercase tracking-wider truncate">
-              All Calendars
-            </span>
-          </button>
-        </div>
-
-        {!collapsedSections['all'] && (
-          <div className="space-y-0.5">
-            {eventCalendars.map(renderCalendarItem)}
-            {renderTasksItem()}
-          </div>
-        )}
-      </div>
-
       {/* ── COMAIL Section ───────────────────────────────────── */}
-      <div className="mb-3 pt-3 border-t border-border/40">
+      <div className="mb-3">
         <div className="flex items-center justify-between mb-1 px-1 group">
           <button
             onClick={() => toggleSection('comail')}
@@ -687,10 +658,10 @@ export function CalendarSidebarPanel({
                     </div>
                   </div>
                 ))}
-                {!googleCalendar.status.connected && renderTasksItem()}
+                {renderTasksItem()}
               </div>
             )}
-            {multiAccountMode && localAccountGroups.length > 0 && !googleCalendar.status.connected && (
+            {multiAccountMode && localAccountGroups.length > 0 && (
               <div className="mt-1 ps-1">
                 {renderTasksItem()}
               </div>

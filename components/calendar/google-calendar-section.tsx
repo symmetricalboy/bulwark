@@ -1,14 +1,9 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { useGoogleCalendar } from '@/hooks/use-google-calendar';
 import { useCalendarStore } from '@/stores/calendar-store';
-import { useSettingsStore } from '@/stores/settings-store';
-import { useTaskStore } from '@/stores/task-store';
-import { displayNow } from '@/lib/timezone';
-import { Check, RefreshCw, LogOut, ChevronDown, ChevronRight, Cake, ExternalLink, GoogleCalendarIcon, GoogleIcon, Plus } from '@/components/icons';
+import { Check, RefreshCw, LogOut, ChevronDown, ChevronRight, Cake, GoogleCalendarIcon, GoogleIcon, Plus } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Calendar } from '@/lib/jmap/types';
@@ -50,23 +45,6 @@ function GoogleCalendarSectionContent({
   const toggleAccountCollapsed = (email: string) => {
     setCollapsedAccounts((prev) => ({ ...prev, [email]: !prev[email] }));
   };
-
-  const t = useTranslations("calendar");
-  const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
-  const showTasksOnCalendar = useSettingsStore((s) => s.showTasksOnCalendar);
-  const updateSetting = useSettingsStore((s) => s.updateSetting);
-  const tasks = useTaskStore((s) => s.tasks);
-
-  const pendingTaskCount = useMemo(
-    () => tasks.filter((t) => t.progress !== 'completed' && t.progress !== 'cancelled').length,
-    [tasks]
-  );
-  const overdueTaskCount = useMemo(() => {
-    const now = displayNow();
-    return tasks.filter(
-      (t) => t.progress !== 'completed' && t.progress !== 'cancelled' && t.due && new Date(t.due) < now
-    ).length;
-  }, [tasks]);
 
   const { status, calendars, isLoading, connectGoogle, disconnectGoogle, loadCalendars, refreshEvents } = googleCalendar;
   const toggleVisibility = useCalendarStore((s) => s.toggleCalendarVisibility);
@@ -274,44 +252,6 @@ function GoogleCalendarSectionContent({
                   <span>Add another Google Account</span>
                 </Button>
               </div>
-
-              {enableCalendarTasks && (
-                <div
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/40 cursor-pointer text-xs group transition-colors mt-2 pt-2 border-t border-border/30"
-                  onClick={() => updateSetting('showTasksOnCalendar', !showTasksOnCalendar)}
-                  title={showTasksOnCalendar ? "Hide tasks on calendar" : "Show tasks on calendar"}
-                >
-                  <div
-                    className={cn(
-                      "w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0",
-                      showTasksOnCalendar ? "border-transparent text-white bg-[#4285F4]" : "border-muted-foreground/30 bg-background"
-                    )}
-                    style={{ backgroundColor: showTasksOnCalendar ? '#4285F4' : undefined }}
-                  >
-                    {showTasksOnCalendar && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                  </div>
-                  <span className={cn("truncate flex-1 font-medium", !showTasksOnCalendar && "text-muted-foreground")}>
-                    {t('tasks.label')}
-                  </span>
-                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {pendingTaskCount > 0 && (
-                      <span className="text-[11px] text-muted-foreground font-normal">{pendingTaskCount}</span>
-                    )}
-                    {overdueTaskCount > 0 && (
-                      <span className="text-[10px] text-destructive font-semibold">
-                        {overdueTaskCount} {t('tasks.filter_overdue').toLowerCase()}
-                      </span>
-                    )}
-                    <Link
-                      href="/tasks"
-                      className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors"
-                      title="Open Tasks app"
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </>

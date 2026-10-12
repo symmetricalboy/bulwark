@@ -3546,7 +3546,7 @@ export function EmailComposer({
           )}
 
           {/* Subject field */}
-          <div className="flex items-center gap-2 px-4 py-2.5">
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('subject_label')}</span>
             <Input
               ref={subjectInputRef}

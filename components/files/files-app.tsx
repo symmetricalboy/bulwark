@@ -29,7 +29,7 @@ import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { AlertTriangle, Loader2, GoogleDriveIcon, HardDrive, ChevronDown, Check, Plus, ArrowLeft } from "@/components/icons";
+import { Loader2, GoogleDriveIcon, HardDrive, ChevronDown, Check, Plus } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { GoogleDriveBrowser } from "@/components/files/google-drive-browser";
 import { getGoogleStatus, type GoogleAccountStatus } from "@/lib/google/google-drive-client";
@@ -723,23 +723,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
         )}
         <div className={cn("flex flex-1 min-h-0", inlineApp && "hidden")}>
           <div className="flex-1 min-w-0 flex flex-col">
-              <div className={cn("px-4 py-2 border-b border-border flex items-center justify-between bg-card/40 shrink-0", isMobile && "px-3 py-2")}>
-                <div className="flex items-center gap-2">
-                  {!isEmbedded ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.push("/")}
-                      className="justify-start h-8 px-2"
-                    >
-                      <ArrowLeft className="w-4 h-4 me-1.5" />
-                      {t("title")}
-                    </Button>
-                  ) : (
-                    <span className="text-sm font-semibold text-foreground px-1">
-                      {t("title")}
-                    </span>
-                  )}
+              <header className={cn("px-4 py-3 border-b border-border/60 flex items-center justify-between bg-background/95 backdrop-blur shrink-0", isMobile && "px-3 py-2.5")}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <h2 className="text-base sm:text-lg font-semibold tracking-tight text-foreground truncate px-1">
+                    {t("title")}
+                  </h2>
                 </div>
 
                 {/* Storage & Account Picker Dropdown */}
@@ -926,7 +914,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                     </div>
                   )}
                 </div>
-              </div>
+              </header>
 
             <div className="flex-1 min-h-0 flex flex-col">
               {storageSource === 'google-drive' && (

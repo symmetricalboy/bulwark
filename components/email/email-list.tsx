@@ -768,16 +768,23 @@ export function EmailList({
               })}
             </div>
 
-            <div className="py-4 flex justify-center">
+            <div className="py-6 flex justify-center">
               {footerIsLoadingMore && footerHasMore && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>{t('loading_more')}</span>
                 </div>
               )}
               {!footerHasMore && emails.length > 0 && (
-                <div className="text-sm text-muted-foreground border-t border-border pt-6">
-                  {t('no_more_emails')}
+                <div className="flex flex-col items-center justify-center py-4 text-center animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3 w-40 mb-2 opacity-60">
+                    <div className="h-px flex-1 bg-border" />
+                    <div className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground/75 font-medium tracking-wide">
+                    {t('no_more_emails')}
+                  </span>
                 </div>
               )}
             </div>

@@ -3230,22 +3230,22 @@ export function EmailViewer({
           onClick={onArchive}
           data-overflow-item
           data-overflow-priority="4"
-          className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-1")}
+          className={cn("h-8 px-2 sm:px-2.5 flex items-center justify-center gap-1.5", mvViewer && "order-1")}
           title={t('tooltips.archive')}
         >
           <Archive className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('archive')}</span>}
+          {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('archive')}</span>}
         </Button>
         {/* Delete */}
         <Button
           variant="ghost"
           size="sm"
           onClick={onDelete}
-          className={cn("flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0", mvViewer && "order-3")}
+          className={cn("h-8 px-2 sm:px-2.5 flex items-center justify-center gap-1.5", mvViewer && "order-3")}
           title={t('tooltips.delete')}
         >
           <Trash2 className="w-4 h-4" />
-          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('delete')}</span>}
+          {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('delete')}</span>}
         </Button>
         {/* Move to folder */}
         {moveTree.length > 0 && onMoveToMailbox && (
@@ -3255,14 +3255,14 @@ export function EmailViewer({
               variant="ghost"
               size="sm"
               onClick={() => { setMoveMenuOpen(!moveMenuOpen); setMoreMenuOpen(false); setTagMenuOpen(false); }}
-              className="flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0"
+              className="h-8 px-2 sm:px-2.5 flex items-center justify-center gap-1.5"
               title={t('move_to')}
               aria-label={t('move_to')}
               aria-haspopup="menu"
               aria-expanded={moveMenuOpen}
             >
               <FolderInput className="w-4 h-4" />
-              {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('move')}</span>}
+              {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('move')}</span>}
             </Button>
             {moveMenuOpen && (
               <div
@@ -3322,7 +3322,7 @@ export function EmailViewer({
             aria-expanded={tagMenuOpen}
           >
             <Tag className="w-4 h-4" />
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{t('tag')}</span>}
+            {showToolbarLabels && <span className="hidden sm:inline text-sm">{t('tag')}</span>}
           </button>
           {tagMenuOpen && (
             <div className="absolute end-0 top-full mt-1 py-1 w-56 bg-background rounded-md shadow-lg border border-border z-10">
@@ -3344,7 +3344,7 @@ export function EmailViewer({
             data-overflow-item
             data-overflow-priority="7"
             className={cn(
-              "flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0",
+              "h-8 px-2 sm:px-2.5 flex items-center justify-center gap-1.5",
               mvViewer
                 ? "order-2"
                 : isInJunkFolder ? "hover:bg-green-50 dark:hover:bg-green-950/30" : "hover:bg-red-50 dark:hover:bg-red-950/30"
@@ -3356,7 +3356,7 @@ export function EmailViewer({
             ) : (
               <ShieldAlert className={cn("h-4 w-4", !mvViewer && "text-red-600 dark:text-red-400")} />
             )}
-            {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isInJunkFolder ? t('not_spam_short') : t('spam_short')}</span>}
+            {showToolbarLabels && <span className="hidden sm:inline text-sm">{isInJunkFolder ? t('not_spam_short') : t('spam_short')}</span>}
           </Button>
         )}
 
