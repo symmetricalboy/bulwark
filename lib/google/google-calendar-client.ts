@@ -1,9 +1,11 @@
 import type { Calendar, CalendarEvent } from '@/lib/jmap/types';
+import type { LinkedGoogleAccountPublic } from './types';
 import { getComailAccountHeaders } from './comail-headers';
 
 export interface GoogleAccountStatus {
   configured: boolean;
   connected: boolean;
+  accounts?: LinkedGoogleAccountPublic[];
   email?: string;
   name?: string;
   picture?: string;
@@ -21,11 +23,18 @@ export async function getGoogleStatus(): Promise<GoogleAccountStatus> {
   }
 }
 
-export async function disconnectGoogle(): Promise<boolean> {
+export async function disconnectGoogle(accountIdOrEmail?: string): Promise<boolean> {
   try {
     const res = await fetch('/api/auth/google/disconnect', {
       method: 'POST',
-      headers: getComailAccountHeaders(),
+      headers: { 'Content-Type': 'application/json', ...getComailAccountHeaders() },
+      body: accountIdOrEmail
+        ? JSON.stringify(
+            accountIdOrEmail.includes('@')
+              ? { email: accountIdOrEmail }
+              : { accountId: accountIdOrEmail }
+          )
+        : undefined,
     });
     return res.ok;
   } catch {

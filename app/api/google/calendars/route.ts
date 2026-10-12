@@ -1,51 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGoogleSession, attachRefreshedTokens } from '@/lib/google/session';
+import { getGoogleSession, getAllGoogleSessions, attachRefreshedTokens } from '@/lib/google/session';
 import {
   googleCalendarToJmap,
   createGoogleBirthdayCalendar,
   isGoogleBirthdayCalendarId,
 } from '@/lib/google/calendar-mapper';
 import type { GoogleCalendarListResponse } from '@/lib/google/types';
+import type { Calendar } from '@/lib/jmap/types';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const session = await getGoogleSession(request);
-  if (!session) {
+  const specificAccountId =
+    request.nextUrl.searchParams.get('googleAccountId') ||
+    request.headers.get('x-google-account-id');
+
+  if (specificAccountId) {
+    const session = await getGoogleSession(request, { accountId: specificAccountId, app: 'calendar' });
+    if (!session) {
+      return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+    }
+
+    try {
+      const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+
+      if (!res.ok) {
+        logger.error('Failed to list Google calendars', { status: res.status });
+        return NextResponse.json({ error: 'google_api_error', status: res.status }, { status: 502 });
+      }
+
+      const data = (await res.json()) as GoogleCalendarListResponse;
+      const accountEmail = session.tokens.email || session.account?.email || 'google';
+      const calendars = (data.items || []).map((item) => googleCalendarToJmap(item, accountEmail));
+
+      const hasBirthdays = calendars.some((c) => isGoogleBirthdayCalendarId(c.originalId || ''));
+      if (!hasBirthdays) {
+        calendars.push(createGoogleBirthdayCalendar(accountEmail));
+      }
+
+      calendars.sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      const response = NextResponse.json({ calendars });
+      attachRefreshedTokens(response, session.refreshedTokens);
+      return response;
+    } catch (err) {
+      logger.error('Exception fetching Google calendars', { err });
+      return NextResponse.json({ error: 'internal_error' }, { status: 500 });
+    }
+  }
+
+  // Multi-account: fetch across all connected Google accounts with calendar enabled
+  const multiSessions = await getAllGoogleSessions(request, { app: 'calendar' });
+  if (!multiSessions || multiSessions.sessions.length === 0) {
     return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
 
   try {
-    const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-      headers: { Authorization: `Bearer ${session.accessToken}` },
-    });
+    const allCalendars: Calendar[] = [];
 
-    if (!res.ok) {
-      logger.error('Failed to list Google calendars', { status: res.status });
-      return NextResponse.json({ error: 'google_api_error', status: res.status }, { status: 502 });
-    }
+    await Promise.all(
+      multiSessions.sessions.map(async (session) => {
+        try {
+          const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
+            headers: { Authorization: `Bearer ${session.accessToken}` },
+          });
 
-    const data = (await res.json()) as GoogleCalendarListResponse;
-    const accountEmail = session.tokens.email || 'google';
-    const calendars = (data.items || []).map((item) => googleCalendarToJmap(item, accountEmail));
+          if (!res.ok) {
+            logger.error('Failed to list Google calendars for account', {
+              email: session.account?.email,
+              status: res.status,
+            });
+            return;
+          }
 
-    const hasBirthdays = calendars.some((c) => isGoogleBirthdayCalendarId(c.originalId || ''));
-    if (!hasBirthdays) {
-      calendars.push(createGoogleBirthdayCalendar(accountEmail));
-    }
+          const data = (await res.json()) as GoogleCalendarListResponse;
+          const accountEmail = session.tokens.email || session.account?.email || 'google';
+          const calendars = (data.items || []).map((item) => googleCalendarToJmap(item, accountEmail));
 
-    // Default Google calendar should always be at the top of the Google list
-    calendars.sort((a, b) => {
+          const hasBirthdays = calendars.some((c) => isGoogleBirthdayCalendarId(c.originalId || ''));
+          if (!hasBirthdays) {
+            calendars.push(createGoogleBirthdayCalendar(accountEmail));
+          }
+
+          allCalendars.push(...calendars);
+        } catch (err) {
+          logger.error('Exception fetching calendars for account', {
+            email: session.account?.email,
+            err,
+          });
+        }
+      })
+    );
+
+    allCalendars.sort((a, b) => {
+      const acctCompare = (a.localAccountId || '').localeCompare(b.localAccountId || '');
+      if (acctCompare !== 0) return acctCompare;
       if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
       return (a.name || '').localeCompare(b.name || '');
     });
 
-    const response = NextResponse.json({ calendars });
-    attachRefreshedTokens(response, session.refreshedTokens);
+    const response = NextResponse.json({ calendars: allCalendars });
+    attachRefreshedTokens(response, multiSessions.refreshedSessionData);
     return response;
   } catch (err) {
-    logger.error('Exception fetching Google calendars', { err });
+    logger.error('Exception fetching multi-account Google calendars', { err });
     return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   }
 }
@@ -56,17 +120,22 @@ function cleanCalendarId(calendarId: string): string {
 }
 
 export async function PATCH(request: NextRequest) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   try {
     const body = await request.json();
     const rawCalendarId = body.calendarId;
     if (!rawCalendarId) {
       return NextResponse.json({ error: 'missing_calendar_id' }, { status: 400 });
     }
+
+    const accountEmail = rawCalendarId.startsWith('google:')
+      ? rawCalendarId.split('::')[0].replace(/^google:/, '')
+      : undefined;
+
+    const session = await getGoogleSession(request, { accountId: accountEmail, app: 'calendar' });
+    if (!session) {
+      return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+    }
+
     const cleanId = cleanCalendarId(rawCalendarId);
     const updates = body.updates || {};
 

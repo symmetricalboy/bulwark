@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ListTodo,
   Star,
@@ -12,6 +12,8 @@ import {
   RefreshCw,
   CheckSquare,
   GoogleTasksIcon,
+  ChevronDown,
+  ChevronRight,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -31,6 +33,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
   const tasks = useTasksAppStore((s) => s.tasks);
   const filter = useTasksAppStore((s) => s.filter);
   const isGoogleConnected = useTasksAppStore((s) => s.isGoogleConnected);
+  const connectedGoogleAccounts = useTasksAppStore((s) => s.connectedGoogleAccounts);
   const isSyncing = useTasksAppStore((s) => s.isSyncing);
   const googleEmail = useTasksAppStore((s) => s.googleEmail);
 
@@ -51,9 +54,13 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
     ? 'Synced with Google'
     : 'Comail Tasks';
 
-  const [isCreatingList, setIsCreatingList] = useState(false);
+  const [creatingListTarget, setCreatingListTarget] = useState<{
+    source: 'comail' | 'google';
+    accountEmail?: string;
+  } | null>(null);
   const [newListTitle, setNewListTitle] = useState('');
   const [menuListId, setMenuListId] = useState<string | null>(null);
+  const [collapsedAccounts, setCollapsedAccounts] = useState<Record<string, boolean>>({});
 
   const { dialogProps, confirm } = useConfirmDialog();
 
@@ -68,13 +75,21 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
     onCloseMobile?.();
   };
 
+  const toggleAccountCollapse = (email: string) => {
+    setCollapsedAccounts((prev) => ({ ...prev, [email]: !prev[email] }));
+  };
+
   const handleCreateList = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newListTitle.trim()) return;
     try {
-      await createList(newListTitle.trim());
+      await createList(
+        newListTitle.trim(),
+        creatingListTarget?.source || 'comail',
+        creatingListTarget?.accountEmail
+      );
       setNewListTitle('');
-      setIsCreatingList(false);
+      setCreatingListTarget(null);
     } catch (err) {
       console.error(err);
     }
@@ -119,6 +134,26 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
 
   const comailLists = lists.filter((l) => l.source !== 'google');
   const googleLists = lists.filter((l) => l.source === 'google');
+
+  const googleAccountGroups = useMemo(() => {
+    const map = new Map<string, { email: string; name?: string; lists: TaskList[] }>();
+
+    for (const acc of connectedGoogleAccounts) {
+      if (acc.email && !map.has(acc.email)) {
+        map.set(acc.email, { email: acc.email, name: acc.name, lists: [] });
+      }
+    }
+
+    for (const list of googleLists) {
+      const email = list.accountEmail || googleEmail || 'Google Account';
+      if (!map.has(email)) {
+        map.set(email, { email, lists: [] });
+      }
+      map.get(email)!.lists.push(list);
+    }
+
+    return Array.from(map.values());
+  }, [connectedGoogleAccounts, googleLists, googleEmail]);
 
   const renderListItem = (l: TaskList) => {
     const count = tasks.filter((t) => t.listId === l.id && t.status !== 'completed').length;
@@ -284,16 +319,16 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
             <span>{isGoogleConnected ? 'Comail Lists' : 'Lists'}</span>
             <button
               type="button"
-              onClick={() => setIsCreatingList(true)}
+              onClick={() => setCreatingListTarget({ source: 'comail' })}
               className="p-0.5 rounded hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
-              title="New list"
+              title="New Comail list"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* New list form */}
-          {isCreatingList && (
+          {/* New list form for Comail */}
+          {creatingListTarget?.source === 'comail' && (
             <form onSubmit={handleCreateList} className="px-2 py-1 space-y-1">
               <input
                 type="text"
@@ -308,7 +343,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsCreatingList(false)}
+                  onClick={() => setCreatingListTarget(null)}
                   className="h-6 text-[11px] px-2"
                 >
                   Cancel
@@ -326,18 +361,88 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
           </div>
         </div>
 
-        {/* Optional Google Lists (if connected) */}
-        {isGoogleConnected && googleLists.length > 0 && (
-          <div className="space-y-1 pt-2 border-t border-sidebar-border/40">
-            <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              <span className="flex items-center gap-1.5">
-                <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
-                Google Tasks
-              </span>
-            </div>
-            <div className="space-y-0.5">
-              {googleLists.map(renderListItem)}
-            </div>
+        {/* Google Lists separated by Account */}
+        {isGoogleConnected && googleAccountGroups.length > 0 && (
+          <div className="space-y-3 pt-2 border-t border-sidebar-border/40">
+            {googleAccountGroups.map((group) => {
+              const isCollapsed = !!collapsedAccounts[group.email];
+              const isAddingToThisGroup =
+                creatingListTarget?.source === 'google' &&
+                creatingListTarget?.accountEmail === group.email;
+
+              return (
+                <div key={group.email} className="space-y-1">
+                  <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider group/acc">
+                    <button
+                      type="button"
+                      onClick={() => toggleAccountCollapse(group.email)}
+                      className="flex items-center gap-1.5 min-w-0 text-start hover:text-sidebar-foreground transition-colors flex-1"
+                      title={group.email}
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate lowercase font-medium text-[11px] text-foreground">
+                        {group.email}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreatingListTarget({ source: 'google', accountEmail: group.email });
+                        if (isCollapsed) toggleAccountCollapse(group.email);
+                      }}
+                      className="p-0.5 rounded hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors shrink-0"
+                      title={`New list in ${group.email}`}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {!isCollapsed && (
+                    <div className="space-y-0.5 ps-1">
+                      {isAddingToThisGroup && (
+                        <form onSubmit={handleCreateList} className="px-2 py-1 space-y-1">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={newListTitle}
+                            onChange={(e) => setNewListTitle(e.target.value)}
+                            placeholder={`New list in ${group.email}`}
+                            className="w-full text-xs px-2 py-1 bg-background text-foreground border border-sidebar-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCreatingListTarget(null)}
+                              className="h-6 text-[11px] px-2"
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit" size="sm" className="h-6 text-[11px] px-2">
+                              Create
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+
+                      {group.lists.length === 0 && !isAddingToThisGroup ? (
+                        <div className="px-2.5 py-1 text-[11px] text-muted-foreground italic">
+                          No lists found
+                        </div>
+                      ) : (
+                        group.lists.map(renderListItem)
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -351,7 +456,11 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                 <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
                 Google Tasks
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">{googleEmail}</p>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {connectedGoogleAccounts.length > 1
+                  ? `${connectedGoogleAccounts.length} accounts connected`
+                  : googleEmail || 'Connected'}
+              </p>
             </div>
             <button
               type="button"

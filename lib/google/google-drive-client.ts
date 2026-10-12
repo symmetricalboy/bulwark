@@ -7,12 +7,14 @@ export { getGoogleStatus, type GoogleAccountStatus };
 export async function fetchGoogleDriveFiles(
   folderId?: string,
   search?: string,
-  pageToken?: string
+  pageToken?: string,
+  googleAccountId?: string
 ): Promise<GoogleDriveFilesResponse> {
   const query = new URLSearchParams();
   if (folderId) query.set('folderId', folderId);
   if (search) query.set('search', search);
   if (pageToken) query.set('pageToken', pageToken);
+  if (googleAccountId) query.set('googleAccountId', googleAccountId);
 
   const res = await fetch(`/api/google/drive/files?${query.toString()}`, {
     headers: getComailAccountHeaders(),
@@ -36,8 +38,14 @@ export async function fetchGoogleDriveFiles(
   return await res.json();
 }
 
-export async function fetchGoogleDriveFile(fileId: string): Promise<GoogleDriveFile> {
-  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(fileId)}`, {
+export async function fetchGoogleDriveFile(fileId: string, googleAccountId?: string): Promise<GoogleDriveFile> {
+  const cleanId = fileId.includes('::') ? fileId.split('::')[1] : fileId;
+  const query = new URLSearchParams();
+  const accId = googleAccountId || (fileId.includes('::') ? fileId : undefined);
+  if (accId) query.set('googleAccountId', accId);
+  const qs = query.toString();
+
+  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(cleanId)}${qs ? `?${qs}` : ''}`, {
     headers: getComailAccountHeaders(),
   });
   if (!res.ok) {
@@ -47,11 +55,11 @@ export async function fetchGoogleDriveFile(fileId: string): Promise<GoogleDriveF
   return data.file;
 }
 
-export async function createGoogleDriveFolder(name: string, parentId?: string): Promise<GoogleDriveFile> {
+export async function createGoogleDriveFolder(name: string, parentId?: string, googleAccountId?: string): Promise<GoogleDriveFile> {
   const res = await fetch('/api/google/drive/folders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getComailAccountHeaders() },
-    body: JSON.stringify({ name, parentId }),
+    body: JSON.stringify({ name, parentId, googleAccountId }),
   });
   if (!res.ok) {
     throw new Error(`Failed to create Google Drive folder (${res.status})`);
@@ -60,11 +68,14 @@ export async function createGoogleDriveFolder(name: string, parentId?: string): 
   return data.folder;
 }
 
-export async function uploadGoogleDriveFile(file: File, parentId?: string): Promise<GoogleDriveFile> {
+export async function uploadGoogleDriveFile(file: File, parentId?: string, googleAccountId?: string): Promise<GoogleDriveFile> {
   const formData = new FormData();
   formData.append('file', file);
   if (parentId && parentId !== 'root') {
     formData.append('parentId', parentId);
+  }
+  if (googleAccountId) {
+    formData.append('googleAccountId', googleAccountId);
   }
 
   const res = await fetch('/api/google/drive/upload', {
@@ -80,11 +91,12 @@ export async function uploadGoogleDriveFile(file: File, parentId?: string): Prom
   return data.file;
 }
 
-export async function renameGoogleDriveFile(fileId: string, newName: string): Promise<GoogleDriveFile> {
-  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(fileId)}`, {
+export async function renameGoogleDriveFile(fileId: string, newName: string, googleAccountId?: string): Promise<GoogleDriveFile> {
+  const cleanId = fileId.includes('::') ? fileId.split('::')[1] : fileId;
+  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(cleanId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getComailAccountHeaders() },
-    body: JSON.stringify({ name: newName }),
+    body: JSON.stringify({ name: newName, googleAccountId: googleAccountId || (fileId.includes('::') ? fileId : undefined) }),
   });
   if (!res.ok) {
     throw new Error(`Failed to rename Google Drive file (${res.status})`);
@@ -93,11 +105,12 @@ export async function renameGoogleDriveFile(fileId: string, newName: string): Pr
   return data.file;
 }
 
-export async function starGoogleDriveFile(fileId: string, starred: boolean): Promise<GoogleDriveFile> {
-  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(fileId)}`, {
+export async function starGoogleDriveFile(fileId: string, starred: boolean, googleAccountId?: string): Promise<GoogleDriveFile> {
+  const cleanId = fileId.includes('::') ? fileId.split('::')[1] : fileId;
+  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(cleanId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...getComailAccountHeaders() },
-    body: JSON.stringify({ starred }),
+    body: JSON.stringify({ starred, googleAccountId: googleAccountId || (fileId.includes('::') ? fileId : undefined) }),
   });
   if (!res.ok) {
     throw new Error(`Failed to star Google Drive file (${res.status})`);
@@ -106,9 +119,15 @@ export async function starGoogleDriveFile(fileId: string, starred: boolean): Pro
   return data.file;
 }
 
-export async function deleteGoogleDriveFile(fileId: string, permanent: boolean = false): Promise<void> {
-  const query = permanent ? '?permanent=true' : '';
-  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(fileId)}${query}`, {
+export async function deleteGoogleDriveFile(fileId: string, permanent: boolean = false, googleAccountId?: string): Promise<void> {
+  const cleanId = fileId.includes('::') ? fileId.split('::')[1] : fileId;
+  const query = new URLSearchParams();
+  if (permanent) query.set('permanent', 'true');
+  const accId = googleAccountId || (fileId.includes('::') ? fileId : undefined);
+  if (accId) query.set('googleAccountId', accId);
+  const qs = query.toString();
+
+  const res = await fetch(`/api/google/drive/files/${encodeURIComponent(cleanId)}${qs ? `?${qs}` : ''}`, {
     method: 'DELETE',
     headers: getComailAccountHeaders(),
   });
@@ -117,12 +136,15 @@ export async function deleteGoogleDriveFile(fileId: string, permanent: boolean =
   }
 }
 
-export function getGoogleDriveDownloadUrl(fileId: string, format?: string, inline?: boolean): string {
+export function getGoogleDriveDownloadUrl(fileId: string, format?: string, inline?: boolean, googleAccountId?: string): string {
   const query = new URLSearchParams();
   if (format) query.set('format', format);
   if (inline) query.set('inline', 'true');
+  const accId = googleAccountId || (fileId.includes('::') ? fileId : undefined);
+  if (accId) query.set('googleAccountId', accId);
+  const cleanId = fileId.includes('::') ? fileId.split('::')[1] : fileId;
   const qs = query.toString();
-  return `/api/google/drive/files/${encodeURIComponent(fileId)}/download${qs ? `?${qs}` : ''}`;
+  return `/api/google/drive/files/${encodeURIComponent(cleanId)}/download${qs ? `?${qs}` : ''}`;
 }
 
 export async function downloadGoogleDriveFileBlob(

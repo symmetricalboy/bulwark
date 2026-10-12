@@ -16,11 +16,11 @@ export async function fetchGoogleTaskLists(): Promise<GoogleTaskList[]> {
   return data.taskLists || [];
 }
 
-export async function createGoogleTaskList(title: string): Promise<GoogleTaskList> {
+export async function createGoogleTaskList(title: string, googleAccountId?: string): Promise<GoogleTaskList> {
   const res = await fetch('/api/google/tasks/lists', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getComailAccountHeaders() },
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title, googleAccountId }),
   });
   if (!res.ok) throw new Error(`Failed to create Google task list (${res.status})`);
   const data = await res.json();

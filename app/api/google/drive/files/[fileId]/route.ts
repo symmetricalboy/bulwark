@@ -9,14 +9,17 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> }
 ) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   const { fileId } = await params;
   if (!fileId) {
     return NextResponse.json({ error: 'missing_file_id' }, { status: 400 });
+  }
+
+  const session = await getGoogleSession(request, {
+    accountId: request.nextUrl.searchParams.get('googleAccountId') || fileId,
+    app: 'drive',
+  });
+  if (!session) {
+    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
 
   try {
@@ -46,14 +49,17 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> }
 ) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   const { fileId } = await params;
   if (!fileId) {
     return NextResponse.json({ error: 'missing_file_id' }, { status: 400 });
+  }
+
+  const session = await getGoogleSession(request, {
+    accountId: request.nextUrl.searchParams.get('googleAccountId') || fileId,
+    app: 'drive',
+  });
+  if (!session) {
+    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
 
   try {
@@ -104,14 +110,17 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> }
 ) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   const { fileId } = await params;
   if (!fileId) {
     return NextResponse.json({ error: 'missing_file_id' }, { status: 400 });
+  }
+
+  const session = await getGoogleSession(request, {
+    accountId: request.nextUrl.searchParams.get('googleAccountId') || fileId,
+    app: 'drive',
+  });
+  if (!session) {
+    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
 
   const permanent = request.nextUrl.searchParams.get('permanent') === 'true';

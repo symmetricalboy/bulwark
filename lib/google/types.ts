@@ -7,12 +7,35 @@ export interface GoogleTokens {
   picture?: string;
 }
 
+export type GoogleAppMode = 'none' | 'separate' | 'sync';
+
 export interface GoogleAccountAppToggles {
-  calendar: boolean;
-  tasks: boolean;
-  drive: boolean;
-  contacts: boolean;
+  gmail?: boolean;
+  drive?: boolean;
+  calendar?: GoogleAppMode | boolean;
+  tasks?: GoogleAppMode | boolean;
+  contacts?: GoogleAppMode | boolean;
 }
+
+export function normalizeAppMode(val: unknown): GoogleAppMode {
+  if (val === 'sync') return 'sync';
+  if (val === 'separate' || val === true) return 'separate';
+  return 'none';
+}
+
+export function isAppEnabled(val: unknown): boolean {
+  if (val === true) return true;
+  if (val === 'separate' || val === 'sync') return true;
+  return false;
+}
+
+export const DEFAULT_GOOGLE_APP_TOGGLES: GoogleAccountAppToggles = {
+  gmail: false,
+  drive: false,
+  calendar: 'none',
+  tasks: 'none',
+  contacts: 'none',
+};
 
 export interface LinkedGoogleAccount {
   id: string; // unique identifier (usually email)
@@ -110,6 +133,8 @@ export interface GoogleTaskList {
   title: string;
   updated?: string;
   selfLink?: string;
+  accountEmail?: string;
+  localAccountId?: string;
 }
 
 export interface GoogleTaskListsResponse {
@@ -131,6 +156,8 @@ export interface GoogleTask {
   completed?: string;
   deleted?: boolean;
   hidden?: boolean;
+  accountEmail?: string;
+  localAccountId?: string;
   links?: Array<{
     type?: string;
     description?: string;
@@ -170,6 +197,8 @@ export interface GoogleDriveFile {
     canShare?: boolean;
     canDownload?: boolean;
   };
+  accountEmail?: string;
+  localAccountId?: string;
 }
 
 export interface GoogleDriveFilesResponse {

@@ -15,11 +15,6 @@ function cleanId(id: string): string {
 type Params = { params: Promise<{ eventId: string }> };
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   const { eventId: rawEventId } = await params;
   const eventId = cleanId(rawEventId);
 
@@ -28,6 +23,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const rawCalendarId = body.calendarId || 'primary';
     const calendarId = cleanId(rawCalendarId);
     const eventUpdates: Partial<CalendarEvent> = body.updates || {};
+
+    const session = await getGoogleSession(request, {
+      accountId: rawCalendarId.startsWith('google:') ? rawCalendarId : rawEventId,
+      app: 'calendar',
+    });
+    if (!session) {
+      return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+    }
 
     const patchPayload = jmapEventToGoogle(eventUpdates);
 
@@ -61,14 +64,18 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
-  const session = await getGoogleSession(request);
+  const { eventId: rawEventId } = await params;
+  const eventId = cleanId(rawEventId);
+  const rawCalendarId = request.nextUrl.searchParams.get('calendarId') || 'primary';
+  const calendarId = cleanId(rawCalendarId);
+
+  const session = await getGoogleSession(request, {
+    accountId: rawCalendarId.startsWith('google:') ? rawCalendarId : rawEventId,
+    app: 'calendar',
+  });
   if (!session) {
     return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
-
-  const { eventId: rawEventId } = await params;
-  const eventId = cleanId(rawEventId);
-  const calendarId = cleanId(request.nextUrl.searchParams.get('calendarId') || 'primary');
 
   try {
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`;

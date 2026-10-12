@@ -7,6 +7,7 @@ import {
   GOOGLE_SESSION_COOKIE,
 } from './auth';
 import type { GoogleTokens, GoogleSessionData, LinkedGoogleAccount, GoogleAccountAppToggles } from './types';
+import { isAppEnabled } from './types';
 import { logger } from '@/lib/logger';
 
 export interface GoogleSessionResult {
@@ -18,6 +19,12 @@ export interface GoogleSessionResult {
   sessionData?: GoogleSessionData;
 }
 
+export interface AllGoogleSessionsResult {
+  sessions: GoogleSessionResult[];
+  sessionData: GoogleSessionData;
+  refreshedSessionData?: GoogleSessionData;
+}
+
 export interface GoogleSessionOptions {
   accountId?: string;
   app?: keyof GoogleAccountAppToggles;
@@ -25,16 +32,11 @@ export interface GoogleSessionOptions {
   comailAccountEmail?: string;
 }
 
-export async function getGoogleSession(
+function resolveCandidateAccounts(
+  sessionData: GoogleSessionData,
   request: NextRequest,
   options?: GoogleSessionOptions
-): Promise<GoogleSessionResult | null> {
-  const cookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
-  if (!cookie) return null;
-
-  const sessionData = decryptGoogleSessionData(cookie);
-  if (!sessionData || sessionData.accounts.length === 0) return null;
-
+): LinkedGoogleAccount[] {
   const requestedComailId =
     options?.comailAccountId ||
     request.nextUrl.searchParams.get('comailAccountId') ||
@@ -47,7 +49,6 @@ export async function getGoogleSession(
     request.headers.get('x-comail-account-email') ||
     undefined;
 
-  // Filter accounts by Comail ownership if specified
   let candidateAccounts = sessionData.accounts;
   if (requestedComailId || requestedComailEmail) {
     candidateAccounts = sessionData.accounts.filter((a) => {
@@ -65,16 +66,102 @@ export async function getGoogleSession(
     });
   }
 
+  return candidateAccounts;
+}
+
+export async function getAllGoogleSessions(
+  request: NextRequest,
+  options?: GoogleSessionOptions
+): Promise<AllGoogleSessionsResult | null> {
+  const cookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
+  if (!cookie) return null;
+
+  const sessionData = decryptGoogleSessionData(cookie);
+  if (!sessionData || sessionData.accounts.length === 0) return null;
+
+  let candidateAccounts = resolveCandidateAccounts(sessionData, request, options);
+
+  if (options?.app) {
+    candidateAccounts = candidateAccounts.filter((a) => {
+      if (!a.enabledApps) return false;
+      const val = a.enabledApps[options.app!];
+      return isAppEnabled(val);
+    });
+  }
+
+  if (candidateAccounts.length === 0) return null;
+
+  let anyRefreshed = false;
+  const sessions: GoogleSessionResult[] = [];
+
+  for (const account of candidateAccounts) {
+    try {
+      let refreshed: GoogleTokens | undefined;
+      const accessToken = await getValidGoogleAccessToken(account.tokens, (newTokens) => {
+        refreshed = newTokens;
+      });
+
+      if (refreshed) {
+        account.tokens = refreshed;
+        anyRefreshed = true;
+      }
+
+      sessions.push({
+        tokens: account.tokens,
+        accessToken,
+        refreshedTokens: refreshed,
+        account,
+        sessionData,
+      });
+    } catch (err) {
+      logger.warn('Failed to get valid Google access token for account in getAllGoogleSessions', {
+        email: account.email,
+        err,
+      });
+    }
+  }
+
+  if (sessions.length === 0) return null;
+
+  return {
+    sessions,
+    sessionData,
+    refreshedSessionData: anyRefreshed ? { ...sessionData } : undefined,
+  };
+}
+
+export async function getGoogleSession(
+  request: NextRequest,
+  options?: GoogleSessionOptions
+): Promise<GoogleSessionResult | null> {
+  const cookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
+  if (!cookie) return null;
+
+  const sessionData = decryptGoogleSessionData(cookie);
+  if (!sessionData || sessionData.accounts.length === 0) return null;
+
+  const candidateAccounts = resolveCandidateAccounts(sessionData, request, options);
   if (candidateAccounts.length === 0) return null;
 
   // Resolve requested account
-  const requestedId =
+  let requestedId =
     options?.accountId ||
     request.nextUrl.searchParams.get('googleAccountId') ||
     request.headers.get('x-google-account-id');
 
+  // If requestedId looks like a namespaced identifier (e.g. google:user@gmail.com::something)
+  if (requestedId && requestedId.startsWith('google:')) {
+    const afterPrefix = requestedId.replace(/^google:/, '');
+    requestedId = afterPrefix.includes('::') ? afterPrefix.split('::')[0] : afterPrefix;
+  }
+
   let account = requestedId
-    ? candidateAccounts.find((a) => a.id === requestedId || a.email.toLowerCase() === requestedId.toLowerCase())
+    ? candidateAccounts.find(
+        (a) =>
+          a.id === requestedId ||
+          a.email.toLowerCase() === requestedId!.toLowerCase() ||
+          (a.email && requestedId!.toLowerCase().includes(a.email.toLowerCase()))
+      )
     : undefined;
 
   if (!account) {
@@ -87,12 +174,15 @@ export async function getGoogleSession(
   if (!account) return null;
 
   // If a specific app was requested, verify that it's enabled for this account
-  if (options?.app && account.enabledApps && account.enabledApps[options.app] === false) {
-    logger.info('Google app integration is disabled for this account', {
-      email: account.email,
-      app: options.app,
-    });
-    return null;
+  if (options?.app) {
+    const val = account.enabledApps ? account.enabledApps[options.app] : undefined;
+    if (!isAppEnabled(val)) {
+      logger.info('Google app integration is disabled for this account', {
+        email: account.email,
+        app: options.app,
+      });
+      return null;
+    }
   }
 
   try {
@@ -123,7 +213,7 @@ export async function getGoogleSession(
 
 export function attachRefreshedTokens(
   response: NextResponse,
-  refreshed?: GoogleTokens | GoogleSessionData | GoogleSessionResult
+  refreshed?: GoogleTokens | GoogleSessionData | GoogleSessionResult | AllGoogleSessionsResult
 ): void {
   if (!refreshed) return;
 
@@ -132,8 +222,8 @@ export function attachRefreshedTokens(
     cookieVal = encryptGoogleSessionData(refreshed.refreshedSessionData);
   } else if ('accounts' in refreshed && Array.isArray((refreshed as GoogleSessionData).accounts)) {
     cookieVal = encryptGoogleSessionData(refreshed as GoogleSessionData);
-  } else if ('accessToken' in refreshed && typeof refreshed.accessToken === 'string') {
-    cookieVal = encryptGoogleTokens(refreshed as GoogleTokens);
+  } else if ('accessToken' in refreshed && typeof (refreshed as GoogleSessionResult).accessToken === 'string') {
+    cookieVal = encryptGoogleTokens((refreshed as GoogleSessionResult).tokens);
   } else {
     return;
   }
@@ -148,3 +238,4 @@ export function attachRefreshedTokens(
     maxAge: 60 * 60 * 24 * 30,
   });
 }
+

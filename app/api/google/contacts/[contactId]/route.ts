@@ -23,13 +23,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ contactId: string }> },
 ) {
-  const session = await getGoogleSession(request);
+  const { contactId } = await params;
+  const session = await getGoogleSession(request, { accountId: contactId, app: 'contacts' });
   if (!session) {
     return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
 
   try {
-    const { contactId } = await params;
     const resourceName = cleanResourceName(contactId);
     const body = await request.json();
     const updates = body.updates || {};
@@ -95,13 +95,13 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ contactId: string }> },
 ) {
-  const session = await getGoogleSession(request);
+  const { contactId } = await params;
+  const session = await getGoogleSession(request, { accountId: contactId, app: 'contacts' });
   if (!session) {
     return NextResponse.json({ error: 'not_connected' }, { status: 401 });
   }
 
   try {
-    const { contactId } = await params;
     const resourceName = cleanResourceName(contactId);
 
     const res = await fetch(

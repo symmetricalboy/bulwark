@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getGoogleSession, attachRefreshedTokens } from '@/lib/google/session';
+import type { GoogleTask } from '@/lib/google/types';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
+
+function cleanId(id: string): string {
+  const parts = id.split('::');
+  return parts.length > 1 ? parts[1] : id;
+}
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
-  const { taskId } = await params;
-  if (!taskId) {
+  const { taskId: rawTaskId } = await params;
+  if (!rawTaskId) {
     return NextResponse.json({ error: 'task_id_required' }, { status: 400 });
   }
 
@@ -22,8 +23,20 @@ export async function PATCH(
     const body = await request.json();
     const { listId = '@default', updates } = body;
 
+    const session = await getGoogleSession(request, {
+      accountId: (listId && listId.startsWith('google:')) ? listId : rawTaskId,
+      app: 'tasks',
+    });
+    if (!session) {
+      return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+    }
+
+    const taskId = cleanId(rawTaskId);
+    const targetListId = cleanId(listId);
+    const accountEmail = session.tokens.email || 'google';
+
     const res = await fetch(
-      `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(listId)}/tasks/${encodeURIComponent(taskId)}`,
+      `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(targetListId)}/tasks/${encodeURIComponent(taskId)}`,
       {
         method: 'PATCH',
         headers: {
@@ -40,8 +53,17 @@ export async function PATCH(
       return NextResponse.json({ error: 'google_api_error', status: res.status }, { status: 502 });
     }
 
-    const updatedTask = await res.json();
-    const response = NextResponse.json({ task: updatedTask });
+    const updatedTask = (await res.json()) as GoogleTask;
+    const mappedTask = {
+      ...updatedTask,
+      id: `google:${accountEmail}::${updatedTask.id}`,
+      originalId: updatedTask.id,
+      listId: `google:${accountEmail}::${targetListId}`,
+      accountEmail,
+      localAccountId: `google:${accountEmail}`,
+    };
+
+    const response = NextResponse.json({ task: mappedTask });
     attachRefreshedTokens(response, session.refreshedTokens);
     return response;
   } catch (err) {
@@ -54,22 +76,28 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
-  const { taskId } = await params;
-  if (!taskId) {
+  const { taskId: rawTaskId } = await params;
+  if (!rawTaskId) {
     return NextResponse.json({ error: 'task_id_required' }, { status: 400 });
   }
 
   const searchParams = request.nextUrl.searchParams;
   const listId = searchParams.get('listId') || '@default';
 
+  const session = await getGoogleSession(request, {
+    accountId: (listId && listId.startsWith('google:')) ? listId : rawTaskId,
+    app: 'tasks',
+  });
+  if (!session) {
+    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+  }
+
+  const taskId = cleanId(rawTaskId);
+  const targetListId = cleanId(listId);
+
   try {
     const res = await fetch(
-      `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(listId)}/tasks/${encodeURIComponent(taskId)}`,
+      `https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(targetListId)}/tasks/${encodeURIComponent(taskId)}`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${session.accessToken}` },
@@ -77,7 +105,7 @@ export async function DELETE(
     );
 
     if (!res.ok && res.status !== 204) {
-      logger.error('Failed to delete Google task', { status: res.status, taskId, listId });
+      logger.error('Failed to delete Google task', { status: res.status, taskId, listId: targetListId });
       return NextResponse.json({ error: 'google_api_error', status: res.status }, { status: 502 });
     }
 

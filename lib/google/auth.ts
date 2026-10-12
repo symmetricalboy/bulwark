@@ -1,5 +1,6 @@
 import { encryptPayload, decryptPayload } from '@/lib/auth/crypto';
 import type { GoogleTokens, GoogleSessionData } from './types';
+import { DEFAULT_GOOGLE_APP_TOGGLES } from './types';
 import { logger } from '@/lib/logger';
 
 export const GOOGLE_SESSION_COOKIE = 'google_tokens';
@@ -15,12 +16,11 @@ export const GOOGLE_SCOPES = [
   'openid',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/gmail.modify',
   'https://www.googleapis.com/auth/calendar',
-  'https://www.googleapis.com/auth/calendar.events',
   'https://www.googleapis.com/auth/contacts',
   'https://www.googleapis.com/auth/tasks',
   'https://www.googleapis.com/auth/drive',
-  'https://www.googleapis.com/auth/drive.readonly',
 ];
 
 export function getGoogleAuthUrl(
@@ -247,12 +247,7 @@ export function decryptGoogleSessionData(cookieValue: string): GoogleSessionData
             name: legacyTokens.name,
             picture: legacyTokens.picture,
             tokens: legacyTokens,
-            enabledApps: {
-              calendar: true,
-              tasks: true,
-              drive: true,
-              contacts: true,
-            },
+            enabledApps: { ...DEFAULT_GOOGLE_APP_TOGGLES },
             connectedAt: Date.now(),
           },
         ],
@@ -277,12 +272,7 @@ export function encryptGoogleTokens(tokens: GoogleTokens): string {
         name: tokens.name,
         picture: tokens.picture,
         tokens,
-        enabledApps: {
-          calendar: true,
-          tasks: true,
-          drive: true,
-          contacts: true,
-        },
+        enabledApps: { ...DEFAULT_GOOGLE_APP_TOGGLES },
         connectedAt: Date.now(),
       },
     ],

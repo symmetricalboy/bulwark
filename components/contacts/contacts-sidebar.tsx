@@ -154,10 +154,26 @@ export function ContactsSidebar({
 
   const isAllActive = activeCategory === "all";
 
-  // Group address books: personal vs shared accounts
+  // Group address books: personal vs shared accounts (excluding Google address books which have their own sections)
   const personalBooks = useMemo(() =>
-    addressBooks.filter(b => !b.isShared),
+    addressBooks.filter(b => !b.isShared && !b.id.startsWith('google:') && !b.localAccountId?.startsWith('google:')),
   [addressBooks]);
+
+  const googleAccountGroups = useMemo(() => {
+    const map = new Map<string, { email: string; books: AddressBook[] }>();
+    for (const book of addressBooks) {
+      const isGoogle = book.id.startsWith('google:') || book.localAccountId?.startsWith('google:');
+      if (!isGoogle) continue;
+      const email = book.accountName ||
+        (book.localAccountId ? book.localAccountId.replace(/^google:/, '') : null) ||
+        (book.id.includes('::') ? book.id.split('::')[0].replace(/^google:/, '') : 'Google Contacts');
+      if (!map.has(email)) {
+        map.set(email, { email, books: [] });
+      }
+      map.get(email)!.books.push(book);
+    }
+    return Array.from(map.values());
+  }, [addressBooks]);
 
   const sharedBookGroups = useMemo(() => {
     const map = new Map<string, { accountId: string; accountName: string; books: AddressBook[] }>();
@@ -185,6 +201,7 @@ export function ContactsSidebar({
     if (!multiAccountMode) return [];
     const byAccount = new Map<string, AddressBook[]>();
     for (const book of addressBooks) {
+      if (book.id.startsWith('google:') || book.localAccountId?.startsWith('google:')) continue;
       const key = book.localAccountId || '__other__';
       const list = byAccount.get(key) ?? [];
       list.push(book);
@@ -469,6 +486,57 @@ export function ContactsSidebar({
             </div>
           )
         )}
+
+        {/* Google Accounts with Address Books */}
+        {googleAccountGroups.map((group) => {
+          const sectionKey = `google-${group.email}`;
+          const isCollapsed = !!collapsed[sectionKey];
+
+          return (
+            <div key={sectionKey} className="mt-2">
+              <div className="flex items-center px-3 py-1 group">
+                <button
+                  onClick={() => toggleSection(sectionKey)}
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-start"
+                  title={group.email}
+                >
+                  {isCollapsed ? (
+                    <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
+                  )}
+                  <GoogleContactsIcon className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-xs font-semibold text-foreground/90 uppercase tracking-wider truncate">
+                    {group.email}
+                  </span>
+                </button>
+                {onCreateContactInBook && group.books[0] && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCreateContactInBook(group.books[0]);
+                    }}
+                    className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    title={`New contact in ${group.email}`}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              {!isCollapsed && group.books.map((book) => (
+                <AddressBookItem
+                  key={book.id}
+                  book={book}
+                  isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
+                  contactCount={contactCountByBook[book.id] || 0}
+                  onSelect={() => onSelectCategory({ addressBookId: book.id })}
+                  onDropContacts={onDropContacts}
+                  onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
+                />
+              ))}
+            </div>
+          );
+        })}
 
         {/* Groups section */}
         {sortedGroups.length > 0 && (

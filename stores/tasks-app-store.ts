@@ -21,6 +21,10 @@ import { useTaskStore } from '@/stores/task-store';
 import { useAccountStore } from '@/stores/account-store';
 import type { CalendarTask } from '@/lib/jmap/types';
 
+import type { LinkedGoogleAccountPublic } from '@/lib/google/types';
+import { normalizeAppMode } from '@/lib/google/types';
+import { reconcileTasks } from '@/lib/google/sync-engine';
+
 export interface TaskList {
   id: string;
   title: string;
@@ -28,6 +32,8 @@ export interface TaskList {
   isDefault?: boolean;
   source?: 'comail' | 'google';
   comailAccountId?: string;
+  accountEmail?: string;
+  localAccountId?: string;
 }
 
 export interface TaskItem {
@@ -45,6 +51,8 @@ export interface TaskItem {
   isLocal?: boolean;
   source?: 'comail' | 'google';
   comailAccountId?: string;
+  accountEmail?: string;
+  localAccountId?: string;
 }
 
 export type TaskViewFilter = 'all' | 'starred' | 'today' | 'pending' | 'completed';
@@ -59,6 +67,7 @@ interface TasksAppState {
   filter: TaskViewFilter;
   sortBy: TaskSortBy;
   isGoogleConnected: boolean;
+  connectedGoogleAccounts: LinkedGoogleAccountPublic[];
   isSyncing: boolean;
   googleEmail?: string;
   googleName?: string;
@@ -75,7 +84,7 @@ interface TasksAppState {
   setSortBy: (sort: TaskSortBy) => void;
   setSearchQuery: (query: string) => void;
 
-  createList: (title: string, source?: 'comail' | 'google') => Promise<TaskList>;
+  createList: (title: string, source?: 'comail' | 'google', googleAccountId?: string) => Promise<TaskList>;
   updateList: (listId: string, title: string) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
 
@@ -236,6 +245,7 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
   filter: 'all',
   sortBy: 'myOrder',
   isGoogleConnected: false,
+  connectedGoogleAccounts: [],
   isSyncing: false,
   isInitialized: false,
   error: null,
@@ -269,6 +279,7 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
       if (status.connected) {
         set({
           isGoogleConnected: true,
+          connectedGoogleAccounts: status.accounts || [],
           googleEmail: status.email,
           googleName: status.name,
           googlePicture: status.picture,
@@ -279,18 +290,36 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
           fetchAllGoogleTasks().catch(() => []),
         ]);
 
-        const googleLists: TaskList[] = gLists.map((l) => ({
-          id: l.id,
-          title: l.title,
-          updated: l.updated,
-          isDefault: false,
-          source: 'google',
-        }));
+        const accounts = status.accounts || [];
+        const syncAccounts = accounts.filter((a) => normalizeAppMode(a.enabledApps?.tasks) === 'sync');
 
-        const googleTasks: TaskItem[] = [];
+        const separateLists: TaskList[] = [];
+        gLists.forEach((l) => {
+          const matchingAccount = accounts.find((a) => a.email.toLowerCase() === l.accountEmail?.toLowerCase());
+          const mode = matchingAccount ? normalizeAppMode(matchingAccount.enabledApps?.tasks) : 'separate';
+          if (mode === 'separate') {
+            separateLists.push({
+              id: l.id,
+              title: l.title,
+              updated: l.updated,
+              isDefault: false,
+              source: 'google',
+              accountEmail: l.accountEmail,
+              localAccountId: l.localAccountId,
+            });
+          }
+        });
+
+        const separateTasks: TaskItem[] = [];
+        const syncTasksByAccount = new Map<string, TaskItem[]>();
+
         gAllTasks.forEach((group) => {
           (group.tasks || []).forEach((t) => {
-            googleTasks.push({
+            const accEmail = t.accountEmail || (group as unknown as { accountEmail?: string }).accountEmail || '';
+            const matchingAccount = accounts.find((a) => a.email.toLowerCase() === accEmail.toLowerCase());
+            const mode = matchingAccount ? normalizeAppMode(matchingAccount.enabledApps?.tasks) : 'separate';
+
+            const item: TaskItem = {
               id: t.id,
               listId: group.listId,
               title: t.title || '',
@@ -304,15 +333,49 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
               starred: false,
               isLocal: false,
               source: 'google',
-            });
+              accountEmail: accEmail,
+              localAccountId: t.localAccountId || (group as unknown as { localAccountId?: string }).localAccountId,
+            };
+
+            if (mode === 'separate') {
+              separateTasks.push(item);
+            } else if (mode === 'sync') {
+              const list = syncTasksByAccount.get(accEmail) || [];
+              list.push(item);
+              syncTasksByAccount.set(accEmail, list);
+            }
           });
         });
 
         const currentNativeLists = get().lists.filter((l) => l.source !== 'google');
-        const currentNativeTasks = get().tasks.filter((t) => t.source !== 'google');
+        let currentNativeTasks = get().tasks.filter((t) => t.source !== 'google');
+        const defaultListId = currentNativeLists.find((l) => l.isDefault)?.id || currentNativeLists[0]?.id || 'default-tasks';
 
-        const combinedLists = [...currentNativeLists, ...googleLists];
-        const combinedTasks = [...currentNativeTasks, ...googleTasks];
+        for (const [accEmail, incTasks] of syncTasksByAccount.entries()) {
+          const syncRes = reconcileTasks({
+            accountEmail: accEmail,
+            incomingTasks: incTasks,
+            defaultListId,
+            currentTasks: currentNativeTasks,
+            otherSyncAccounts: syncAccounts,
+            onPushToGoogle: async (email, task) => {
+              try {
+                await updateGoogleTask(task.listId, task.id, {
+                  title: task.title,
+                  notes: task.notes,
+                  due: task.due,
+                  status: task.status,
+                });
+              } catch (err) {
+                console.error(`Failed to propagate task to Google account ${email}:`, err);
+              }
+            },
+          });
+          currentNativeTasks = syncRes.merged;
+        }
+
+        const combinedLists = [...currentNativeLists, ...separateLists];
+        const combinedTasks = [...currentNativeTasks, ...separateTasks];
 
         const activeListId = combinedLists.some((l) => l.id === get().activeListId)
           ? get().activeListId
@@ -326,10 +389,10 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
 
         syncTasksToCalendarStore(combinedTasks);
       } else {
-        set({ isGoogleConnected: false });
+        set({ isGoogleConnected: false, connectedGoogleAccounts: [] });
       }
     } catch {
-      set({ isGoogleConnected: false });
+      set({ isGoogleConnected: false, connectedGoogleAccounts: [] });
     }
   },
 
@@ -339,19 +402,21 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
   setSortBy: (sortBy: TaskSortBy) => set({ sortBy }),
   setSearchQuery: (searchQuery: string) => set({ searchQuery }),
 
-  createList: async (title: string, source: 'comail' | 'google' = 'comail') => {
+  createList: async (title: string, source: 'comail' | 'google' = 'comail', googleAccountId?: string) => {
     const trimmed = title.trim();
     if (!trimmed) throw new Error('List title is required');
     const accountId = get().currentAccountId || useAccountStore.getState().getActiveAccount()?.id || 'default';
 
     if (source === 'google' && get().isGoogleConnected) {
       try {
-        const created = await createGoogleTaskList(trimmed);
+        const created = await createGoogleTaskList(trimmed, googleAccountId);
         const newList: TaskList = {
           id: created.id,
           title: created.title,
           updated: created.updated,
           source: 'google',
+          accountEmail: created.accountEmail,
+          localAccountId: created.localAccountId,
         };
         const nextLists = [...get().lists, newList];
         set({ lists: nextLists, activeListId: newList.id });
@@ -466,6 +531,8 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
           starred: false,
           isLocal: false,
           source: 'google',
+          accountEmail: created.accountEmail || currentList?.accountEmail,
+          localAccountId: created.localAccountId || currentList?.localAccountId,
         };
 
         const nextTasks = [newTask, ...get().tasks];
@@ -617,6 +684,7 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
 
       set({
         isGoogleConnected: true,
+        connectedGoogleAccounts: status.accounts || [],
         googleEmail: status.email,
         googleName: status.name,
         googlePicture: status.picture,
@@ -633,6 +701,8 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
         updated: l.updated,
         isDefault: false,
         source: 'google',
+        accountEmail: l.accountEmail,
+        localAccountId: l.localAccountId,
       }));
 
       const googleTasks: TaskItem[] = [];
@@ -652,6 +722,8 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
             starred: false,
             isLocal: false,
             source: 'google',
+            accountEmail: t.accountEmail || (group as unknown as { accountEmail?: string }).accountEmail,
+            localAccountId: t.localAccountId || (group as unknown as { localAccountId?: string }).localAccountId,
           });
         });
       });
@@ -680,3 +752,10 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
     }
   },
 }));
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('google-services-updated', () => {
+    void useTasksAppStore.getState().syncGoogle();
+  });
+}
+

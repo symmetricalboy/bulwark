@@ -137,8 +137,19 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const isOfficeEditable = useCallback((name: string) => canWopiOpen(wopiStatus, name), [wopiStatus]);
   const [storageSource, setStorageSource] = useState<'jmap' | 'google-drive'>('jmap');
   const [googleStatus, setGoogleStatus] = useState<GoogleAccountStatus | null>(null);
+  const [selectedGoogleAccountId, setSelectedGoogleAccountId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  const selectedGoogleAccountEmail = useMemo(() => {
+    if (!googleStatus?.connected) return null;
+    const accounts = googleStatus.accounts && googleStatus.accounts.length > 0
+      ? googleStatus.accounts
+      : (googleStatus.email ? [{ id: googleStatus.email, email: googleStatus.email }] : []);
+    if (!selectedGoogleAccountId) return accounts[0]?.email || googleStatus.email;
+    const found = accounts.find((a) => a.id === selectedGoogleAccountId || a.email === selectedGoogleAccountId);
+    return found?.email || selectedGoogleAccountId;
+  }, [googleStatus, selectedGoogleAccountId]);
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -163,12 +174,28 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   }, [pickerOpen]);
 
   useEffect(() => {
-    getGoogleStatus().then((s) => {
-      setGoogleStatus(s);
-      if (useFileStore.getState().supportsFiles === false && s.connected) {
-        setStorageSource('google-drive');
-      }
-    });
+    const checkStatus = () => {
+      getGoogleStatus().then((s) => {
+        setGoogleStatus(s);
+        const driveAccs = (s.accounts && s.accounts.length > 0
+          ? s.accounts
+          : (s.email ? [{ id: s.email, email: s.email, enabledApps: { drive: true } }] : [])
+        ).filter((acc) => (acc.enabledApps ? Boolean(acc.enabledApps.drive) : true));
+
+        if (useFileStore.getState().supportsFiles === false && s.connected && driveAccs.length > 0) {
+          setStorageSource('google-drive');
+        }
+      });
+    };
+    checkStatus();
+
+    const handleServicesUpdated = () => {
+      checkStatus();
+    };
+    window.addEventListener('google-services-updated', handleServicesUpdated);
+    return () => {
+      window.removeEventListener('google-services-updated', handleServicesUpdated);
+    };
   }, []);
 
   // Check auth on mount – skip when already authenticated so that navigating
@@ -730,8 +757,8 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                         <span className="font-semibold truncate max-w-[130px] sm:max-w-[180px]">
                           Google Drive
                         </span>
-                        <span className="text-[10px] text-muted-foreground hidden sm:inline truncate max-w-[120px]">
-                          ({googleStatus?.email || 'External'})
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline truncate max-w-[140px]">
+                          ({selectedGoogleAccountEmail || googleStatus?.email || 'External'})
                         </span>
                       </>
                     ) : (
@@ -827,37 +854,60 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                         )}
                       </div>
 
-                      {/* External Accounts Section */}
+                      {/* Google Drive Section */}
                       <div className="mt-1 pt-1.5 border-t border-border/50">
                         <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          External Accounts
+                          Google Drive
                         </div>
                         <div className="px-1 space-y-0.5">
                           {googleStatus?.connected ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setStorageSource('google-drive');
-                                setPickerOpen(false);
-                              }}
-                              className={cn(
-                                "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-start transition-colors cursor-pointer",
-                                storageSource === 'google-drive' ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground"
-                              )}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                <GoogleDriveIcon className="w-5 h-5 shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs font-medium text-foreground">
-                                    Google Drive
-                                  </p>
-                                  <p className="truncate text-[11px] text-muted-foreground">
-                                    {googleStatus.email}
-                                  </p>
-                                </div>
-                              </div>
-                              {storageSource === 'google-drive' && <Check className="w-4 h-4 text-primary shrink-0 ms-2" />}
-                            </button>
+                            <>
+                              {(googleStatus.accounts && googleStatus.accounts.length > 0
+                                ? googleStatus.accounts
+                                : (googleStatus.email ? [{ id: googleStatus.email, email: googleStatus.email, enabledApps: { drive: true } }] : [])
+                              )
+                                .filter((acc: { enabledApps?: { drive?: boolean } }) => (acc.enabledApps ? Boolean(acc.enabledApps.drive) : true))
+                                .map((acc) => {
+                                const isSelected =
+                                  storageSource === 'google-drive' &&
+                                  (selectedGoogleAccountId === acc.id || selectedGoogleAccountEmail === acc.email);
+                                return (
+                                  <button
+                                    key={acc.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedGoogleAccountId(acc.id);
+                                      setStorageSource('google-drive');
+                                      setPickerOpen(false);
+                                    }}
+                                    className={cn(
+                                      "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-start transition-colors cursor-pointer",
+                                      isSelected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground"
+                                    )}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <GoogleDriveIcon className="w-5 h-5 shrink-0" />
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-medium text-foreground">
+                                          {acc.email}
+                                        </p>
+                                        <p className="truncate text-[11px] text-muted-foreground">
+                                          Google Drive
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {isSelected && <Check className="w-4 h-4 text-primary shrink-0 ms-2" />}
+                                  </button>
+                                );
+                              })}
+                              <a
+                                href="/api/auth/google/start?returnTo=/files"
+                                className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs"
+                              >
+                                <Plus className="w-3.5 h-3.5 shrink-0" />
+                                <span>Add another Google Account</span>
+                              </a>
+                            </>
                           ) : (
                             <a
                               href="/api/auth/google/start?returnTo=/files"
@@ -880,7 +930,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
             <div className="flex-1 min-h-0 flex flex-col">
               {storageSource === 'google-drive' && (
-                <GoogleDriveBrowser onBackToBulwarkFiles={() => setStorageSource('jmap')} />
+                <GoogleDriveBrowser
+                  onBackToBulwarkFiles={() => setStorageSource('jmap')}
+                  selectedAccountId={selectedGoogleAccountId}
+                  onSelectAccountId={setSelectedGoogleAccountId}
+                />
               )}
               {storageSource !== 'google-drive' && (
                 <>

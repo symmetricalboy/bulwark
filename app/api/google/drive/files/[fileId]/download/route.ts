@@ -28,22 +28,24 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ fileId: string }> }
 ) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   const { fileId } = await params;
   if (!fileId) {
     return NextResponse.json({ error: 'missing_file_id' }, { status: 400 });
   }
 
+  const requestedAccountId = request.nextUrl.searchParams.get('googleAccountId') || (fileId.includes('::') ? fileId : undefined);
+  const session = await getGoogleSession(request, { accountId: requestedAccountId, app: 'drive' });
+  if (!session) {
+    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+  }
+
+  const rawFileId = fileId.includes('::') ? fileId.split('::')[1] : fileId;
   const formatParam = request.nextUrl.searchParams.get('format')?.toLowerCase();
 
   try {
     // 1. Fetch file metadata to determine name and mimeType
     const metaRes = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,size&supportsAllDrives=true`,
+      `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(rawFileId)}?fields=id,name,mimeType,size&supportsAllDrives=true`,
       { headers: { Authorization: `Bearer ${session.accessToken}` } }
     );
 

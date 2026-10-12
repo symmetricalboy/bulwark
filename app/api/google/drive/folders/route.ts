@@ -6,14 +6,17 @@ import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   try {
     const body = await request.json();
-    const { name, parentId } = body;
+    const { name, parentId, googleAccountId } = body;
+
+    const session = await getGoogleSession(request, {
+      accountId: googleAccountId,
+      app: 'drive',
+    });
+    if (!session) {
+      return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+    }
 
     if (!name || typeof name !== 'string' || !name.trim()) {
       return NextResponse.json({ error: 'folder_name_required' }, { status: 400 });

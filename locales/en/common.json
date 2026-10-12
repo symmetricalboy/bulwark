@@ -1809,15 +1809,31 @@
         "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
         "connected_at": "Connected {time}",
         "apps_heading": "Apps populated into Comail",
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
+        },
         "apps": {
-          "calendar": "Calendar",
-          "calendar_desc": "Sync Google Calendar events and schedules",
-          "tasks": "Tasks",
-          "tasks_desc": "Sync Google Tasks to-dos and task lists",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app",
           "drive": "Drive",
-          "drive_desc": "Browse, view, and attach Google Drive files",
+          "drive_desc": "Display Google Drive in Files and Mail attachments",
+          "calendar": "Calendar",
+          "calendar_desc": "Manage calendar events and schedules",
+          "tasks": "Tasks",
+          "tasks_desc": "Manage to-dos and task lists",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Manage contacts and address books"
         }
       }
     },

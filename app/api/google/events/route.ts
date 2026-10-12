@@ -20,16 +20,19 @@ function cleanCalendarId(calendarId: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   const searchParams = request.nextUrl.searchParams;
   const rawCalendarId = searchParams.get('calendarId') || 'primary';
   const calendarId = cleanCalendarId(rawCalendarId);
   const after = searchParams.get('after'); // ISO 8601 string
   const before = searchParams.get('before'); // ISO 8601 string
+
+  const session = await getGoogleSession(request, {
+    accountId: rawCalendarId,
+    app: 'calendar',
+  });
+  if (!session) {
+    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+  }
 
   const isBirthdays = isGoogleBirthdayCalendarId(calendarId);
   const targetCalendarId = isBirthdays ? 'primary' : calendarId;
@@ -92,16 +95,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await getGoogleSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'not_connected' }, { status: 401 });
-  }
-
   try {
     const body = await request.json();
     const rawCalendarId = body.calendarId || 'primary';
     const calendarId = cleanCalendarId(rawCalendarId);
     const eventInput: Partial<CalendarEvent> = body.event || {};
+
+    const session = await getGoogleSession(request, {
+      accountId: rawCalendarId,
+      app: 'calendar',
+    });
+    if (!session) {
+      return NextResponse.json({ error: 'not_connected' }, { status: 401 });
+    }
 
     const googlePayload = jmapEventToGoogle(eventInput);
 

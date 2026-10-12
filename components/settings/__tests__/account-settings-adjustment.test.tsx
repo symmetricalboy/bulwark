@@ -339,12 +339,12 @@ describe('LinkedAccountsModal', () => {
       expect(screen.getByText('Google User 1')).toBeInTheDocument();
     });
 
-    const calendarToggle = screen.getByLabelText(
-      'settings.account.linked_accounts.apps.calendar for user1@gmail.com'
+    const driveToggle = screen.getByLabelText(
+      'settings.account.linked_accounts.apps.drive for user1@gmail.com'
     );
-    expect(calendarToggle).toHaveAttribute('aria-checked', 'true');
+    expect(driveToggle).toHaveAttribute('aria-checked', 'true');
 
-    fireEvent.click(calendarToggle);
+    fireEvent.click(driveToggle);
 
     expect(fetchSpy).toHaveBeenCalledWith(
       '/api/auth/google/toggle-app',
@@ -352,7 +352,8 @@ describe('LinkedAccountsModal', () => {
         method: 'POST',
         body: JSON.stringify({
           accountId: 'user1@gmail.com',
-          app: 'calendar',
+          settings: { drive: false },
+          app: 'drive',
           enabled: false,
         }),
       })
@@ -424,6 +425,7 @@ describe('LinkedAccountsModal', () => {
         }),
         body: JSON.stringify({
           accountId: 'user1@gmail.com_alice@example.com@mail.example.com',
+          settings: { drive: false },
           app: 'drive',
           enabled: false,
           comailAccountId: ACCOUNT_1.id,
@@ -431,5 +433,130 @@ describe('LinkedAccountsModal', () => {
         }),
       })
     );
+  });
+
+  it('clicking Remove opens ConfirmDialog, and clicking Cancel does not close the parent modal', async () => {
+    const mockAccounts = [
+      {
+        id: 'user1@gmail.com',
+        email: 'user1@gmail.com',
+        name: 'Google User 1',
+        enabledApps: { calendar: true, tasks: true, drive: true, contacts: true },
+        connectedAt: Date.now(),
+      },
+    ];
+
+    vi.spyOn(global, 'fetch').mockImplementation(async (url) => {
+      if (typeof url === 'string' && url.includes('/api/auth/google/status')) {
+        return {
+          ok: true,
+          json: async () => ({
+            configured: true,
+            connected: true,
+            accounts: mockAccounts,
+          }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({ ok: true }) } as Response;
+    });
+
+    const onClose = vi.fn();
+    render(<LinkedAccountsModal isOpen={true} onClose={onClose} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Google User 1')).toBeInTheDocument();
+    });
+
+    const removeBtn = screen.getByTitle('settings.account.linked_accounts.remove');
+    fireEvent.click(removeBtn);
+
+    // Confirm dialog should be open
+    expect(screen.getByText('settings.account.linked_accounts.remove_confirm_title')).toBeInTheDocument();
+
+    // Mousedown inside confirm dialog or clicking cancel should NOT trigger onClose of parent modal
+    const cancelBtn = screen.getByText('confirm_dialog.cancel');
+    fireEvent.mouseDown(cancelBtn);
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(cancelBtn);
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Confirm dialog should now be closed, but modal should remain open with account visible
+    expect(screen.queryByText('settings.account.linked_accounts.remove_confirm_title')).not.toBeInTheDocument();
+    expect(screen.getByText('Google User 1')).toBeInTheDocument();
+  });
+
+  it('clicking Remove in ConfirmDialog disconnects account and keeps LinkedAccountsModal open', async () => {
+    const mockAccounts = [
+      {
+        id: 'user1@gmail.com',
+        email: 'user1@gmail.com',
+        name: 'Google User 1',
+        enabledApps: { calendar: true, tasks: true, drive: true, contacts: true },
+        connectedAt: Date.now(),
+      },
+    ];
+
+    const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async (url) => {
+      if (typeof url === 'string' && url.includes('/api/auth/google/status')) {
+        return {
+          ok: true,
+          json: async () => ({
+            configured: true,
+            connected: true,
+            accounts: mockAccounts,
+          }),
+        } as Response;
+      }
+      if (typeof url === 'string' && url.includes('/api/auth/google/disconnect')) {
+        return {
+          ok: true,
+          json: async () => ({ ok: true }),
+        } as Response;
+      }
+      return { ok: true, json: async () => ({ ok: true }) } as Response;
+    });
+
+    const onClose = vi.fn();
+    render(<LinkedAccountsModal isOpen={true} onClose={onClose} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Google User 1')).toBeInTheDocument();
+    });
+
+    const removeBtn = screen.getByTitle('settings.account.linked_accounts.remove');
+    fireEvent.click(removeBtn);
+
+    expect(screen.getByText('settings.account.linked_accounts.remove_confirm_title')).toBeInTheDocument();
+
+    // In confirm dialog, find the confirm button (which has text 'settings.account.linked_accounts.remove')
+    const confirmButtons = screen.getAllByRole('button', { name: 'settings.account.linked_accounts.remove' });
+    const confirmRemoveButton = confirmButtons[confirmButtons.length - 1];
+
+    fireEvent.mouseDown(confirmRemoveButton);
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(confirmRemoveButton);
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith(
+        '/api/auth/google/disconnect',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            accountId: 'user1@gmail.com',
+            email: 'user1@gmail.com',
+          }),
+        })
+      );
+    });
+
+    // Parent modal was not dismissed
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Account list now empty state
+    await waitFor(() => {
+      expect(screen.getByText('settings.account.linked_accounts.empty_title')).toBeInTheDocument();
+    });
   });
 });

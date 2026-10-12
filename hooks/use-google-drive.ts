@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { GoogleDriveFile } from '@/lib/google/types';
 import {
   getGoogleStatus,
@@ -22,8 +22,9 @@ export interface BreadcrumbItem {
   name: string;
 }
 
-export function useGoogleDrive() {
+export function useGoogleDrive(initialAccountId?: string | null) {
   const [status, setStatus] = useState<GoogleAccountStatus>({ configured: false, connected: false });
+  const [activeAccountId, setActiveAccountId] = useState<string | null>(initialAccountId || null);
   const [currentSection, setCurrentSection] = useState<GoogleDriveSection>('root');
   const [currentFolderId, setCurrentFolderId] = useState<string>('root');
   const [folderTrail, setFolderTrail] = useState<BreadcrumbItem[]>([
@@ -43,6 +44,22 @@ export function useGoogleDrive() {
   const [selectedFileIds, setSelectedFileIds] = useState<Set<string>>(new Set());
   const [nextPageToken, setNextPageToken] = useState<string | undefined>(undefined);
 
+  // Sync external initialAccountId prop if provided
+  useEffect(() => {
+    if (initialAccountId !== undefined && initialAccountId !== activeAccountId) {
+      setActiveAccountId(initialAccountId);
+    }
+  }, [initialAccountId]);
+
+  const activeAccountEmail = useMemo(() => {
+    if (!status.accounts || status.accounts.length === 0) return status.email;
+    if (!activeAccountId) return status.accounts[0]?.email || status.email;
+    const found = status.accounts.find(
+      (a) => a.id === activeAccountId || a.email === activeAccountId
+    );
+    return found?.email || activeAccountId;
+  }, [status.accounts, status.email, activeAccountId]);
+
   const checkStatus = useCallback(async () => {
     try {
       const currentStatus = await getGoogleStatus();
@@ -54,13 +71,16 @@ export function useGoogleDrive() {
   }, []);
 
   const loadFiles = useCallback(
-    async (targetFolderId: string, search?: string) => {
+    async (targetFolderId: string, search?: string, accountId?: string | null) => {
       setIsLoading(true);
       setError(null);
+      const accId = accountId !== undefined ? accountId : activeAccountId;
       try {
         const res = await fetchGoogleDriveFiles(
           targetFolderId,
-          search && search.trim() ? search.trim() : undefined
+          search && search.trim() ? search.trim() : undefined,
+          undefined,
+          accId || undefined
         );
         setFiles(res.files || []);
         setNextPageToken(res.nextPageToken);
@@ -79,26 +99,26 @@ export function useGoogleDrive() {
         setIsLoading(false);
       }
     },
-    []
+    [activeAccountId]
   );
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await loadFiles(currentFolderId, searchQuery);
+      await loadFiles(currentFolderId, searchQuery, activeAccountId);
     } finally {
       setIsRefreshing(false);
     }
-  }, [currentFolderId, searchQuery, loadFiles]);
+  }, [currentFolderId, searchQuery, activeAccountId, loadFiles]);
 
   // Initial status check & initial load
   useEffect(() => {
     checkStatus().then((s) => {
       if (s.connected) {
-        loadFiles('root');
+        loadFiles('root', undefined, activeAccountId);
       }
     });
-  }, [checkStatus, loadFiles]);
+  }, [checkStatus, activeAccountId]);
 
   const navigateToFolder = useCallback(
     (folderId: string, folderName: string) => {
@@ -186,7 +206,8 @@ export function useGoogleDrive() {
       try {
         const folder = await apiCreateFolder(
           name,
-          currentFolderId === 'sharedWithMe' || currentFolderId === 'starred' ? 'root' : currentFolderId
+          currentFolderId === 'sharedWithMe' || currentFolderId === 'starred' ? 'root' : currentFolderId,
+          activeAccountId || undefined
         );
         toast.success(`Created folder "${name}"`);
         setFiles((prev) => [folder, ...prev]);
@@ -197,7 +218,7 @@ export function useGoogleDrive() {
         return null;
       }
     },
-    [currentFolderId]
+    [currentFolderId, activeAccountId]
   );
 
   const uploadFiles = useCallback(
@@ -206,7 +227,7 @@ export function useGoogleDrive() {
         currentFolderId === 'sharedWithMe' || currentFolderId === 'starred' ? 'root' : currentFolderId;
       for (const file of fileList) {
         try {
-          const uploaded = await apiUploadFile(file, targetFolder);
+          const uploaded = await apiUploadFile(file, targetFolder, activeAccountId || undefined);
           setFiles((prev) => [uploaded, ...prev]);
           toast.success(`Uploaded "${file.name}" to Google Drive`);
         } catch (err) {
@@ -215,13 +236,13 @@ export function useGoogleDrive() {
         }
       }
     },
-    [currentFolderId]
+    [currentFolderId, activeAccountId]
   );
 
   const renameFile = useCallback(
     async (fileId: string, newName: string): Promise<boolean> => {
       try {
-        const updated = await apiRenameFile(fileId, newName);
+        const updated = await apiRenameFile(fileId, newName, activeAccountId || undefined);
         setFiles((prev) => prev.map((f) => (f.id === fileId ? updated : f)));
         toast.success('Renamed successfully');
         return true;
@@ -231,13 +252,13 @@ export function useGoogleDrive() {
         return false;
       }
     },
-    []
+    [activeAccountId]
   );
 
   const starFile = useCallback(
     async (fileId: string, starred: boolean): Promise<boolean> => {
       try {
-        const updated = await apiStarFile(fileId, starred);
+        const updated = await apiStarFile(fileId, starred, activeAccountId || undefined);
         setFiles((prev) => prev.map((f) => (f.id === fileId ? updated : f)));
         return true;
       } catch (err) {
@@ -246,13 +267,13 @@ export function useGoogleDrive() {
         return false;
       }
     },
-    []
+    [activeAccountId]
   );
 
   const deleteFile = useCallback(
     async (fileId: string, permanent: boolean = false): Promise<boolean> => {
       try {
-        await apiDeleteFile(fileId, permanent);
+        await apiDeleteFile(fileId, permanent, activeAccountId || undefined);
         setFiles((prev) => prev.filter((f) => f.id !== fileId));
         setSelectedFileIds((prev) => {
           const next = new Set(prev);
@@ -267,7 +288,7 @@ export function useGoogleDrive() {
         return false;
       }
     },
-    []
+    [activeAccountId]
   );
 
   const connectGoogle = useCallback(() => {
@@ -277,17 +298,35 @@ export function useGoogleDrive() {
     window.location.href = `/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`;
   }, []);
 
-  const disconnectGoogle = useCallback(async () => {
-    const ok = await apiDisconnectGoogle();
+  const disconnectGoogle = useCallback(async (accountIdOrEmail?: string) => {
+    const target = accountIdOrEmail || activeAccountId || undefined;
+    const ok = await apiDisconnectGoogle(target);
     if (ok) {
-      setStatus({ configured: status.configured, connected: false });
-      setFiles([]);
+      const refreshedStatus = await getGoogleStatus();
+      setStatus(refreshedStatus);
+      if (refreshedStatus.connected && refreshedStatus.accounts?.length) {
+        setActiveAccountId(refreshedStatus.accounts[0].id);
+      } else {
+        setActiveAccountId(null);
+        setFiles([]);
+      }
       toast.success('Disconnected Google Account');
     }
-  }, [status.configured]);
+  }, [activeAccountId]);
+
+  useEffect(() => {
+    const handleUpdated = () => {
+      void checkStatus().then(() => void refresh());
+    };
+    window.addEventListener('google-services-updated', handleUpdated);
+    return () => window.removeEventListener('google-services-updated', handleUpdated);
+  }, [checkStatus, refresh]);
 
   return {
     status,
+    activeAccountId,
+    setActiveAccountId,
+    activeAccountEmail,
     currentSection,
     currentFolderId,
     folderTrail,

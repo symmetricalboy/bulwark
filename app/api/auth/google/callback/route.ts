@@ -6,6 +6,7 @@ import {
   GOOGLE_SESSION_COOKIE,
 } from '@/lib/google/auth';
 import type { GoogleSessionData, LinkedGoogleAccount } from '@/lib/google/types';
+import { DEFAULT_GOOGLE_APP_TOGGLES } from '@/lib/google/types';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +25,8 @@ function getSafeReturnTo(returnTo: unknown): string {
 
 function createRedirectResponse(
   returnTo: string,
-  paramKey: string,
-  paramValue: string,
+  paramKeyOrParams: string | Record<string, string>,
+  paramValue?: string,
   status = 303
 ): NextResponse {
   // Use a relative Location header so the browser resolves it against the
@@ -34,7 +35,13 @@ function createRedirectResponse(
   // when running in Docker behind a reverse proxy.
   const safePath = getSafeReturnTo(returnTo);
   const target = new URL(safePath, 'http://localhost');
-  target.searchParams.set(paramKey, paramValue);
+  if (typeof paramKeyOrParams === 'string' && paramValue !== undefined) {
+    target.searchParams.set(paramKeyOrParams, paramValue);
+  } else if (typeof paramKeyOrParams === 'object') {
+    for (const [k, v] of Object.entries(paramKeyOrParams)) {
+      target.searchParams.set(k, v);
+    }
+  }
   const relativeLocation = `${target.pathname}${target.search}${target.hash}`;
 
   return new NextResponse(null, {
@@ -113,12 +120,7 @@ export async function GET(request: NextRequest) {
       enabledApps:
         existingIdx >= 0
           ? sessionData.accounts[existingIdx].enabledApps
-          : {
-              calendar: true,
-              tasks: true,
-              drive: true,
-              contacts: true,
-            },
+          : { ...DEFAULT_GOOGLE_APP_TOGGLES },
       connectedAt: existingIdx >= 0 ? sessionData.accounts[existingIdx].connectedAt : Date.now(),
       comailAccountId:
         comailAccountId || (existingIdx >= 0 ? sessionData.accounts[existingIdx].comailAccountId : undefined),
@@ -136,7 +138,11 @@ export async function GET(request: NextRequest) {
 
     const encrypted = encryptGoogleSessionData(sessionData);
 
-    const response = createRedirectResponse(returnTo, 'google_connected', 'true');
+    const response = createRedirectResponse(returnTo, {
+      google_connected: 'true',
+      google_account_id: accountId,
+      google_account_email: email,
+    });
     response.cookies.set({
       name: GOOGLE_SESSION_COOKIE,
       value: encrypted,

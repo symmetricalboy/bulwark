@@ -1404,7 +1404,7 @@ export function Sidebar({
             return (
               <div key={account.id} onContextMenu={isActive ? handleFoldersHeaderContextMenu : undefined}>
                 <SidebarSectionHeader
-                  label={toUnicodeEmail(account.label || account.email || account.username)}
+                  label={toUnicodeEmail(account.email || account.username || account.label)}
                   expanded={expanded}
                   onToggle={() => toggleAccountGroup(account.id)}
                   onSettings={isActive ? openFolderSettings : undefined}

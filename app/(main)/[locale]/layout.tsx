@@ -15,6 +15,7 @@ import { PluginOAuthCallbackListener } from "@/components/providers/plugin-oauth
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { AccessApprovalDialog } from "@/components/access-approval-dialog";
 import { PushNotificationPrompt } from "@/components/push-notification-prompt";
+import { GoogleAccountOnboardingModal } from "@/components/settings/google-account-onboarding-modal";
 import { setRequestLocale } from "next-intl/server";
 import { locales } from "@/i18n/routing";
 import { generateLiteLocaleParams } from "@/lib/lite-static-params";
@@ -63,6 +64,7 @@ export default async function LocaleLayout({
                   <PWAInstallPrompt />
                   <AccessApprovalDialog />
                   <PushNotificationPrompt />
+                  <GoogleAccountOnboardingModal />
                 </ProtocolLaunchHandlerProvider>
               </TourProvider>
             </EmbeddedBridgeProvider>

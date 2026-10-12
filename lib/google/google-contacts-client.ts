@@ -9,21 +9,27 @@ export {
 
 export interface GoogleContactsResponse {
   contacts: ContactCard[];
+  addressBooks?: AddressBook[];
   addressBook: AddressBook;
   total: number;
 }
 
-export async function fetchGoogleContacts(): Promise<GoogleContactsResponse> {
-  const res = await fetch('/api/google/contacts', {
+export async function fetchGoogleContacts(googleAccountId?: string): Promise<GoogleContactsResponse> {
+  const url = googleAccountId
+    ? `/api/google/contacts?googleAccountId=${encodeURIComponent(googleAccountId)}`
+    : '/api/google/contacts';
+  const res = await fetch(url, {
     headers: getComailAccountHeaders(),
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch Google contacts (${res.status})`);
   }
   const data = await res.json();
+  const addressBooks = data.addressBooks || (data.addressBook ? [data.addressBook] : []);
   return {
     contacts: data.contacts || [],
-    addressBook: data.addressBook,
+    addressBooks,
+    addressBook: data.addressBook || addressBooks[0],
     total: data.total || 0,
   };
 }

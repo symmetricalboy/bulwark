@@ -129,14 +129,13 @@ describe('FilesApp Storage & Account Picker', () => {
     // Open dropdown menu
     fireEvent.click(pickerButton);
 
-    // Dropdown reveals Comail Files and External Accounts sections
+    // Dropdown reveals Comail Files and Google Drive sections
     expect(screen.getByText('Comail Files')).toBeInTheDocument();
-    expect(screen.getByText('External Accounts')).toBeInTheDocument();
-    expect(screen.getByText('Google Drive')).toBeInTheDocument();
+    expect(screen.getAllByText('Google Drive').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('user@gmail.com')).toBeInTheDocument();
 
     // Select Google Drive
-    const googleDriveOption = screen.getByRole('button', { name: /Google Drive user@gmail\.com/i });
+    const googleDriveOption = screen.getByRole('button', { name: /user@gmail\.com/i });
     fireEvent.click(googleDriveOption);
 
     // Now Google Drive browser is active

@@ -8,7 +8,7 @@ import { useCalendarStore } from '@/stores/calendar-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useTaskStore } from '@/stores/task-store';
 import { displayNow } from '@/lib/timezone';
-import { Check, RefreshCw, LogOut, ChevronDown, ChevronRight, Cake, ExternalLink, GoogleCalendarIcon, GoogleIcon } from '@/components/icons';
+import { Check, RefreshCw, LogOut, ChevronDown, ChevronRight, Cake, ExternalLink, GoogleCalendarIcon, GoogleIcon, Plus } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Calendar } from '@/lib/jmap/types';
@@ -45,6 +45,11 @@ function GoogleCalendarSectionContent({
   const [internalExpanded, setInternalExpanded] = useState(true);
   const expanded = isExpanded !== undefined ? isExpanded : internalExpanded;
   const handleToggleExpand = onToggleExpand ?? (() => setInternalExpanded((v) => !v));
+  const [collapsedAccounts, setCollapsedAccounts] = useState<Record<string, boolean>>({});
+
+  const toggleAccountCollapsed = (email: string) => {
+    setCollapsedAccounts((prev) => ({ ...prev, [email]: !prev[email] }));
+  };
 
   const t = useTranslations("calendar");
   const enableCalendarTasks = useSettingsStore((s) => s.enableCalendarTasks);
@@ -66,12 +71,56 @@ function GoogleCalendarSectionContent({
   const { status, calendars, isLoading, connectGoogle, disconnectGoogle, loadCalendars, refreshEvents } = googleCalendar;
   const toggleVisibility = useCalendarStore((s) => s.toggleCalendarVisibility);
 
-  const sortedCalendars = useMemo(() => {
-    return [...calendars].sort((a, b) => {
-      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-      return (a.name || '').localeCompare(b.name || '');
+  // Group calendars by Google account email
+  const accountGroups = useMemo(() => {
+    const groups = new Map<string, { email: string; name?: string; calendars: Calendar[] }>();
+
+    // Seed groups from status.accounts if available
+    (status.accounts || []).forEach((acc) => {
+      if (acc.email) {
+        groups.set(acc.email.toLowerCase(), {
+          email: acc.email,
+          name: acc.name,
+          calendars: [],
+        });
+      }
     });
-  }, [calendars]);
+
+    // Also include status.email if not already present
+    if (status.email && !groups.has(status.email.toLowerCase())) {
+      groups.set(status.email.toLowerCase(), {
+        email: status.email,
+        name: status.name,
+        calendars: [],
+      });
+    }
+
+    // Populate calendars into groups
+    calendars.forEach((cal) => {
+      let email = '';
+      if (cal.localAccountId?.startsWith('google:')) {
+        email = cal.localAccountId.replace(/^google:/, '');
+      } else if (cal.id.startsWith('google:')) {
+        email = cal.id.split('::')[0].replace(/^google:/, '');
+      } else {
+        email = status.email || 'google';
+      }
+
+      const key = email.toLowerCase();
+      if (!groups.has(key)) {
+        groups.set(key, { email, calendars: [] });
+      }
+      groups.get(key)!.calendars.push(cal);
+    });
+
+    return Array.from(groups.values()).map((g) => ({
+      ...g,
+      calendars: [...g.calendars].sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        return (a.name || '').localeCompare(b.name || '');
+      }),
+    }));
+  }, [calendars, status.accounts, status.email, status.name]);
 
   const handleToggle = (id: string) => {
     if (onToggleVisibility) {
@@ -101,8 +150,8 @@ function GoogleCalendarSectionContent({
           )}
           {/* Google Calendar Logo */}
           <GoogleCalendarIcon className="w-3.5 h-3.5 shrink-0" />
-          <span className="text-xs font-medium uppercase tracking-wider truncate">
-            Google
+          <span className="text-xs font-semibold uppercase tracking-wider truncate">
+            Google Calendars
           </span>
         </button>
 
@@ -114,13 +163,6 @@ function GoogleCalendarSectionContent({
               title="Refresh Google Calendars & Events"
             >
               <RefreshCw className={cn("w-3 h-3", isLoading && "animate-spin")} />
-            </button>
-            <button
-              onClick={() => void disconnectGoogle()}
-              className="p-1 text-muted-foreground hover:text-destructive rounded transition-colors"
-              title="Disconnect Google Account"
-            >
-              <LogOut className="w-3 h-3" />
             </button>
           </div>
         )}
@@ -146,64 +188,107 @@ function GoogleCalendarSectionContent({
               )}
             </div>
           ) : (
-            <div className="space-y-0.5">
-              {status.email && (
-                <div className="px-2 py-1 text-[11px] text-muted-foreground truncate">
-                  {status.email}
-                </div>
-              )}
-              {calendars.length === 0 ? (
-                <div className="px-2 py-1 text-xs text-muted-foreground italic">
-                  {isLoading ? 'Loading calendars...' : 'No Google calendars found'}
-                </div>
-              ) : (
-                sortedCalendars.map((cal) => {
-                  const isSelected = selectedCalendarIds.includes(cal.id);
-                  const color = cal.color || '#4285F4';
-
-                  return (
-                    <div
-                      key={cal.id}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent/40 cursor-pointer text-xs group transition-colors"
-                      onClick={() => handleToggle(cal.id)}
-                      onContextMenu={(e) => {
-                        if (onContextMenu) {
-                          e.preventDefault();
-                          onContextMenu(e, cal);
-                        }
-                      }}
-                    >
-                      <div
-                        className={cn(
-                          "w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0",
-                          isSelected ? "border-transparent text-white" : "border-muted-foreground/30 bg-background"
-                        )}
-                        style={{ backgroundColor: isSelected ? color : undefined }}
+            <div className="space-y-2 mt-1">
+              {accountGroups.map((group) => {
+                const isGroupCollapsed = collapsedAccounts[group.email] === true;
+                return (
+                  <div key={group.email} className="rounded-lg border border-border/40 bg-muted/20 overflow-hidden">
+                    <div className="flex items-center justify-between px-2 py-1.5 bg-muted/30">
+                      <button
+                        onClick={() => toggleAccountCollapsed(group.email)}
+                        className="flex items-center gap-1.5 flex-1 min-w-0 text-start group"
+                        title={group.email}
                       >
-                        {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                      </div>
-                      <span className="truncate flex-1 font-medium">{cal.name}</span>
-                      {(cal.originalId === '#birthdays' || cal.name.toLowerCase() === 'birthdays') && (
-                        <Cake className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      )}
+                        {isGroupCollapsed ? (
+                          <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate text-xs font-semibold text-foreground tracking-tight" title={group.email}>
+                          {group.email}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => void disconnectGoogle(group.email)}
+                        className="p-1 text-muted-foreground hover:text-destructive rounded transition-colors"
+                        title={`Disconnect ${group.email}`}
+                      >
+                        <LogOut className="w-3 h-3" />
+                      </button>
                     </div>
-                  );
-                })
-              )}
+
+                    {!isGroupCollapsed && (
+                      <div className="p-1 space-y-0.5">
+                        {group.calendars.length === 0 ? (
+                          <div className="px-2 py-1 text-xs text-muted-foreground italic">
+                            {isLoading ? 'Loading calendars...' : 'No calendars found'}
+                          </div>
+                        ) : (
+                          group.calendars.map((cal) => {
+                            const isSelected = selectedCalendarIds.includes(cal.id);
+                            const color = cal.color || '#4285F4';
+
+                            return (
+                              <div
+                                key={cal.id}
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/40 cursor-pointer text-xs group transition-colors"
+                                onClick={() => handleToggle(cal.id)}
+                                onContextMenu={(e) => {
+                                  if (onContextMenu) {
+                                    e.preventDefault();
+                                    onContextMenu(e, cal);
+                                  }
+                                }}
+                              >
+                                <div
+                                  className={cn(
+                                    "w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0",
+                                    isSelected ? "border-transparent text-white" : "border-muted-foreground/30 bg-background"
+                                  )}
+                                  style={{ backgroundColor: isSelected ? color : undefined }}
+                                >
+                                  {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </div>
+                                <span className="truncate flex-1 font-medium">{cal.name}</span>
+                                {(cal.originalId === '#birthdays' || cal.name.toLowerCase() === 'birthdays') && (
+                                  <Cake className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div className="px-1 pt-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-full text-xs h-7 flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground border border-dashed border-border/60 hover:border-border"
+                  onClick={connectGoogle}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add another Google Account</span>
+                </Button>
+              </div>
+
               {enableCalendarTasks && (
                 <div
-                  className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent/40 cursor-pointer text-xs group transition-colors"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent/40 cursor-pointer text-xs group transition-colors mt-2 pt-2 border-t border-border/30"
                   onClick={() => updateSetting('showTasksOnCalendar', !showTasksOnCalendar)}
                   title={showTasksOnCalendar ? "Hide tasks on calendar" : "Show tasks on calendar"}
                 >
                   <div
                     className={cn(
-                      "w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0",
+                      "w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0",
                       showTasksOnCalendar ? "border-transparent text-white bg-[#4285F4]" : "border-muted-foreground/30 bg-background"
                     )}
                     style={{ backgroundColor: showTasksOnCalendar ? '#4285F4' : undefined }}
                   >
-                    {showTasksOnCalendar && <Check className="w-3 h-3 stroke-[3]" />}
+                    {showTasksOnCalendar && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                   </div>
                   <span className={cn("truncate flex-1 font-medium", !showTasksOnCalendar && "text-muted-foreground")}>
                     {t('tasks.label')}

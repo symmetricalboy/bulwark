@@ -6,7 +6,7 @@ import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { ToggleSwitch } from '@/components/settings/settings-section';
+import { GoogleAccountServicesConfig } from './google-account-services-config';
 import {
   X,
   Plus,
@@ -15,10 +15,6 @@ import {
   AlertCircle,
   Link as LinkIcon,
   GoogleIcon,
-  GoogleDriveIcon,
-  GoogleCalendarIcon,
-  GoogleTasksIcon,
-  GoogleContactsIcon,
 } from '@/components/icons';
 import type { LinkedGoogleAccountPublic, GoogleAccountAppToggles } from '@/lib/google/types';
 import type { AccountEntry } from '@/stores/account-store';
@@ -57,7 +53,7 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
   const [togglingMap, setTogglingMap] = useState<Record<string, boolean>>({});
 
   const dialogRef = useFocusTrap({
-    isActive: isOpen,
+    isActive: isOpen && !accountToRemove,
     onEscape: onClose,
     restoreFocus: true,
   });
@@ -114,6 +110,13 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
     if (!isOpen) return;
 
     const handleBackdropClick = (e: MouseEvent) => {
+      // Don't close if a confirm dialog is open or if user clicked inside it
+      if (accountToRemove) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('[role="alertdialog"]') || target?.closest?.('[data-confirm-dialog]')) {
+        return;
+      }
+
       if (dialogRef.current && !dialogRef.current.contains(e.target as Node)) {
         onClose();
       }
@@ -121,7 +124,7 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
 
     document.addEventListener('mousedown', handleBackdropClick);
     return () => document.removeEventListener('mousedown', handleBackdropClick);
-  }, [isOpen, onClose, dialogRef]);
+  }, [isOpen, onClose, dialogRef, accountToRemove]);
 
   const handleConnect = useCallback((emailHint?: string) => {
     const returnTo = typeof window !== 'undefined'
@@ -143,24 +146,22 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
     window.location.href = url.toString();
   }, [comailAccountId, comailAccountEmail]);
 
-  const handleToggleApp = useCallback(
-    async (account: LinkedGoogleAccountPublic, app: keyof GoogleAccountAppToggles, enabled: boolean) => {
-      const toggleKey = `${account.id}-${app}`;
+  const handleUpdateAppSetting = useCallback(
+    async (
+      account: LinkedGoogleAccountPublic,
+      updates: Partial<GoogleAccountAppToggles>
+    ) => {
+      const keys = Object.keys(updates);
+      const appKey = keys[0] as keyof GoogleAccountAppToggles;
+      const toggleKey = `${account.id}-${appKey}`;
       setTogglingMap((prev) => ({ ...prev, [toggleKey]: true }));
+
+      const prevApps = { ...(account.enabledApps || {}) };
+      const newApps = { ...prevApps, ...updates };
 
       // Optimistic update
       setAccounts((prev) =>
-        prev.map((a) =>
-          a.id === account.id
-            ? {
-                ...a,
-                enabledApps: {
-                  ...a.enabledApps,
-                  [app]: enabled,
-                },
-              }
-            : a
-        )
+        prev.map((a) => (a.id === account.id ? { ...a, enabledApps: newApps } : a))
       );
 
       try {
@@ -173,8 +174,9 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
           headers,
           body: JSON.stringify({
             accountId: account.id,
-            app,
-            enabled,
+            settings: updates,
+            app: appKey,
+            enabled: updates[appKey],
             comailAccountId,
             comailAccountEmail,
           }),
@@ -183,33 +185,21 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
         if (!res.ok) {
           // Revert optimistic update on failure
           setAccounts((prev) =>
-            prev.map((a) =>
-              a.id === account.id
-                ? {
-                    ...a,
-                    enabledApps: {
-                      ...a.enabledApps,
-                      [app]: !enabled,
-                    },
-                  }
-                : a
-            )
+            prev.map((a) => (a.id === account.id ? { ...a, enabledApps: prevApps } : a))
           );
+        } else {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('google-services-updated', {
+                detail: { accountId: account.id, settings: newApps },
+              })
+            );
+          }
         }
       } catch {
         // Revert on error
         setAccounts((prev) =>
-          prev.map((a) =>
-            a.id === account.id
-              ? {
-                  ...a,
-                  enabledApps: {
-                    ...a.enabledApps,
-                    [app]: !enabled,
-                  },
-                }
-              : a
-          )
+          prev.map((a) => (a.id === account.id ? { ...a, enabledApps: prevApps } : a))
         );
       } finally {
         setTogglingMap((prev) => {
@@ -221,6 +211,7 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
     },
     [comailAccountId, comailAccountEmail]
   );
+
 
   const confirmRemoveAccount = useCallback(async () => {
     if (!accountToRemove) return;
@@ -420,99 +411,18 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
                           {t('apps_heading')}
                         </div>
 
-                        <div className="space-y-2">
-                          {/* 1. Calendar */}
-                          <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                                <GoogleCalendarIcon className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-medium text-foreground">
-                                  {t('apps.calendar')}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground truncate">
-                                  {t('apps.calendar_desc')}
-                                </p>
-                              </div>
-                            </div>
-                            <ToggleSwitch
-                              checked={acc.enabledApps?.calendar !== false}
-                              disabled={Boolean(togglingMap[`${acc.id}-calendar`])}
-                              onChange={(enabled) => handleToggleApp(acc, 'calendar', enabled)}
-                              ariaLabel={`${t('apps.calendar')} for ${acc.email}`}
-                            />
-                          </div>
-
-                          {/* 2. Tasks */}
-                          <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                                <GoogleTasksIcon className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-medium text-foreground">
-                                  {t('apps.tasks')}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground truncate">
-                                  {t('apps.tasks_desc')}
-                                </p>
-                              </div>
-                            </div>
-                            <ToggleSwitch
-                              checked={acc.enabledApps?.tasks !== false}
-                              disabled={Boolean(togglingMap[`${acc.id}-tasks`])}
-                              onChange={(enabled) => handleToggleApp(acc, 'tasks', enabled)}
-                              ariaLabel={`${t('apps.tasks')} for ${acc.email}`}
-                            />
-                          </div>
-
-                          {/* 3. Drive */}
-                          <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                                <GoogleDriveIcon className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-medium text-foreground">
-                                  {t('apps.drive')}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground truncate">
-                                  {t('apps.drive_desc')}
-                                </p>
-                              </div>
-                            </div>
-                            <ToggleSwitch
-                              checked={acc.enabledApps?.drive !== false}
-                              disabled={Boolean(togglingMap[`${acc.id}-drive`])}
-                              onChange={(enabled) => handleToggleApp(acc, 'drive', enabled)}
-                              ariaLabel={`${t('apps.drive')} for ${acc.email}`}
-                            />
-                          </div>
-
-                          {/* 4. Contacts */}
-                          <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/60 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-                                <GoogleContactsIcon className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-medium text-foreground">
-                                  {t('apps.contacts')}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground truncate">
-                                  {t('apps.contacts_desc')}
-                                </p>
-                              </div>
-                            </div>
-                            <ToggleSwitch
-                              checked={acc.enabledApps?.contacts !== false}
-                              disabled={Boolean(togglingMap[`${acc.id}-contacts`])}
-                              onChange={(enabled) => handleToggleApp(acc, 'contacts', enabled)}
-                              ariaLabel={`${t('apps.contacts')} for ${acc.email}`}
-                            />
-                          </div>
-                        </div>
+                        <GoogleAccountServicesConfig
+                          accountEmail={acc.email}
+                          values={acc.enabledApps || {}}
+                          disabled={Boolean(
+                            togglingMap[`${acc.id}-calendar`] ||
+                            togglingMap[`${acc.id}-tasks`] ||
+                            togglingMap[`${acc.id}-drive`] ||
+                            togglingMap[`${acc.id}-contacts`] ||
+                            togglingMap[`${acc.id}-gmail`]
+                          )}
+                          onChange={(updates) => handleUpdateAppSetting(acc, updates)}
+                        />
                       </div>
                     </div>
                   ))}
