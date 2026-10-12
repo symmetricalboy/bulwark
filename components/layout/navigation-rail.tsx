@@ -72,6 +72,8 @@ interface NavigationRailProps {
   size?: "default" | "spacious";
   /** If true, omits the top ALPHA badge from the rail (e.g. when hoisted to sidebar header). */
   hideAlphaBadge?: boolean;
+  /** If true, omits the top avatar/logo button (e.g. when hoisted above the rail). */
+  hideLogo?: boolean;
 }
 
 function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; total: number }; usagePercent: number }) {
@@ -206,6 +208,7 @@ export function NavigationRail({
   onOpenSearch,
   size = "default",
   hideAlphaBadge = false,
+  hideLogo = false,
 }: NavigationRailProps) {
   const isSpacious = size === "spacious";
   const t = useTranslations("sidebar");
@@ -604,7 +607,7 @@ export function NavigationRail({
         className
       )}
     >
-      {(() => {
+      {!hideLogo && (() => {
         // comail's light-mode rail is dark teal → use the dark wordmark there.
         const useDarkLogo = resolvedTheme === 'dark' || comailLightRail;
         const logoUrl = withBasePath(useDarkLogo ? (appLogoDarkUrl || appLogoLightUrl) : (appLogoLightUrl || appLogoDarkUrl));

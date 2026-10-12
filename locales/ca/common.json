@@ -150,7 +150,7 @@
     "show_more": "Més",
     "show_fewer": "Menys",
     "shared": "Compartit",
-    "mail": "Safata d'entrada",
+    "mail": "Correu",
     "nav_label": "Navegació",
     "add_app": "Aplicacions",
     "scheduled": "Programats",
@@ -1064,7 +1064,7 @@
       "apps": "Aplicacions",
       "system": "Sistema",
       "appearance": "Aparença",
-      "mail": "Safata d'entrada",
+      "mail": "Correu",
       "privacy": "Privadesa i seguretat",
       "advanced": "Avançat"
     },

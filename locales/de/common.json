@@ -149,7 +149,7 @@
     "folders": "Ordner",
     "show_more": "Mehr",
     "show_fewer": "Weniger",
-    "mail": "Posteingang",
+    "mail": "E-Mail",
     "nav_label": "Navigation",
     "add_app": "Apps",
     "shared": "Geteilt",
@@ -1061,7 +1061,7 @@
       "apps": "Apps",
       "system": "System",
       "appearance": "Darstellung",
-      "mail": "Posteingang",
+      "mail": "E-Mail",
       "privacy": "Datenschutz & Sicherheit",
       "advanced": "Erweitert"
     },

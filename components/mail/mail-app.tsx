@@ -132,6 +132,7 @@ import {
   type MailDeepLink,
 } from "@/lib/deep-links";
 import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
+import { withBasePath } from "@/lib/browser-navigation";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
@@ -380,6 +381,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // one-pane flow, with Mountain View's own app chrome.
   const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isTablet && !isEmbedded;
   const mvMobile = interfaceLayout === 'mountain-view' && isMobile && !isEmbedded;
+  const isDesktopMail = !isMobile && !isTablet && !isEmbedded && !mvShell;
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
+  const activeThemeId = useThemeStore((s) => s.activeThemeId);
+  const isDarkSidebar = resolvedTheme === 'dark' || !activeThemeId || activeThemeId === 'builtin-comail';
   // Pane hosting (Pro shell). When this app renders inside a Pro pane, the
   // pane publishes its width and id; `isMobile` above is then pane-based,
   // and layout that would use viewport-fixed positioning must scope itself
@@ -4043,22 +4048,134 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         <div className="flex flex-1 overflow-hidden">
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
             under Mountain View, whose header carries the app grid instead) */}
-        {!isMobile && !isTablet && !isEmbedded && !mvShell && (
-          <div className="w-16 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-            <NavigationRail
-              collapsed
-              size="spacious"
-              hideAlphaBadge
-              quota={quota}
-              isPushConnected={isPushConnected}
-              onLogout={handleLogout}
-              onShowShortcuts={() => setShowShortcutsModal(true)}
-              onManageApps={handleManageApps}
-              onInlineApp={handleInlineApp}
-              onCloseInlineApp={closeInlineApp}
-              activeAppId={inlineApp?.id ?? null}
-            />
-          </div>
+        {/* Desktop Left Column: Unified Heading above Navigation Rail & Sidebar */}
+        {isDesktopMail && (
+          inlineApp ? (
+            <div className="w-16 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+              <NavigationRail
+                collapsed
+                size="spacious"
+                hideLogo
+                hideAlphaBadge
+                quota={quota}
+                isPushConnected={isPushConnected}
+                onLogout={handleLogout}
+                onShowShortcuts={() => setShowShortcutsModal(true)}
+                onManageApps={handleManageApps}
+                onInlineApp={handleInlineApp}
+                onCloseInlineApp={closeInlineApp}
+                activeAppId={inlineApp?.id ?? null}
+              />
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-[336px] flex flex-col flex-shrink-0 h-full z-50 bg-secondary border-e border-border select-none",
+                fullscreenReading && "hidden"
+              )}
+            >
+              {/* Unified Heading above both Navigation Rail and Sidebar */}
+              <div className="h-14 border-b border-border flex items-center justify-between px-3.5 flex-shrink-0 bg-secondary">
+                {/* Comail brand: Cammie Mark + Wordmark (functions as refresh button) */}
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="flex items-center gap-2 hover:opacity-80 active:scale-98 transition-all cursor-pointer text-start focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                  title="Reload Comail"
+                  aria-label="Comail - Reload"
+                >
+                  <img
+                    src={withBasePath("/branding/comail/cammie-mark.png")}
+                    alt="Comail"
+                    className="w-7 h-7 object-contain"
+                  />
+                  <img
+                    src={withBasePath(isDarkSidebar ? "/branding/comail/wordmark-light.svg" : "/branding/comail/wordmark-dark.svg")}
+                    alt="comail"
+                    className="h-5 w-auto object-contain"
+                  />
+                </button>
+
+                {/* LARGER app title with icon, no longer in all caps */}
+                <div className="flex items-center gap-2 select-none flex-shrink-0">
+                  <Mail className="w-5 h-5 text-foreground/80 flex-shrink-0" />
+                  <span className="text-base font-semibold tracking-normal text-foreground">
+                    {t('sidebar.mail') || 'Mail'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Lower body: Left is Navigation Rail (w-16), Right is Sidebar (w-[272px] flex-1) */}
+              <div className="flex flex-1 min-h-0 overflow-hidden">
+                <div className="w-16 flex flex-col flex-shrink-0 border-e border-border/40">
+                  <NavigationRail
+                    collapsed
+                    size="spacious"
+                    hideLogo
+                    hideAlphaBadge
+                    quota={quota}
+                    isPushConnected={isPushConnected}
+                    onLogout={handleLogout}
+                    onShowShortcuts={() => setShowShortcutsModal(true)}
+                    onManageApps={handleManageApps}
+                    onInlineApp={handleInlineApp}
+                    onCloseInlineApp={closeInlineApp}
+                    activeAppId={null}
+                  />
+                </div>
+
+                <div
+                  id={sidebarId}
+                  ref={sidebarContainerRef}
+                  className="flex-1 min-w-0 overflow-hidden h-full"
+                >
+                  <ErrorBoundary fallback={SidebarErrorFallback}>
+                    <Sidebar
+                      hideHeader
+                      mailboxes={mailboxes}
+                      selectedMailbox={selectedMailbox}
+                      selectedKeyword={selectedKeyword}
+                      scheduledTotal={scheduledTotal}
+                      scheduledTotalByAccount={scheduledTotalByAccount}
+                      scheduledAccountScope={scheduledAccountScope}
+                      showScheduledMailbox={delayedSendSupported}
+                      crossAccountActive={crossAccountActive}
+                      showCrossUnread={showCrossUnread}
+                      showCrossStarred={showCrossStarred}
+                      onOpenStarred={mvShell ? goToStarred : undefined}
+                      showCrossAll={showCrossAll}
+                      crossUnreadCount={crossUnreadCount}
+                      onMailboxSelect={handleMailboxSelect}
+                      onTagSelect={handleTagSelect}
+                      onUnreadFilterClick={handleUnreadFilterClick}
+                      onMarkFolderRead={handleMarkFolderRead}
+                      onMarkFolderTreeRead={handleMarkFolderTreeRead}
+                      onMarkAllFoldersRead={handleMarkAllFoldersRead}
+                      onEmptyFolder={handleEmptyFolderFromContextMenu}
+                      onCreateSubfolder={handleCreateSubfolderFromContextMenu}
+                      onCreateFolder={handleCreateFolderFromContextMenu}
+                      onRenameFolder={handleRenameFolderFromContextMenu}
+                      onDeleteFolder={handleDeleteFolderFromContextMenu}
+                      onShareFolder={supportsMailboxSharing ? handleShareFolderFromContextMenu : undefined}
+                      onImportEmail={handleImportEmailFromContextMenu}
+                      onRefreshMailboxes={handleRefreshMailboxes}
+                      onCompose={() => {
+                        startFreshComposerSession();
+                        setComposerMode('compose');
+                        setShowComposer(true);
+                      }}
+                      onSidebarClose={() => setSidebarOpen(false)}
+                      mvShell={mvShell}
+                      multiAccountMode={isEmbedded}
+                      accountMailboxes={accountMailboxes}
+                      viewingAccountId={viewingAccountId}
+                      onAccountMailboxSelect={handleAccountMailboxSelect}
+                    />
+                  </ErrorBoundary>
+                </div>
+              </div>
+            </div>
+          )
         )}
 
         {inlineApp && (
@@ -4080,98 +4197,98 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
 
-        {/* Sidebar - overlay on mobile/tablet, in-flow on desktop.
-            When embedded, overlay-mode is driven by pane-aware JS rather
-            than viewport-variants (which still see the full window). */}
-        <div
-          id={sidebarId}
-          ref={sidebarContainerRef}
-          /* On mobile/tablet the sidebar is only slid off-screen, so without
-             `inert` it stays in the accessibility tree and screen readers can
-             reach a menu the Toggle menu button reports as collapsed (#721). */
-          inert={(isMobile || isTablet) && !sidebarOpen}
-          onKeyDown={(isMobile || isTablet) && sidebarOpen ? (e) => {
-            if (e.key === 'Escape') setSidebarOpen(false);
-          } : undefined}
-          className={cn(
-            "flex-shrink-0 h-full z-50",
-            // The z-index is for the phone drawer. On a desktop under Mountain
-            // View it only has to lift the hover peek over the list: at 40 the
-            // compose window, drawn later at the same level, stays on top.
-            mvShell && "lg:z-40",
-            !isResizing && "transition-[width] duration-300",
-            isEmbedded
-              ? (isMobile || isTablet
-                  ? cn(
-                      "absolute inset-y-0 start-0 w-72 pt-[env(safe-area-inset-top)]",
-                      "transform transition-transform duration-300 ease-in-out",
-                      // translate-x is physical, so RTL needs the opposite
-                      // sign or the drawer slides off the wrong edge.
-                      !sidebarOpen && "-translate-x-full rtl:translate-x-full"
-                    )
-                  : "relative translate-x-0")
-              : cn(
-                  // Mobile/Tablet: fixed overlay
-                  // start-0 rather than left-0: in RTL the drawer belongs on
-                  // the right, matching the hamburger that opens it.
-                  "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[env(safe-area-inset-top)]",
-                  "max-lg:transform max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out",
-                  !sidebarOpen && "max-lg:-translate-x-full max-lg:rtl:translate-x-full",
-                  // Desktop: normal flow
-                  "lg:relative lg:translate-x-0"
-                ),
-            inlineApp && "hidden",
-            fullscreenReading && "hidden"
-          )}
-          style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : 272 } : undefined}
-        >
-          <ErrorBoundary fallback={SidebarErrorFallback}>
-            <Sidebar
-              mailboxes={mailboxes}
-              selectedMailbox={selectedMailbox}
-              selectedKeyword={selectedKeyword}
-              scheduledTotal={scheduledTotal}
-              scheduledTotalByAccount={scheduledTotalByAccount}
-              scheduledAccountScope={scheduledAccountScope}
-              showScheduledMailbox={delayedSendSupported}
-              crossAccountActive={crossAccountActive}
-              showCrossUnread={showCrossUnread}
-              showCrossStarred={showCrossStarred}
-              onOpenStarred={mvShell ? goToStarred : undefined}
-              showCrossAll={showCrossAll}
-              crossUnreadCount={crossUnreadCount}
-              onMailboxSelect={handleMailboxSelect}
-              onTagSelect={handleTagSelect}
-              onUnreadFilterClick={handleUnreadFilterClick}
-              onMarkFolderRead={handleMarkFolderRead}
-              onMarkFolderTreeRead={handleMarkFolderTreeRead}
-              onMarkAllFoldersRead={handleMarkAllFoldersRead}
-              onEmptyFolder={handleEmptyFolderFromContextMenu}
-              onCreateSubfolder={handleCreateSubfolderFromContextMenu}
-              onCreateFolder={handleCreateFolderFromContextMenu}
-              onRenameFolder={handleRenameFolderFromContextMenu}
-              onDeleteFolder={handleDeleteFolderFromContextMenu}
-              onShareFolder={supportsMailboxSharing ? handleShareFolderFromContextMenu : undefined}
-              onImportEmail={handleImportEmailFromContextMenu}
-              onRefreshMailboxes={handleRefreshMailboxes}
-              onCompose={() => {
-                startFreshComposerSession();
-                setComposerMode('compose');
-                setShowComposer(true);
-                if (isMobile) {
-                  setSidebarOpen(false);
-                  setActiveView('viewer');
-                }
-              }}
-              onSidebarClose={() => setSidebarOpen(false)}
-              mvShell={mvShell}
-              multiAccountMode={isEmbedded}
-              accountMailboxes={accountMailboxes}
-              viewingAccountId={viewingAccountId}
-              onAccountMailboxSelect={handleAccountMailboxSelect}
-            />
-          </ErrorBoundary>
-        </div>
+        {/* Sidebar - overlay on mobile/tablet, in-flow on desktop embedded / Mountain View. */}
+        {!isDesktopMail && (
+          <div
+            id={sidebarId}
+            ref={sidebarContainerRef}
+            /* On mobile/tablet the sidebar is only slid off-screen, so without
+               `inert` it stays in the accessibility tree and screen readers can
+               reach a menu the Toggle menu button reports as collapsed (#721). */
+            inert={(isMobile || isTablet) && !sidebarOpen}
+            onKeyDown={(isMobile || isTablet) && sidebarOpen ? (e) => {
+              if (e.key === 'Escape') setSidebarOpen(false);
+            } : undefined}
+            className={cn(
+              "flex-shrink-0 h-full z-50",
+              // The z-index is for the phone drawer. On a desktop under Mountain
+              // View it only has to lift the hover peek over the list: at 40 the
+              // compose window, drawn later at the same level, stays on top.
+              mvShell && "lg:z-40",
+              !isResizing && "transition-[width] duration-300",
+              isEmbedded
+                ? (isMobile || isTablet
+                    ? cn(
+                        "absolute inset-y-0 start-0 w-72 pt-[env(safe-area-inset-top)]",
+                        "transform transition-transform duration-300 ease-in-out",
+                        // translate-x is physical, so RTL needs the opposite
+                        // sign or the drawer slides off the wrong edge.
+                        !sidebarOpen && "-translate-x-full rtl:translate-x-full"
+                      )
+                    : "relative translate-x-0")
+                : cn(
+                    // Mobile/Tablet: fixed overlay
+                    // start-0 rather than left-0: in RTL the drawer belongs on
+                    // the right, matching the hamburger that opens it.
+                    "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[env(safe-area-inset-top)]",
+                    "max-lg:transform max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out",
+                    !sidebarOpen && "max-lg:-translate-x-full max-lg:rtl:translate-x-full",
+                    // Desktop: normal flow
+                    "lg:relative lg:translate-x-0"
+                  ),
+              inlineApp && "hidden",
+              fullscreenReading && "hidden"
+            )}
+            style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : 272 } : undefined}
+          >
+            <ErrorBoundary fallback={SidebarErrorFallback}>
+              <Sidebar
+                mailboxes={mailboxes}
+                selectedMailbox={selectedMailbox}
+                selectedKeyword={selectedKeyword}
+                scheduledTotal={scheduledTotal}
+                scheduledTotalByAccount={scheduledTotalByAccount}
+                scheduledAccountScope={scheduledAccountScope}
+                showScheduledMailbox={delayedSendSupported}
+                crossAccountActive={crossAccountActive}
+                showCrossUnread={showCrossUnread}
+                showCrossStarred={showCrossStarred}
+                onOpenStarred={mvShell ? goToStarred : undefined}
+                showCrossAll={showCrossAll}
+                crossUnreadCount={crossUnreadCount}
+                onMailboxSelect={handleMailboxSelect}
+                onTagSelect={handleTagSelect}
+                onUnreadFilterClick={handleUnreadFilterClick}
+                onMarkFolderRead={handleMarkFolderRead}
+                onMarkFolderTreeRead={handleMarkFolderTreeRead}
+                onMarkAllFoldersRead={handleMarkAllFoldersRead}
+                onEmptyFolder={handleEmptyFolderFromContextMenu}
+                onCreateSubfolder={handleCreateSubfolderFromContextMenu}
+                onCreateFolder={handleCreateFolderFromContextMenu}
+                onRenameFolder={handleRenameFolderFromContextMenu}
+                onDeleteFolder={handleDeleteFolderFromContextMenu}
+                onShareFolder={supportsMailboxSharing ? handleShareFolderFromContextMenu : undefined}
+                onImportEmail={handleImportEmailFromContextMenu}
+                onRefreshMailboxes={handleRefreshMailboxes}
+                onCompose={() => {
+                  startFreshComposerSession();
+                  setComposerMode('compose');
+                  setShowComposer(true);
+                  if (isMobile) {
+                    setSidebarOpen(false);
+                    setActiveView('viewer');
+                  }
+                }}
+                onSidebarClose={() => setSidebarOpen(false)}
+                mvShell={mvShell}
+                multiAccountMode={isEmbedded}
+                accountMailboxes={accountMailboxes}
+                viewingAccountId={viewingAccountId}
+                onAccountMailboxSelect={handleAccountMailboxSelect}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
         {/* Main Content Area. Under Mountain View it is the rounded card
             inset from the canvas. */}
         <div

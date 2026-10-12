@@ -149,7 +149,7 @@
     "folders": "フォルダ",
     "show_more": "もっと見る",
     "show_fewer": "折りたたむ",
-    "mail": "受信トレイ",
+    "mail": "メール",
     "nav_label": "ナビゲーション",
     "add_app": "アプリ",
     "shared": "共有",
@@ -1061,7 +1061,7 @@
       "apps": "アプリ",
       "system": "システム",
       "appearance": "外観",
-      "mail": "受信トレイ",
+      "mail": "メール",
       "privacy": "プライバシーとセキュリティ",
       "advanced": "詳細"
     },

@@ -149,7 +149,7 @@
     "folders": "Mapes",
     "show_more": "Vairāk",
     "show_fewer": "Mazāk",
-    "mail": "Iesūtne",
+    "mail": "Pasts",
     "nav_label": "Navigācija",
     "add_app": "Lietotnes",
     "shared": "Koplietots",
@@ -1061,7 +1061,7 @@
       "apps": "Lietotnes",
       "system": "Sistēma",
       "appearance": "Izskats",
-      "mail": "Iesūtne",
+      "mail": "Pasts",
       "privacy": "Privātums un drošība",
       "advanced": "Papildu"
     },

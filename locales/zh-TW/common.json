@@ -150,7 +150,7 @@
     "show_more": "更多",
     "show_fewer": "收合",
     "shared": "共用",
-    "mail": "收件匣",
+    "mail": "郵件",
     "nav_label": "導覽",
     "add_app": "應用程式",
     "scheduled": "排程寄送",
@@ -1064,7 +1064,7 @@
       "apps": "應用程式",
       "system": "系統",
       "appearance": "外觀",
-      "mail": "收件匣",
+      "mail": "郵件",
       "privacy": "隱私權與安全",
       "advanced": "進階"
     },

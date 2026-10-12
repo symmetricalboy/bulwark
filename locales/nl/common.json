@@ -149,7 +149,7 @@
     "folders": "Mappen",
     "show_more": "Meer",
     "show_fewer": "Minder",
-    "mail": "Postvak IN",
+    "mail": "E-mail",
     "nav_label": "Navigatie",
     "add_app": "Apps",
     "shared": "Gedeeld",
@@ -1061,7 +1061,7 @@
       "apps": "Apps",
       "system": "Systeem",
       "appearance": "Weergave",
-      "mail": "Postvak IN",
+      "mail": "E-mail",
       "privacy": "Privacy en beveiliging",
       "advanced": "Geavanceerd"
     },

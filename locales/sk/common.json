@@ -150,7 +150,7 @@
     "show_more": "Viac",
     "show_fewer": "Menej",
     "shared": "Zdieľané",
-    "mail": "Doručené",
+    "mail": "Pošta",
     "nav_label": "Navigácia",
     "add_app": "Aplikácie",
     "scheduled": "Naplánované",
@@ -1064,7 +1064,7 @@
       "apps": "Aplikácie",
       "system": "Systém",
       "appearance": "Vzhľad",
-      "mail": "Doručené",
+      "mail": "Pošta",
       "privacy": "Súkromie a zabezpečenie",
       "advanced": "Pokročilé"
     },

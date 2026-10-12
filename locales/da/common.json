@@ -150,7 +150,7 @@
     "show_more": "Mere",
     "show_fewer": "Mindre",
     "shared": "Delt",
-    "mail": "Indbakke",
+    "mail": "Mail",
     "nav_label": "Navigation",
     "add_app": "Apps",
     "scheduled": "Planlagt",
@@ -1064,7 +1064,7 @@
       "apps": "Apps",
       "system": "System",
       "appearance": "Udseende",
-      "mail": "Indbakke",
+      "mail": "Mail",
       "privacy": "Privatliv & sikkerhed",
       "advanced": "Avanceret"
     },

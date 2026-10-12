@@ -13,8 +13,6 @@ import {
   Trash2,
   Archive,
   Ban,
-  ChevronsLeft,
-  ChevronsRight,
   ChevronRight,
   ChevronDown,
   ChevronUp,
@@ -125,6 +123,8 @@ interface SidebarProps {
   showCrossAll?: boolean;
   /** Unread total across all cross-view folders (badge for unread/all). */
   crossUnreadCount?: number;
+  /** When true, omits the top header bar (used when a unified heading is hoisted above rail and sidebar). */
+  hideHeader?: boolean;
   className?: string;
   /**
    * Multi-account (Pro) mode props. When `multiAccountMode` is true, the
@@ -883,9 +883,10 @@ export function Sidebar({
   viewingAccountId = null,
   onAccountMailboxSelect,
   mvShell = false,
+  hideHeader = false,
 }: SidebarProps) {
   const router = useRouter();
-  const { sidebarCollapsed, toggleSidebarCollapsed } = useUIStore();
+  const { sidebarCollapsed } = useUIStore();
   // Mountain View's collapsed rail is a peek, not a commitment: putting the pointer on
   // it slides the full list back out over the message list and takes it away
   // again on leaving, so a folder two clicks deep costs no clicks at all. It
@@ -893,7 +894,7 @@ export function Sidebar({
   // list behind it.
   const [railHovered, setRailHovered] = useState(false);
   const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
-  const isCollapsed = sidebarCollapsed && !hoverExpanded;
+  const isCollapsed = mvShell ? (sidebarCollapsed && !hoverExpanded) : false;
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore();
   const googleMail = useGoogleMail();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -946,7 +947,7 @@ export function Sidebar({
   const isEmbedded = useIsEmbedded();
   const resolvedTheme = useThemeStore(s => s.resolvedTheme);
   const activeThemeId = useThemeStore(s => s.activeThemeId);
-  const isDarkSidebar = resolvedTheme === 'dark' || activeThemeId === 'builtin-comail';
+  const isDarkSidebar = resolvedTheme === 'dark' || !activeThemeId || activeThemeId === 'builtin-comail';
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   // Mountain View draws its navigation icons in the text colour.
@@ -1289,6 +1290,7 @@ export function Sidebar({
       data-mv-rail-peek={hoverExpanded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
+        hideHeader && "border-e-0",
         // Mountain View's navigation sits on the canvas, with no rule between
         // it and the content card.
         mvShell ? "bg-[var(--mv-canvas)] border-transparent" : "bg-secondary border-border",
@@ -1303,77 +1305,53 @@ export function Sidebar({
         className
       )}
     >
-      {/* Header - hidden in the Pro shell, which owns its own chrome and
-          would otherwise render an empty strip (no collapse, no switcher). */}
-      {!isEmbedded && !mvShell && (
+      {/* Header - hidden in the Pro shell, under Mountain View, or when hoisted above rail and sidebar */}
+      {!hideHeader && !isEmbedded && !mvShell && (
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border">
-          <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "px-3")}>
-            {isCollapsed ? (
+          <div className="flex items-center justify-between h-14 px-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Comail brand: Cammie Mark + Wordmark (refresh button) */}
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-1.5 flex-shrink-0 select-none hover:opacity-80 transition-opacity cursor-pointer"
+                title="Reload"
+                aria-label="Comail - Reload"
+              >
+                <img
+                  src={withBasePath("/branding/comail/cammie-mark.png")}
+                  alt="Comail"
+                  className="w-6 h-6 object-contain"
+                />
+                <img
+                  src={withBasePath(isDarkSidebar ? "/branding/comail/wordmark-light.svg" : "/branding/comail/wordmark-dark.svg")}
+                  alt="comail"
+                  className="h-4.5 w-auto object-contain"
+                />
+              </button>
+
+              {/* App Indicator: Nav icon + App Title */}
+              <div className="relative flex items-center gap-1 select-none flex-shrink-0">
+                <Mail className="w-3.5 h-3.5 text-foreground/75 flex-shrink-0" />
+                <span className="text-xs font-semibold text-foreground/90">
+                  {t("mail") || "Mail"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-0.5 flex-shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleSidebarCollapsed}
-                className="hidden lg:flex h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
-                title={t("expand_tooltip")}
+                onClick={onSidebarClose}
+                className="lg:hidden h-8 w-8 flex-shrink-0 text-foreground/75 hover:text-foreground"
+                aria-label={t("close")}
               >
-                <ChevronsRight className="w-4 h-4" />
+                <X className="w-4 h-4" />
               </Button>
-            ) : (
-              <div className="flex items-center justify-between w-full min-w-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Comail brand: Cammie Mark + Wordmark */}
-                  <div className="flex items-center gap-1.5 flex-shrink-0 select-none">
-                    <img
-                      src={withBasePath("/branding/comail/cammie-mark.png")}
-                      alt="Comail"
-                      className="w-6 h-6 object-contain"
-                    />
-                    <img
-                      src={withBasePath(isDarkSidebar ? "/branding/comail/wordmark-light.svg" : "/branding/comail/wordmark-dark.svg")}
-                      alt="comail"
-                      className="h-4.5 w-auto object-contain"
-                    />
-                  </div>
-
-                  {/* App Indicator: Nav icon + App Title + ALPHA badge */}
-                  <div className="relative flex items-center gap-1 select-none flex-shrink-0">
-                    <Mail className="w-3.5 h-3.5 text-foreground/75 flex-shrink-0" />
-                    <span className="text-[11px] font-bold tracking-wider uppercase text-foreground/80">
-                      INBOX
-                    </span>
-                    <span
-                      data-testid="comail-alpha-badge"
-                      className="relative -top-1.5 -ml-0.5 px-1 py-0.2 text-[8px] font-bold tracking-wider leading-none rounded bg-orange-500 text-white uppercase select-none shadow-xs"
-                    >
-                      ALPHA
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-0.5 flex-shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onSidebarClose}
-                    className="lg:hidden h-8 w-8 flex-shrink-0 text-foreground/75 hover:text-foreground"
-                    aria-label={t("close")}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleSidebarCollapsed}
-                    className="hidden lg:flex h-8 w-8 flex-shrink-0 text-foreground/75 hover:text-foreground"
-                    title={t("collapse_tooltip")}
-                  >
-                    <ChevronsLeft className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}

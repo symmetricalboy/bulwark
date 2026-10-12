@@ -149,7 +149,7 @@
     "folders": "폴더",
     "show_more": "더보기",
     "show_fewer": "간략히",
-    "mail": "받은편지함",
+    "mail": "메일",
     "nav_label": "내비게이션",
     "add_app": "앱",
     "shared": "공유됨",
@@ -1061,7 +1061,7 @@
       "apps": "앱",
       "system": "시스템",
       "appearance": "모양",
-      "mail": "받은편지함",
+      "mail": "메일",
       "privacy": "개인정보 및 보안",
       "advanced": "고급"
     },

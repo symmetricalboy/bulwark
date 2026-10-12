@@ -149,7 +149,7 @@
     "folders": "Pastas",
     "show_more": "Mais",
     "show_fewer": "Menos",
-    "mail": "Caixa de Entrada",
+    "mail": "E-mail",
     "nav_label": "Navegação",
     "add_app": "Apps",
     "shared": "Compartilhado",
@@ -1061,7 +1061,7 @@
       "apps": "Aplicativos",
       "system": "Sistema",
       "appearance": "Aparência",
-      "mail": "Caixa de Entrada",
+      "mail": "Correio",
       "privacy": "Privacidade e segurança",
       "advanced": "Avançado"
     },

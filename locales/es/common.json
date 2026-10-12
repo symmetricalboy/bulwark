@@ -149,7 +149,7 @@
     "folders": "Carpetas",
     "show_more": "Más",
     "show_fewer": "Menos",
-    "mail": "Bandeja de entrada",
+    "mail": "Correo",
     "nav_label": "Navegación",
     "add_app": "Apps",
     "shared": "Compartido",
@@ -1061,7 +1061,7 @@
       "apps": "Aplicaciones",
       "system": "Sistema",
       "appearance": "Apariencia",
-      "mail": "Bandeja de entrada",
+      "mail": "Correo",
       "privacy": "Privacidad y seguridad",
       "advanced": "Avanzado"
     },
