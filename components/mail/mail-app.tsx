@@ -4075,12 +4075,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               )}
             >
               {/* Unified Heading above both Navigation Rail and Sidebar */}
-              <div className="h-14 border-b border-border flex items-center justify-between px-3.5 flex-shrink-0 bg-secondary">
+              <div className="relative h-14 border-b border-border flex items-center px-3.5 flex-shrink-0 bg-secondary">
                 {/* Comail brand: Cammie Mark + Wordmark (functions as refresh button) */}
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="flex items-center gap-2 hover:opacity-80 active:scale-98 transition-all cursor-pointer text-start focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                  className="relative z-10 flex items-center gap-2 hover:opacity-80 active:scale-98 transition-all cursor-pointer text-start focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
                   title="Reload Comail"
                   aria-label="Comail - Reload"
                 >
@@ -4096,18 +4096,20 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   />
                 </button>
 
-                {/* LARGER app title with icon, no longer in all caps */}
-                <div className="flex items-center gap-2 select-none flex-shrink-0">
-                  <Mail className="w-5 h-5 text-foreground/80 flex-shrink-0" />
-                  <span className="text-base font-semibold tracking-normal text-foreground">
-                    {t('sidebar.mail') || 'Mail'}
-                  </span>
+                {/* App title with icon: centered with sidebar dimensions (start-16 to end-0 = 272px), enlarged to fill the space, offset by half icon width for optical balance */}
+                <div className="absolute inset-y-0 start-16 end-0 flex items-center justify-center pointer-events-none">
+                  <div className="flex items-center gap-2.5 select-none pointer-events-auto -translate-x-3.5 rtl:translate-x-3.5">
+                    <Mail className="w-7 h-7 text-foreground/90 flex-shrink-0" />
+                    <span className="text-2xl font-bold tracking-tight text-foreground">
+                      {t('sidebar.mail') || 'Mail'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Lower body: Left is Navigation Rail (w-16), Right is Sidebar (w-[272px] flex-1) */}
               <div className="flex flex-1 min-h-0 overflow-hidden">
-                <div className="w-16 flex flex-col flex-shrink-0 border-e border-border/40">
+                <div className="w-16 flex flex-col flex-shrink-0 border-e border-border/40 bg-secondary">
                   <NavigationRail
                     collapsed
                     size="spacious"

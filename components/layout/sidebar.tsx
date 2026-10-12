@@ -364,13 +364,15 @@ function SidebarRow({
       data-has-unread={(unread ?? 0) > 0 && testRole !== 'drafts' ? '' : undefined}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
-        "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
-        isCollapsed ? "justify-center px-1" : "pe-2",
+        "group flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
+        isCollapsed
+          ? "w-full justify-center px-1"
+          : "mx-2 w-[calc(100%-16px)] rounded-md pe-2",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
-            ? "bg-accent text-accent-foreground font-semibold border-s-2 border-primary"
-            : "hover:bg-muted/50 text-foreground border-s-2 border-transparent",
+            ? "bg-accent text-accent-foreground font-semibold"
+            : "hover:bg-muted/50 text-foreground",
         isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
         isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50"
       )}
@@ -466,7 +468,6 @@ function SidebarSectionHeader({
   }
 
   const paddingY = sub ? "pt-2" : first ? "pt-3" : "pt-5";
-  const paddingX = sub ? "px-4" : "px-3";
   const textClass = sub
     ? "text-xs font-semibold text-muted-foreground truncate"
     : "text-sm font-semibold text-foreground truncate";
@@ -479,8 +480,8 @@ function SidebarSectionHeader({
       data-section-name={label}
       data-expanded={expanded ? 'true' : 'false'}
       className={cn(
-        "group w-full flex items-center pb-1 select-none rounded-sm hover:bg-muted/40 transition-colors",
-        paddingX,
+        "group flex items-center pb-1 select-none rounded-md hover:bg-muted/40 transition-colors",
+        isCollapsed ? "w-full px-2" : "mx-2 w-[calc(100%-16px)] px-2",
         paddingY
       )}
     >

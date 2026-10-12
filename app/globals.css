@@ -218,6 +218,11 @@
   border-color: var(--color-border);
 }
 
+.border-transparent,
+[class*="border-transparent"] {
+  border-color: transparent !important;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
