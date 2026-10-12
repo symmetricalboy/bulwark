@@ -150,7 +150,7 @@
     "show_more": "Mai multe",
     "show_fewer": "Mai puține",
     "shared": "Partajat",
-    "mail": "E-mail",
+    "mail": "Primite",
     "nav_label": "Navigare",
     "add_app": "Aplicații",
     "scheduled": "Programat",
@@ -1064,7 +1064,7 @@
       "apps": "Aplicații",
       "system": "Sistem",
       "appearance": "Aspect",
-      "mail": "E-mail",
+      "mail": "Primite",
       "privacy": "Confidențialitate și securitate",
       "advanced": "Nivel avansat"
     },

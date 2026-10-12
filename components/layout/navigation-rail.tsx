@@ -68,6 +68,10 @@ interface NavigationRailProps {
    * palette (#641) instead of navigating anywhere.
    */
   onOpenSearch?: () => void;
+  /** Size variant: default (w-10 buttons / 18px icons) or spacious (w-11 buttons / 22px icons). */
+  size?: "default" | "spacious";
+  /** If true, omits the top ALPHA badge from the rail (e.g. when hoisted to sidebar header). */
+  hideAlphaBadge?: boolean;
 }
 
 function StorageQuotaCircle({ quota, usagePercent }: { quota: { used: number; total: number }; usagePercent: number }) {
@@ -200,7 +204,10 @@ export function NavigationRail({
   onNavigate,
   activeItemId,
   onOpenSearch,
+  size = "default",
+  hideAlphaBadge = false,
 }: NavigationRailProps) {
+  const isSpacious = size === "spacious";
   const t = useTranslations("sidebar");
   const tGlobalSearch = useTranslations("global_search");
   const pathname = usePathname();
@@ -603,16 +610,21 @@ export function NavigationRail({
         const logoUrl = withBasePath(useDarkLogo ? (appLogoDarkUrl || appLogoLightUrl) : (appLogoLightUrl || appLogoDarkUrl));
         return logoUrl ? (
           <div className="flex flex-col items-center justify-center pt-2.5 pb-1 px-1 gap-1">
-            <span
-              data-testid="comail-alpha-badge"
-              className="px-1.5 py-0.5 text-[9px] font-bold tracking-wider leading-none rounded bg-orange-500 text-white uppercase select-none shadow-xs"
-            >
-              ALPHA
-            </span>
+            {!hideAlphaBadge && (
+              <span
+                data-testid="comail-alpha-badge"
+                className="px-1.5 py-0.5 text-[9px] font-bold tracking-wider leading-none rounded bg-orange-500 text-white uppercase select-none shadow-xs"
+              >
+                ALPHA
+              </span>
+            )}
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="flex items-center justify-center p-1 rounded-lg hover:opacity-80 active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className={cn(
+                "flex items-center justify-center rounded-lg hover:opacity-80 active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                isSpacious ? "w-11 h-11 p-1" : "p-1"
+              )}
               title="Refresh"
               aria-label="Refresh Comail"
               data-testid="comail-avatar-button"
@@ -620,7 +632,7 @@ export function NavigationRail({
               <img
                 src={logoUrl}
                 alt="Comail"
-                className="w-8 h-8 object-contain"
+                className={cn("object-contain", isSpacious ? "w-9 h-9" : "w-8 h-8")}
               />
             </button>
           </div>
@@ -642,14 +654,14 @@ export function NavigationRail({
             data-tour="nav-search"
             className={cn(
               "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-pointer",
-              collapsed ? "justify-center w-10 h-10" : "px-2.5 text-sm",
+              collapsed ? (isSpacious ? "justify-center w-11 h-11" : "justify-center w-10 h-10") : "px-2.5 text-sm",
               "max-lg:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             title={collapsed ? tGlobalSearch("title") : undefined}
             style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
           >
-            <Search className="w-[18px] h-[18px] flex-shrink-0" />
+            <Search className={cn(isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]", "flex-shrink-0")} />
             {!collapsed && <span className="truncate">{tGlobalSearch("title")}</span>}
           </button>
         )}
@@ -678,7 +690,7 @@ export function NavigationRail({
                 className={cn(
                   "relative flex items-center gap-2.5 rounded-md transition-colors duration-150 cursor-grab active:cursor-grabbing",
                   collapsed
-                    ? "justify-center w-10 h-10"
+                    ? (isSpacious ? "justify-center w-11 h-11" : "justify-center w-10 h-10")
                     : "px-2.5 text-sm",
                   "max-lg:min-h-[44px]",
                   isActive
@@ -690,7 +702,7 @@ export function NavigationRail({
                 title={collapsed ? t(item.labelKey) : undefined}
                 style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
               >
-                <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} />
+                <Icon className={cn(isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]", "flex-shrink-0", isActive && "text-primary")} />
                 {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
                 {item.badge != null && item.badge > 0 && (
                   <span className={cn(
@@ -736,7 +748,7 @@ export function NavigationRail({
               className={cn(
                 "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
                 collapsed
-                  ? "justify-center w-10 h-10"
+                  ? (isSpacious ? "justify-center w-11 h-11" : "justify-center w-10 h-10")
                   : "px-2.5 text-sm",
                 "max-lg:min-h-[44px]",
                 isActive
@@ -746,7 +758,7 @@ export function NavigationRail({
               title={collapsed ? app.name : undefined}
               style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
             >
-              {AppIcon ? <AppIcon className={cn("w-[18px] h-[18px] flex-shrink-0", isActive && "text-primary")} /> : null}
+              {AppIcon ? <AppIcon className={cn(isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]", "flex-shrink-0", isActive && "text-primary")} /> : null}
               {!collapsed && <span className="truncate">{app.name}</span>}
             </button>
           );
@@ -759,7 +771,7 @@ export function NavigationRail({
             className={cn(
               "relative flex items-center gap-2.5 rounded-md transition-colors duration-150",
               collapsed
-                ? "justify-center w-10 h-10"
+                ? (isSpacious ? "justify-center w-11 h-11" : "justify-center w-10 h-10")
                 : "px-2.5 text-sm",
               "max-lg:min-h-[44px]",
               "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -767,7 +779,7 @@ export function NavigationRail({
             title={collapsed ? t("add_app") : undefined}
             style={collapsed ? undefined : { paddingBlock: 'var(--density-sidebar-py)' }}
           >
-            <Plus className="w-[18px] h-[18px] flex-shrink-0" />
+            <Plus className={cn(isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]", "flex-shrink-0")} />
             {!collapsed && <span className="truncate">{t("add_app")}</span>}
           </button>
         )}
@@ -780,10 +792,13 @@ export function NavigationRail({
         {isStalwartAdmin && (
           <a
             href={`${getPathPrefix()}/admin`}
-            className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted relative"
+            className={cn(
+              "flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted relative",
+              isSpacious ? "w-11 h-11" : "w-10 h-10"
+            )}
             title={t("admin") || "Admin"}
           >
-            <Shield className="w-[18px] h-[18px]" />
+            <Shield className={isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]"} />
             {hasUpdate && (
               <span
                 className={cn(
@@ -801,11 +816,14 @@ export function NavigationRail({
           href="https://build.comail.at"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center w-10 h-10 rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+          className={cn(
+            "flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted",
+            isSpacious ? "w-11 h-11" : "w-10 h-10"
+          )}
           title="Comail for Builders"
           aria-label="Comail for Builders"
         >
-          <Wrench className="w-[18px] h-[18px]" />
+          <Wrench className={isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]"} />
         </a>
         )}
 
@@ -814,7 +832,8 @@ export function NavigationRail({
           onClick={handleNavClick('settings')}
           data-tour="nav-settings"
           className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-md transition-colors",
+            "flex items-center justify-center rounded-md transition-colors",
+            isSpacious ? "w-11 h-11" : "w-10 h-10",
             isSettingsActive
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -822,7 +841,7 @@ export function NavigationRail({
           title={t("settings")}
           aria-current={isSettingsActive ? "page" : undefined}
         >
-          <Settings className="w-[18px] h-[18px]" />
+          <Settings className={isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]"} />
         </Link>
 
         <div className="w-8 border-t" style={{ borderColor: 'rgba(128, 128, 128, 0.3)' }} />
@@ -831,10 +850,13 @@ export function NavigationRail({
           <button
             onClick={onShowShortcuts}
             data-tour="nav-shortcuts"
-            className="flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className={cn(
+              "flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+              isSpacious ? "w-11 h-11" : "w-10 h-10"
+            )}
             title={t("keyboard_shortcuts")}
           >
-            <Keyboard className="w-[18px] h-[18px]" />
+            <Keyboard className={isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]"} />
           </button>
         )}
         {!onShowShortcuts && (
@@ -842,10 +864,13 @@ export function NavigationRail({
             <button
               onClick={() => setShowShortcutsModal(true)}
               data-tour="nav-shortcuts"
-              className="flex items-center justify-center w-10 h-10 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className={cn(
+                "flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+                isSpacious ? "w-11 h-11" : "w-10 h-10"
+              )}
               title={t("keyboard_shortcuts")}
             >
-              <Keyboard className="w-[18px] h-[18px]" />
+              <Keyboard className={isSpacious ? "w-[22px] h-[22px]" : "w-[18px] h-[18px]"} />
             </button>
             <KeyboardShortcutsModal
               isOpen={showShortcutsModal}
@@ -928,13 +953,16 @@ export function NavigationRail({
             <button
               ref={logoutBtnRef}
               onClick={() => setLogoutMenuOpen(!logoutMenuOpen)}
-              className="flex items-center justify-center w-9 h-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className={cn(
+                "flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
+                isSpacious ? "w-11 h-11" : "w-9 h-9"
+              )}
               title={t("sign_out")}
               aria-label={t("sign_out")}
               aria-expanded={logoutMenuOpen}
               aria-haspopup="menu"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className={isSpacious ? "w-5 h-5" : "w-4 h-4"} />
             </button>
 
             {logoutMenuOpen && createPortal(

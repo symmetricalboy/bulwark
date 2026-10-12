@@ -36,6 +36,7 @@ import {
   Plus,
   CalendarClock,
   BellOff,
+  Mail,
   Mails,
   MailOpen,
   MoreHorizontal,
@@ -72,7 +73,8 @@ import { useSettingsStore, getKeywordVisibility } from "@/stores/settings-store"
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
-import { AccountSwitcher } from "./account-switcher";
+import { useThemeStore } from "@/stores/theme-store";
+import { withBasePath } from "@/lib/browser-navigation";
 import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { buildSettingsPath, SCHEDULED_MAILBOX_ID, scopedScheduledMailboxId } from "@/lib/deep-links";
 import { useTour } from "@/components/tour/tour-provider";
@@ -942,10 +944,9 @@ export function Sidebar({
   const emailKeywords = useSettingsStore(s => s.emailKeywords);
   const nestedTags = useSettingsStore(s => s.nestedTags);
   const isEmbedded = useIsEmbedded();
-  // The Pro shell owns the global chrome (rail + tab bar), so the sidebar's
-  // own AccountSwitcher would be a redundant second account UI in the same
-  // pane.
-  const hideAccountSwitcher = useSettingsStore(s => s.hideAccountSwitcher) || isEmbedded;
+  const resolvedTheme = useThemeStore(s => s.resolvedTheme);
+  const activeThemeId = useThemeStore(s => s.activeThemeId);
+  const isDarkSidebar = resolvedTheme === 'dark' || activeThemeId === 'builtin-comail';
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
   // Mountain View draws its navigation icons in the text colour.
@@ -1308,29 +1309,70 @@ export function Sidebar({
         // Border lives on the wrapper (outside the h-14 box) so the bar's total
         // height matches the search/reply toolbars, which border-b their wrapper too.
         <div className="border-b border-border">
-          <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "gap-1 px-2")}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onSidebarClose}
-              className="lg:hidden h-9 w-9 flex-shrink-0"
-              aria-label={t("close")}
-            >
-              <X className="w-5 h-5" />
-            </Button>
+          <div className={cn("flex items-center h-14", isCollapsed ? "justify-center px-2" : "px-3")}>
+            {isCollapsed ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebarCollapsed}
+                className="hidden lg:flex h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
+                title={t("expand_tooltip")}
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <div className="flex items-center justify-between w-full min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Comail brand: Cammie Mark + Wordmark */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0 select-none">
+                    <img
+                      src={withBasePath("/branding/comail/cammie-mark.png")}
+                      alt="Comail"
+                      className="w-6 h-6 object-contain"
+                    />
+                    <img
+                      src={withBasePath(isDarkSidebar ? "/branding/comail/wordmark-light.svg" : "/branding/comail/wordmark-dark.svg")}
+                      alt="comail"
+                      className="h-4.5 w-auto object-contain"
+                    />
+                  </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleSidebarCollapsed}
-              className="hidden lg:flex h-8 w-8 flex-shrink-0"
-              title={isCollapsed ? t("expand_tooltip") : t("collapse_tooltip")}
-            >
-              {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
-            </Button>
+                  {/* App Indicator: Nav icon + App Title + ALPHA badge */}
+                  <div className="relative flex items-center gap-1 select-none flex-shrink-0">
+                    <Mail className="w-3.5 h-3.5 text-foreground/75 flex-shrink-0" />
+                    <span className="text-[11px] font-bold tracking-wider uppercase text-foreground/80">
+                      INBOX
+                    </span>
+                    <span
+                      data-testid="comail-alpha-badge"
+                      className="relative -top-1.5 -ml-0.5 px-1 py-0.2 text-[8px] font-bold tracking-wider leading-none rounded bg-orange-500 text-white uppercase select-none shadow-xs"
+                    >
+                      ALPHA
+                    </span>
+                  </div>
+                </div>
 
-            {!isCollapsed && !hideAccountSwitcher && (
-              <AccountSwitcher variant="expanded" className="flex-1" />
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onSidebarClose}
+                    className="lg:hidden h-8 w-8 flex-shrink-0 text-foreground/75 hover:text-foreground"
+                    aria-label={t("close")}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleSidebarCollapsed}
+                    className="hidden lg:flex h-8 w-8 flex-shrink-0 text-foreground/75 hover:text-foreground"
+                    title={t("collapse_tooltip")}
+                  >
+                    <ChevronsLeft className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

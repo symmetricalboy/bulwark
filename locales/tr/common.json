@@ -150,7 +150,7 @@
     "show_more": "Diğer",
     "show_fewer": "Daha az",
     "shared": "Paylaşılan",
-    "mail": "Posta",
+    "mail": "Gelen Kutusu",
     "nav_label": "Gezinme",
     "add_app": "Uygulamalar",
     "scheduled": "Zamanlandı",
@@ -1061,7 +1061,7 @@
       "apps": "Uygulamalar",
       "system": "Sistem",
       "appearance": "Görünüm",
-      "mail": "Posta",
+      "mail": "Gelen Kutusu",
       "privacy": "Gizlilik ve Güvenlik",
       "advanced": "Gelişmiş"
     },

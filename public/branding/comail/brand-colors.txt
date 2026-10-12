@@ -1,0 +1,23 @@
+Comail brand colors
+
+Cammie Blue
+#3fa1c0
+
+Black Ink
+#012102
+
+Paper White
+#f5f5e0
+
+Notepad Yellow
+#dfe0c0
+
+Notepad Yellow Accent
+#e1c23f
+
+Protocol Green
+#02413c
+
+Protocol Green Dark
+#03413c
+

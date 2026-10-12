@@ -150,7 +150,7 @@
     "show_more": "More",
     "show_fewer": "Less",
     "shared": "Shared",
-    "mail": "Mail",
+    "mail": "Inbox",
     "nav_label": "Navigation",
     "add_app": "Apps",
     "scheduled": "Scheduled",
@@ -1064,7 +1064,7 @@
       "apps": "Apps",
       "system": "System",
       "appearance": "Appearance",
-      "mail": "Mail",
+      "mail": "Inbox",
       "privacy": "Privacy & Security",
       "advanced": "Advanced"
     },
@@ -1847,7 +1847,7 @@
         },
         "apps": {
           "gmail": "Gmail",
-          "gmail_desc": "Display your Gmail messages in the Mail app",
+          "gmail_desc": "Display your Gmail messages in the Inbox app",
           "drive": "Drive",
           "drive_desc": "Display Google Drive in Files and Mail attachments",
           "calendar": "Calendar",

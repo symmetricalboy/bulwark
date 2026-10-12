@@ -149,7 +149,7 @@
     "folders": "Foldery",
     "show_more": "Więcej",
     "show_fewer": "Mniej",
-    "mail": "Poczta",
+    "mail": "Odebrane",
     "nav_label": "Nawigacja",
     "add_app": "Aplikacje",
     "shared": "Udostępnione",
@@ -1061,7 +1061,7 @@
       "apps": "Aplikacje",
       "system": "System",
       "appearance": "Wygląd",
-      "mail": "Poczta",
+      "mail": "Odebrane",
       "privacy": "Prywatność i bezpieczeństwo",
       "advanced": "Zaawansowane"
     },

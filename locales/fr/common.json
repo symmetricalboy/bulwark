@@ -149,7 +149,7 @@
     "folders": "Dossiers",
     "show_more": "Plus",
     "show_fewer": "Moins",
-    "mail": "Messagerie",
+    "mail": "Boîte de réception",
     "nav_label": "Navigation",
     "add_app": "Apps",
     "shared": "Partagé",
@@ -1061,7 +1061,7 @@
       "apps": "Applications",
       "system": "Système",
       "appearance": "Apparence",
-      "mail": "Courrier",
+      "mail": "Boîte de réception",
       "privacy": "Confidentialité et sécurité",
       "advanced": "Avancé"
     },

@@ -150,7 +150,7 @@
     "show_more": "Több",
     "show_fewer": "Kevesebb",
     "shared": "Megosztott",
-    "mail": "Levelek",
+    "mail": "Beérkező levelek",
     "nav_label": "Navigáció",
     "add_app": "Alkalmazások",
     "scheduled": "Ütemezett",
@@ -1064,7 +1064,7 @@
       "apps": "Alkalmazások",
       "system": "Rendszer",
       "appearance": "Megjelenés",
-      "mail": "Levelek",
+      "mail": "Beérkező levelek",
       "privacy": "Adatvédelem és biztonság",
       "advanced": "Speciális"
     },

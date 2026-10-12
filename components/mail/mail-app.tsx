@@ -393,7 +393,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // after a split closes and reopens at a different size.
   const clampEmailListWidth = (width: number) =>
     paneWidth !== null ? Math.min(width, Math.max(220, Math.floor(paneWidth * 0.55))) : width;
-  const { activeView, sidebarOpen, setSidebarOpen, setActiveView, tabletListVisible, setTabletListVisible, sidebarWidth, emailListWidth, emailListHeight, setSidebarWidth, setEmailListWidth, setEmailListHeight, persistColumnWidths, sidebarCollapsed, resetSidebarWidth, resetEmailListWidth, resetEmailListHeight } = useUIStore();
+  const { activeView, sidebarOpen, setSidebarOpen, setActiveView, tabletListVisible, setTabletListVisible, emailListWidth, emailListHeight, setEmailListWidth, setEmailListHeight, persistColumnWidths, sidebarCollapsed, resetEmailListWidth, resetEmailListHeight } = useUIStore();
   const {
     emails,
     mailboxes,
@@ -1149,7 +1149,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const stored = localStorage.getItem("column-widths");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.sidebarWidth) setSidebarWidth(parsed.sidebarWidth);
         if (parsed.emailListWidth) setEmailListWidth(parsed.emailListWidth);
         if (parsed.emailListHeight) setEmailListHeight(parsed.emailListHeight);
       }
@@ -4045,9 +4044,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
             under Mountain View, whose header carries the app grid instead) */}
         {!isMobile && !isTablet && !isEmbedded && !mvShell && (
-          <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
+          <div className="w-16 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
             <NavigationRail
               collapsed
+              size="spacious"
+              hideAlphaBadge
               quota={quota}
               isPushConnected={isPushConnected}
               onLogout={handleLogout}
@@ -4122,7 +4123,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             inlineApp && "hidden",
             fullscreenReading && "hidden"
           )}
-          style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : sidebarWidth } : undefined}
+          style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : 272 } : undefined}
         >
           <ErrorBoundary fallback={SidebarErrorFallback}>
             <Sidebar
@@ -4171,21 +4172,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             />
           </ErrorBoundary>
         </div>
-
-        {/* Sidebar resize handle (desktop only, hidden when collapsed, and
-            absent under Mountain View, whose navigation has a fixed width) */}
-        {!isMobile && !isTablet && !sidebarCollapsed && !inlineApp && !fullscreenReading && !mvShell && (
-          <ResizeHandle
-            value={sidebarWidth}
-            valueMin={180}
-            valueMax={400}
-            valueText={`Sidebar width ${Math.round(sidebarWidth)} pixels`}
-            onResizeStart={() => { dragStartWidth.current = sidebarWidth; setIsResizing(true); }}
-            onResize={(delta) => setSidebarWidth(dragStartWidth.current + delta)}
-            onResizeEnd={() => { setIsResizing(false); persistColumnWidths(); }}
-            onDoubleClick={resetSidebarWidth}
-          />
-        )}
         {/* Main Content Area. Under Mountain View it is the rounded card
             inset from the canvas. */}
         <div

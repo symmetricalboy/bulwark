@@ -62,7 +62,6 @@ export const tabSearchPaths: Record<Tab, string[]> = {
   layout: [
     'settings.appearance.toolbar_position',
     'settings.appearance.toolbar_labels',
-    'settings.appearance.hide_account_switcher',
     'settings.appearance.show_rail_account_list',
     'settings.appearance.unified_mailbox',
     'settings.appearance.cross_unread',

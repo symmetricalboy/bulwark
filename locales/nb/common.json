@@ -150,7 +150,7 @@
     "show_more": "Mer",
     "show_fewer": "Mindre",
     "shared": "Delt",
-    "mail": "E-post",
+    "mail": "Innboks",
     "nav_label": "Navigasjon",
     "add_app": "Apper",
     "scheduled": "Planlagt",
@@ -1064,7 +1064,7 @@
       "apps": "Apper",
       "system": "System",
       "appearance": "Utseende",
-      "mail": "E-post",
+      "mail": "Innboks",
       "privacy": "Personvern og sikkerhet",
       "advanced": "Avansert"
     },

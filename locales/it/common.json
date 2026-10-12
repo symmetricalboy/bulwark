@@ -149,7 +149,7 @@
     "folders": "Cartelle",
     "show_more": "Altro",
     "show_fewer": "Riduci",
-    "mail": "Posta",
+    "mail": "Posta in arrivo",
     "nav_label": "Navigazione",
     "add_app": "App",
     "shared": "Condiviso",
@@ -1061,7 +1061,7 @@
       "apps": "Applicazioni",
       "system": "Sistema",
       "appearance": "Aspetto",
-      "mail": "Posta",
+      "mail": "Posta in arrivo",
       "privacy": "Privacy e sicurezza",
       "advanced": "Avanzate"
     },
