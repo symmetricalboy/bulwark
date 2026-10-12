@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import {
-  Check,
   GripVertical,
   Plus,
   Star,
@@ -12,6 +11,7 @@ import {
   Info,
   Link as LinkIcon,
   Trash2,
+  GoogleIcon,
 } from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -290,6 +290,40 @@ interface AccountRowProps {
   };
 }
 
+function ProviderBadge({ account }: { account: AccountEntry }) {
+  const email = (account.email || account.username || '').toLowerCase();
+  const server = (account.serverUrl || '').toLowerCase();
+
+  if (email.endsWith('@gmail.com') || email.endsWith('@googlemail.com') || server.includes('google')) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
+        <GoogleIcon className="w-3 h-3 shrink-0" />
+        <span>Google Workspace</span>
+      </span>
+    );
+  }
+  if (account.did) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 shrink-0">
+        <span className="font-bold">@</span>
+        <span>ATProto Space</span>
+      </span>
+    );
+  }
+  if (email.endsWith('@icloud.com') || email.endsWith('@me.com') || email.endsWith('@mac.com')) {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-muted text-foreground border border-border shrink-0">
+        <span>iCloud</span>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20 shrink-0">
+      <span>JMAP</span>
+    </span>
+  );
+}
+
 function AccountRow({
   account,
   index,
@@ -316,95 +350,101 @@ function AccountRow({
       onDrop={(e) => onDrop(e, index)}
       onDragEnd={onDragEnd}
       className={cn(
-        'flex items-center gap-3 p-3 border rounded-lg transition-colors',
+        'flex flex-col sm:flex-row sm:items-center gap-3 p-3.5 border rounded-xl transition-all duration-200 shadow-2xs',
         isDragOver
-          ? 'border-primary bg-primary/5'
+          ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
           : isActive
-            ? 'border-border bg-accent/30'
-            : 'border-border hover:bg-muted/50'
+            ? 'border-primary/40 bg-accent/25 ring-1 ring-primary/20'
+            : 'border-border bg-card/60 hover:bg-muted/40 hover:border-border/80'
       )}
     >
-      <div
-        className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0"
-        title={labels.dragHandle}
-      >
-        <GripVertical className="w-4 h-4" />
-      </div>
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div
+          className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground flex-shrink-0"
+          title={labels.dragHandle}
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
 
-      <div className="relative flex-shrink-0">
-        <Avatar
-          name={account.displayName || account.label}
-          email={account.email || account.username}
-          did={account.did}
-          size="sm"
-          className="w-9 h-9 text-sm"
-          disableFavicon
-          fallbackColor={account.avatarColor}
-        />
-        {isActive && (
-          <div
-            className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-white ring-2 ring-background flex items-center justify-center shadow-xs"
-            title={labels.active}
-          >
-            <svg
-              className="w-2.5 h-2.5 text-white"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+        <div className="relative flex-shrink-0">
+          <Avatar
+            name={account.displayName || account.label}
+            email={account.email || account.username}
+            did={account.did}
+            size="sm"
+            className="w-10 h-10 text-sm shadow-2xs"
+            disableFavicon
+            fallbackColor={account.avatarColor}
+          />
+          {isActive && (
+            <div
+              className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-white ring-2 ring-background flex items-center justify-center shadow-xs"
+              title={labels.active}
             >
-              <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" stroke="#ffffff" />
-            </svg>
+              <svg
+                className="w-2.5 h-2.5 text-white"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="3.5 8.5 6.5 11.5 12.5 4.5" stroke="#ffffff" />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onSwitch}
+          disabled={isActive}
+          className={cn(
+            'min-w-0 flex-1 text-start',
+            !isActive && 'cursor-pointer'
+          )}
+          title={isActive ? labels.active : labels.switchTo}
+        >
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-sm font-semibold truncate tracking-tight text-foreground font-mono">
+              {rowName}
+            </span>
+            <ProviderBadge account={account} />
+            {account.isDefault && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                <Star className="w-2.5 h-2.5 fill-amber-500" aria-label={labels.default} />
+                <span>{labels.default}</span>
+              </span>
+            )}
           </div>
-        )}
+          <AtprotoHandle
+            did={account.did}
+            className="block text-[11px] leading-4 text-muted-foreground"
+          />
+          {!isSameIdentity(rowName, rowEmail) && (
+            <p className="text-xs text-muted-foreground truncate">
+              {rowEmail}
+            </p>
+          )}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {account.hasError ? (
+              <AlertCircle className="w-3 h-3 text-destructive" />
+            ) : (
+              <span className={cn(
+                'w-1.5 h-1.5 rounded-full',
+                account.isConnected ? 'bg-green-500 shadow-xs' : 'bg-muted-foreground/40'
+              )} />
+            )}
+            <span className="text-[10px] text-muted-foreground truncate">
+              {hostnameOf(account.serverUrl)}
+            </span>
+          </div>
+        </button>
       </div>
 
-      <button
-        type="button"
-        onClick={onSwitch}
-        disabled={isActive}
-        className={cn(
-          'min-w-0 flex-1 text-start',
-          !isActive && 'cursor-pointer'
-        )}
-        title={isActive ? labels.active : labels.switchTo}
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-medium truncate">
-            {rowName}
-          </span>
-          {account.isDefault && (
-            <Star className="w-3 h-3 text-amber-500 flex-shrink-0 fill-amber-500" aria-label={labels.default} />
-          )}
-        </div>
-        <AtprotoHandle
-          did={account.did}
-          className="block text-[11px] leading-4 text-muted-foreground"
-        />
-        {!isSameIdentity(rowName, rowEmail) && (
-          <p className="text-xs text-muted-foreground truncate">
-            {rowEmail}
-          </p>
-        )}
-        <div className="flex items-center gap-1 mt-0.5">
-          {account.hasError ? (
-            <AlertCircle className="w-3 h-3 text-destructive" />
-          ) : (
-            <span className={cn(
-              'w-1.5 h-1.5 rounded-full',
-              account.isConnected ? 'bg-green-500' : 'bg-muted-foreground/40'
-            )} />
-          )}
-          <span className="text-[10px] text-muted-foreground truncate">
-            {hostnameOf(account.serverUrl)}
-          </span>
-        </div>
-      </button>
-
-      <div className="flex items-center gap-1.5 flex-shrink-0">
+      <div className="flex items-center gap-1.5 flex-shrink-0 self-end sm:self-center">
         <Button
           type="button"
           variant="outline"
@@ -413,7 +453,7 @@ function AccountRow({
             e.stopPropagation();
             onShowLinkedAccounts();
           }}
-          className="h-8 px-2.5 text-xs gap-1.5"
+          className="h-8 px-2.5 text-xs gap-1.5 shadow-2xs"
           title={labels.linkedAccounts}
         >
           <LinkIcon className="w-3.5 h-3.5 text-muted-foreground" />
@@ -428,7 +468,7 @@ function AccountRow({
             e.stopPropagation();
             onShowInfo();
           }}
-          className="h-8 px-2.5 text-xs gap-1.5"
+          className="h-8 px-2.5 text-xs gap-1.5 shadow-2xs"
           title={labels.accountInfo}
         >
           <Info className="w-3.5 h-3.5 text-muted-foreground" />
@@ -443,7 +483,7 @@ function AccountRow({
             e.stopPropagation();
             onRemove();
           }}
-          className="h-8 px-2.5 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-border"
+          className="h-8 px-2.5 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-border shadow-2xs"
           title={labels.removeAccount}
         >
           <Trash2 className="w-3.5 h-3.5 text-destructive" />
@@ -454,7 +494,7 @@ function AccountRow({
           <button
             type="button"
             onClick={onSetDefault}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors"
             title={labels.setDefault}
             aria-label={labels.setDefault}
           >
