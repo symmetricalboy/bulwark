@@ -42,13 +42,12 @@ import {
 } from "@/components/icons";
 import {
   generateJitsiMeetingUrl,
-  getGoogleMeetNewUrl,
-  getTeamsNewUrl,
-  getZoomNewUrl,
+  getProviderMeta,
   buildMeetingHtmlSnippet,
   buildMeetingPlainTextSnippet,
   type VideoMeetingProviderId,
 } from "@/lib/video-meetings";
+import { useMeetingLinkFlow } from "@/components/video-meeting/use-meeting-link-flow";
 import { ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { schedulePresets } from "@/lib/schedule-presets";
@@ -1434,34 +1433,19 @@ export function EmailComposer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plainTextMode, body, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled]);
 
-  const insertVideoMeeting = useCallback(
-    (providerId: VideoMeetingProviderId) => {
-      let url = "";
-      let providerName = "";
-
-      switch (providerId) {
-        case "jitsi":
-          url = generateJitsiMeetingUrl(subject);
-          providerName = "Instant Jitsi Meet";
-          break;
-        case "google-meet":
-          url = getGoogleMeetNewUrl();
-          providerName = "Google Meet";
-          break;
-        case "teams":
-          url = getTeamsNewUrl();
-          providerName = "Microsoft Teams";
-          break;
-        case "zoom":
-          url = getZoomNewUrl();
-          providerName = "Zoom";
-          break;
-      }
-
-      if (!url) return;
+  const tVideo = useTranslations('video_meeting');
+  const insertMeetingLink = useCallback(
+    (url: string, providerName: string) => {
+      const snippetOptions = {
+        url,
+        heading: subject.trim()
+          ? tVideo('snippet_heading_titled', { title: subject.trim() })
+          : tVideo('snippet_heading'),
+        joinLabel: tVideo('snippet_join', { provider: providerName }),
+      };
 
       if (plainTextMode) {
-        const snippet = buildMeetingPlainTextSnippet({ url, title: subject, providerName });
+        const snippet = buildMeetingPlainTextSnippet(snippetOptions);
         const textarea = bodyRef.current;
         if (textarea) {
           const start = textarea.selectionStart ?? textarea.value.length;
@@ -1476,16 +1460,27 @@ export function EmailComposer({
           setBody((prev) => prev + snippet);
         }
       } else if (editorRef.current) {
-        const htmlSnippet = buildMeetingHtmlSnippet({ url, title: subject, providerName });
-        editorRef.current.chain().focus().insertContent(htmlSnippet).run();
+        editorRef.current.chain().focus().insertContent(buildMeetingHtmlSnippet(snippetOptions)).run();
       } else {
-        const htmlSnippet = buildMeetingHtmlSnippet({ url, title: subject, providerName });
-        setBody((prev) => prev + htmlSnippet);
+        setBody((prev) => prev + buildMeetingHtmlSnippet(snippetOptions));
       }
 
-      toast.success(`${providerName} invitation inserted`);
+      toast.success(tVideo('inserted', { provider: providerName }));
     },
-    [subject, plainTextMode]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [subject, plainTextMode, tVideo]
+  );
+  const { start: startLinkedMeeting, dialog: meetingLinkDialog } = useMeetingLinkFlow(insertMeetingLink);
+
+  const insertVideoMeeting = useCallback(
+    (providerId: VideoMeetingProviderId) => {
+      if (providerId === "jitsi") {
+        insertMeetingLink(generateJitsiMeetingUrl(subject), getProviderMeta("jitsi").name);
+      } else if (providerId === "google-meet" || providerId === "teams" || providerId === "zoom") {
+        startLinkedMeeting(providerId);
+      }
+    },
+    [subject, insertMeetingLink, startLinkedMeeting]
   );
 
   // Move a chip from one recipient field to another. `toIndex`, when given,
@@ -4000,6 +3995,8 @@ export function EmailComposer({
           onPick={handleFilesPicked}
         />
       )}
+
+      {meetingLinkDialog}
 
       {showGoogleDrivePicker && (
         <GoogleDrivePickerDialog

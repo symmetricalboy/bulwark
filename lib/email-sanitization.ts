@@ -124,6 +124,7 @@ export interface IframeBodySanitizeResult {
 export function sanitizeEmailBodyForIframe(
   html: string,
   blockExternal: boolean,
+  options: { stripTrackingPixels?: boolean } = {},
 ): IframeBodySanitizeResult {
   const config = blockExternal
     ? {
@@ -135,6 +136,13 @@ export function sanitizeEmailBodyForIframe(
 
   let blockedExternalContent = false;
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    // Tracking pixels go first: once removed there is nothing left to block,
+    // and they must not raise the "external content blocked" banner - the
+    // user would gain nothing by loading them.
+    if (options.stripTrackingPixels && isTrackingPixel(node)) {
+      node.remove();
+      return;
+    }
     if (blockExternal) {
       // Blocks every external-resource vector (img src incl. whitespace/newline
       // tricks, srcset, <source>, <video poster>, media src, background attr,
@@ -423,6 +431,83 @@ export function isExternalResourceUrl(value: string | null | undefined): boolean
   // eslint-disable-next-line no-control-regex
   const normalized = value.replace(/[\u0000-\u0020]+/g, '').replace(/\\/g, '/');
   return /^(?:https?:|\/\/)/i.test(normalized);
+}
+
+/**
+ * Hosts that exist only to record email opens. Matched as the hostname or any
+ * subdomain of it. Kept short on purpose: the size/visibility heuristics below
+ * catch the long tail, this list catches trackers that ship a normal-sized
+ * transparent image to dodge them.
+ */
+const TRACKING_PIXEL_HOSTS = [
+  'mailtrack.io',
+  'mailtrack.com',
+  'mailfoogae.appspot.com',
+  'list-manage.com',
+  'open.convertkit-mail.com',
+  'pixel.watch',
+  'track.hubspot.com',
+  'email.mg.mailgun.net',
+  'mandrillapp.com',
+  'ct.sendgrid.net',
+  'trk.klclick.com',
+  'r.superhuman.com',
+  'track.mixmax.com',
+  't.yesware.com',
+  'getnotify.com',
+  'bananatag.com',
+];
+
+/** URL paths open-tracking services use regardless of the (branded) host. */
+const TRACKING_PIXEL_PATH = /\/(?:track\/open(?:\.php)?|wf\/open|open\.php|e\/o\/|trk\/o)(?:[/?#]|$)/i;
+
+function cssLengthIsTiny(style: string, prop: 'width' | 'height'): boolean {
+  const match = style.match(new RegExp(`(?:^|;)\\s*(?:max-)?${prop}\\s*:\\s*([\\d.]+)\\s*(px)?\\s*(?:!important)?\\s*(?:;|$)`, 'i'));
+  return !!match && Number(match[1]) <= 2;
+}
+
+function hostOf(url: string): string | null {
+  try {
+    // eslint-disable-next-line no-control-regex
+    const normalized = url.replace(/[\u0000-\u0020]+/g, '').replace(/\\/g, '/');
+    return new URL(normalized.startsWith('//') ? `https:${normalized}` : normalized).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * True if an element is a remote image whose only purpose is reporting that
+ * the message was opened: a 0-2px or invisible remote `<img>`, or any remote
+ * image served from a known open-tracking host. Inline (data:/blob:/cid:)
+ * images never count - they cannot phone home.
+ */
+export function isTrackingPixel(node: Element): boolean {
+  if (node.tagName !== 'IMG') return false;
+  const src = node.getAttribute('src');
+  if (!isExternalResourceUrl(src)) return false;
+
+  const host = hostOf(src as string);
+  if (host && TRACKING_PIXEL_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) {
+    return true;
+  }
+  if (TRACKING_PIXEL_PATH.test(src as string)) return true;
+
+  const width = node.getAttribute('width');
+  const height = node.getAttribute('height');
+  const tinyAttr = (v: string | null) => v !== null && v.trim() !== '' && Number.parseFloat(v) <= 2;
+  if (tinyAttr(width) && tinyAttr(height)) return true;
+
+  const style = (node.getAttribute('style') ?? '').toLowerCase();
+  if (style) {
+    if (/(?:^|;)\s*display\s*:\s*none/.test(style)) return true;
+    if (/(?:^|;)\s*visibility\s*:\s*hidden/.test(style)) return true;
+    if (/(?:^|;)\s*opacity\s*:\s*0(?:\.0+)?\s*(?:;|$|!)/.test(style)) return true;
+    const tinyW = cssLengthIsTiny(style, 'width') || tinyAttr(width);
+    const tinyH = cssLengthIsTiny(style, 'height') || tinyAttr(height);
+    if (tinyW && tinyH) return true;
+  }
+  return false;
 }
 
 

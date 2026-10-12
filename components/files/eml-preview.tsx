@@ -43,11 +43,12 @@ function escapeHtml(s: string): string {
 export function EmlPreview({ message }: { message: ParsedEml }) {
   const t = useTranslations("email_viewer");
   const blockRemote = useSettingsStore((state) => state.externalContentPolicy) !== "allow";
+  const stripTrackingPixels = useSettingsStore((state) => state.trackerBlockerEnabled);
 
   // dir="auto" on a wrapper we control lets the first strong character pick
   // the direction, matching the main viewer.
   const body = message.html
-    ? `<div dir="auto">${sanitizeEmailBodyForIframe(message.html, blockRemote).html}</div>`
+    ? `<div dir="auto">${sanitizeEmailBodyForIframe(message.html, blockRemote, { stripTrackingPixels }).html}</div>`
     : message.text
       ? `<pre dir="auto" style="white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace;margin:0;padding:8px">${escapeHtml(message.text)}</pre>`
       : "";

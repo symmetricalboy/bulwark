@@ -2,11 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   generateJitsiMeetingUrl,
   generateJitsiRoomName,
-  getGoogleMeetNewUrl,
-  getTeamsNewUrl,
-  getZoomNewUrl,
-  getNextcloudTalkUrl,
   detectMeetingProvider,
+  isProviderMeetingUrl,
+  isSafeMeetingHref,
+  MEETING_START_URLS,
   buildMeetingHtmlSnippet,
   buildMeetingPlainTextSnippet,
 } from "../video-meetings";
@@ -15,80 +14,97 @@ describe("video-meetings helper", () => {
   describe("Jitsi meeting generator", () => {
     it("generates a valid Jitsi meeting URL with title slug", () => {
       const url = generateJitsiMeetingUrl("Weekly Product Sync!");
-      expect(url).toMatch(/^https:\/\/meet\.jit\.si\/comail-weekly-product-sync-[a-z0-9]+$/);
+      expect(url).toMatch(/^https:\/\/meet\.jit\.si\/comail-weekly-product-sync-[a-z0-9]{12}$/);
     });
 
     it("generates a valid Jitsi meeting URL without title", () => {
-      const url = generateJitsiMeetingUrl();
-      expect(url).toMatch(/^https:\/\/meet\.jit\.si\/comail-[a-z0-9]+$/);
+      expect(generateJitsiMeetingUrl()).toMatch(/^https:\/\/meet\.jit\.si\/comail-[a-z0-9]{12}$/);
     });
 
     it("sanitizes special characters in room name", () => {
       const room = generateJitsiRoomName("Special %$# & * () characters @ 123");
-      expect(room).toMatch(/^comail-special-characters-123-[a-z0-9]+$/);
+      expect(room).toMatch(/^comail-special-characters-123-[a-z0-9]{12}$/);
+    });
+
+    it("never produces the same room twice", () => {
+      const rooms = new Set(Array.from({ length: 200 }, () => generateJitsiRoomName("x")));
+      expect(rooms.size).toBe(200);
     });
   });
 
-  describe("Provider URLs", () => {
-    it("returns correct new meeting URLs", () => {
-      expect(getGoogleMeetNewUrl()).toBe("https://meet.google.com/new");
-      expect(getTeamsNewUrl()).toBe("https://teams.live.com/meet/");
-      expect(getZoomNewUrl()).toBe("https://zoom.us/start/videomeeting");
-      expect(getNextcloudTalkUrl("https://cloud.acme.org/")).toBe("https://cloud.acme.org/call/");
-      expect(getNextcloudTalkUrl()).toBe("https://cloud.comail.at/call/");
+  describe("linked providers", () => {
+    it("start pages are not themselves accepted as invite links", () => {
+      expect(isProviderMeetingUrl("google-meet", MEETING_START_URLS["google-meet"])).toBe(false);
+      expect(isProviderMeetingUrl("teams", MEETING_START_URLS.teams)).toBe(false);
+      expect(isProviderMeetingUrl("zoom", MEETING_START_URLS.zoom)).toBe(false);
+      expect(isProviderMeetingUrl("google-meet", "https://meet.google.com/new")).toBe(false);
+    });
+
+    it("accepts real invite links for the matching provider only", () => {
+      expect(isProviderMeetingUrl("google-meet", "https://meet.google.com/abc-defg-hij")).toBe(true);
+      expect(isProviderMeetingUrl("zoom", "https://us02web.zoom.us/j/123456789?pwd=abc")).toBe(true);
+      expect(isProviderMeetingUrl("teams", "https://teams.microsoft.com/l/meetup-join/19%3ameeting_x/0")).toBe(true);
+      expect(isProviderMeetingUrl("teams", "https://meet.google.com/abc-defg-hij")).toBe(false);
+    });
+
+    it("rejects non-https links", () => {
+      expect(isProviderMeetingUrl("google-meet", "http://meet.google.com/abc-defg-hij")).toBe(false);
+      expect(isProviderMeetingUrl("zoom", "javascript:alert(1)")).toBe(false);
+    });
+  });
+
+  describe("isSafeMeetingHref", () => {
+    it("only allows http(s)", () => {
+      expect(isSafeMeetingHref("https://meet.jit.si/x")).toBe(true);
+      expect(isSafeMeetingHref("javascript:alert(1)")).toBe(false);
+      expect(isSafeMeetingHref("data:text/html,hi")).toBe(false);
+      expect(isSafeMeetingHref(undefined)).toBe(false);
     });
   });
 
   describe("detectMeetingProvider", () => {
-    it("detects Google Meet URLs", () => {
-      const meta = detectMeetingProvider("https://meet.google.com/abc-defg-hij");
-      expect(meta.id).toBe("google-meet");
-      expect(meta.name).toBe("Google Meet");
+    it("detects known providers", () => {
+      expect(detectMeetingProvider("https://meet.google.com/abc-defg-hij").id).toBe("google-meet");
+      expect(detectMeetingProvider("https://teams.microsoft.com/meet/123456").id).toBe("teams");
+      expect(detectMeetingProvider("https://us02web.zoom.us/j/123456789?pwd=abc").id).toBe("zoom");
+      expect(detectMeetingProvider("https://meet.jit.si/comail-planning-xyz").id).toBe("jitsi");
     });
 
-    it("detects Microsoft Teams URLs", () => {
-      const meta = detectMeetingProvider("https://teams.microsoft.com/meet/123456");
-      expect(meta.id).toBe("teams");
-      expect(meta.name).toBe("Microsoft Teams");
-    });
-
-    it("detects Zoom URLs", () => {
-      const meta = detectMeetingProvider("https://us02web.zoom.us/j/123456789?pwd=abc");
-      expect(meta.id).toBe("zoom");
-      expect(meta.name).toBe("Zoom");
-    });
-
-    it("detects Jitsi URLs", () => {
-      const meta = detectMeetingProvider("https://meet.jit.si/comail-planning-xyz");
-      expect(meta.id).toBe("jitsi");
-      expect(meta.name).toBe("Jitsi Meet");
-    });
-
-    it("handles null and undefined gracefully", () => {
-      const meta = detectMeetingProvider(null);
+    it("keeps the brand name of other recognised services", () => {
+      const meta = detectMeetingProvider("https://whereby.com/team-room");
       expect(meta.id).toBe("custom");
-      expect(meta.name).toBe("Video Meeting");
+      expect(meta.name).toBe("Whereby");
+    });
+
+    it("returns a nameless generic meta for unknown or missing links", () => {
+      expect(detectMeetingProvider(null)).toMatchObject({ id: "custom", name: "" });
+      expect(detectMeetingProvider("https://example.com/room")).toMatchObject({ id: "custom", name: "" });
     });
   });
 
-  describe("Snippets", () => {
-    it("builds rich HTML snippet with link and provider name", () => {
-      const html = buildMeetingHtmlSnippet({
-        url: "https://meet.jit.si/comail-test-123",
-        title: "Sprint Planning",
-      });
-      expect(html).toContain("Sprint Planning");
-      expect(html).toContain("https://meet.jit.si/comail-test-123");
-      expect(html).toContain("Jitsi Meet");
+  describe("snippets", () => {
+    const opts = {
+      url: "https://meet.jit.si/comail-test-123",
+      heading: "Sprint Planning · Video call",
+      joinLabel: "Join with Jitsi Meet:",
+    };
+
+    it("builds an HTML snippet with the heading and link", () => {
+      const html = buildMeetingHtmlSnippet(opts);
+      expect(html).toContain("Sprint Planning · Video call");
+      expect(html).toContain('href="https://meet.jit.si/comail-test-123"');
     });
 
-    it("builds plain text snippet", () => {
-      const text = buildMeetingPlainTextSnippet({
-        url: "https://meet.google.com/abc-defg-hij",
-        title: "Client Sync",
-      });
-      expect(text).toContain("Client Sync - Video Meeting");
-      expect(text).toContain("Meeting Link: https://meet.google.com/abc-defg-hij");
+    it("escapes caller-provided text", () => {
+      const html = buildMeetingHtmlSnippet({ ...opts, heading: '<img src=x onerror="alert(1)">' });
+      expect(html).not.toContain("<img");
+      expect(html).toContain("&lt;img");
+    });
+
+    it("builds a plain text snippet", () => {
+      const text = buildMeetingPlainTextSnippet(opts);
+      expect(text).toContain("Sprint Planning · Video call");
+      expect(text).toContain("Join with Jitsi Meet: https://meet.jit.si/comail-test-123");
     });
   });
 });

@@ -89,6 +89,20 @@ export function getEventDisplayEndDate(event: CalendarEvent): Date {
   return subMilliseconds(end, 1);
 }
 
+/**
+ * "Speedy meetings": trim a new meeting so back-to-back calls leave a break.
+ * Meetings of up to 30 minutes end 5 minutes early, longer ones 10 minutes
+ * early. Meetings of 15 minutes or less are left alone - trimming them would
+ * eat a third of the slot.
+ */
+export function applySpeedyMeetings(start: Date, end: Date, enabled: boolean): Date {
+  if (!enabled) return end;
+  const minutes = (end.getTime() - start.getTime()) / 60000;
+  if (minutes <= 15) return end;
+  const trim = minutes <= 30 ? 5 : 10;
+  return new Date(end.getTime() - trim * 60000);
+}
+
 export function getEventDayBounds(event: CalendarEvent): { startDay: Date; endDay: Date } {
   return {
     startDay: startOfDay(getEventStartDate(event)),

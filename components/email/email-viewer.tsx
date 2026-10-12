@@ -837,6 +837,7 @@ export function EmailViewer({
   const copyLink = useCopyLink();
   const tWelcome = useTranslations('welcome');
   const externalContentPolicy = useSettingsStore((state) => state.externalContentPolicy);
+  const trackerBlockerEnabled = useSettingsStore((state) => state.trackerBlockerEnabled);
   const messageSpacing = useSettingsStore((state) => state.messageSpacing);
   const plainTextFont = useSettingsStore((state) => state.plainTextFont);
   const mailAttachmentAction = useSettingsStore((state) => state.mailAttachmentAction);
@@ -1961,7 +1962,7 @@ export function EmailViewer({
         // Sanitize (no dark mode color transforms - emails render true-to-life
         // in the iframe) and enforce the external-content policy.
         const { html: cleanHtml, blockedExternalContent } =
-          sanitizeEmailBodyForIframe(htmlContent, shouldBlockExternal);
+          sanitizeEmailBodyForIframe(htmlContent, shouldBlockExternal, { stripTrackingPixels: trackerBlockerEnabled });
 
         // Update blocked content state
         if (blockedExternalContent && !hasBlockedContent) {
@@ -2025,7 +2026,7 @@ export function EmailViewer({
     // intentionally trigger a fresh srcDoc - `shouldBlockExternal` carries that
     // change in, and re-reads the trust selectors on the way.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, shouldBlockExternal, cidBlobUrls, t]);
+  }, [email, shouldBlockExternal, trackerBlockerEnabled, cidBlobUrls, t]);
 
   // Override email content with S/MIME decrypted content when available
   const effectiveEmailContent = useMemo(() => {
@@ -2040,7 +2041,7 @@ export function EmailViewer({
     // banner, and the strict iframe CSP via `externalBlocked` (#797).
     const renderHtml = (html: string) => {
       const { html: cleanHtml, blockedExternalContent } =
-        sanitizeEmailBodyForIframe(html, shouldBlockExternal);
+        sanitizeEmailBodyForIframe(html, shouldBlockExternal, { stripTrackingPixels: trackerBlockerEnabled });
       if (blockedExternalContent && !hasBlockedContent) {
         setHasBlockedContent(true);
       }
@@ -2081,7 +2082,7 @@ export function EmailViewer({
     // `hasBlockedContent` is only read to avoid a redundant setState; including
     // it would re-run the whole sanitize pass the moment the banner appears.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cidBlobUrls, emailContent, shouldBlockExternal, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText, t]);
+  }, [cidBlobUrls, emailContent, shouldBlockExternal, trackerBlockerEnabled, pluginRenderedHtml, pluginRenderedText, tnefHtml, tnefText, embeddedEmailHtml, embeddedEmailText, t]);
 
   const resolveAttachmentName = useCallback(
     (attachment: EffectiveAttachment) => {

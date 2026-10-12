@@ -105,62 +105,60 @@ export function PWAInstallPrompt() {
   const darkLogoSrc = withBasePath(appLogoDarkUrl || faviconUrl);
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-neutral-900 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-800 p-4 max-w-sm animate-in slide-in-from-bottom-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-start gap-3">
+    <div
+      role="dialog"
+      aria-labelledby="pwa-install-title"
+      className="fixed end-4 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] lg:bottom-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-border/70 bg-popover/95 text-popover-foreground shadow-xl backdrop-blur-md p-3 animate-spring-fade-in"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
           {logoSrc ? (
-            <img
-              src={logoSrc}
-              alt={appName}
-              className="w-8 h-8 shrink-0 object-contain dark:hidden"
-            />
+            <>
+              <img src={logoSrc} alt="" className="w-7 h-7 object-contain dark:hidden" />
+              <img src={darkLogoSrc} alt="" className="w-7 h-7 object-contain hidden dark:block" />
+            </>
           ) : (
-            <Download className="w-5 h-5 mt-0.5 text-primary shrink-0" />
+            <Download className="w-5 h-5 text-primary" />
           )}
-          {logoSrc && (
-            <img
-              src={darkLogoSrc}
-              alt={appName}
-              className="w-8 h-8 shrink-0 object-contain hidden dark:block"
-            />
-          )}
-          <div>
-            <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">
-              {t("title", { appName })}
-            </h3>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-              {t("description")}
-            </p>
-          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 id="pwa-install-title" className="font-semibold text-sm leading-tight truncate">
+            {t("title", { appName })}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+            {t("description")}
+          </p>
         </div>
         <button
+          type="button"
           onClick={handleDismiss}
-          className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+          className="self-start p-1 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           aria-label={t("dismiss_aria")}
         >
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
-          <button
-            onClick={handleDismiss}
-            className="flex-1 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
-          >
-            {t("not_now")}
-          </button>
-          <button
-            onClick={handleInstall}
-            className="flex-1 px-3 py-2 text-sm font-medium text-primary-foreground bg-primary rounded hover:bg-primary/90 transition-colors"
-          >
-            {t("install")}
-          </button>
-        </div>
+      <div className="mt-3 flex items-center gap-2">
         <button
+          type="button"
           onClick={handleDismissForever}
-          className="w-full text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors text-center"
+          className="me-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           {t("dont_remind")}
+        </button>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className="px-3 py-1.5 text-xs font-medium rounded-lg text-foreground hover:bg-muted transition-colors"
+        >
+          {t("not_now")}
+        </button>
+        <button
+          type="button"
+          onClick={handleInstall}
+          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          {t("install")}
         </button>
       </div>
     </div>

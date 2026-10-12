@@ -11,7 +11,7 @@ import { format, parseISO, addHours, isSameDay } from "date-fns";
 import type { CalendarEvent, Calendar, CalendarParticipant, CalendarEventAlert, CalendarRecurrenceRule } from "@/lib/jmap/types";
 import { RecurrenceEditor, buildRecurrenceSummary, isSimpleRecurrenceRule } from "./recurrence-editor";
 import { parseDuration, getEventColor } from "./event-card";
-import { buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
+import { applySpeedyMeetings, buildAllDayDuration, getEventDisplayEndDate, getEventEndDate, getEventStartDate, getPrimaryCalendarId } from "@/lib/calendar-utils";
 import { displayNow, getEffectiveTimeZone } from "@/lib/timezone";
 import { createRecurrenceRule } from "@/lib/recurrence-rule";
 import { ParticipantInput, type ParticipantInputHandle } from "./participant-input";
@@ -218,6 +218,7 @@ export function EventModal({
   const t = useTranslations("calendar");
   const locale = useLocale();
   const timeFormat = useSettingsStore((s) => s.timeFormat);
+  const speedyMeetings = useSettingsStore((s) => s.speedyMeetings);
   const timeDisplayFmt = timeFormat === "12h" ? "h:mm a" : "HH:mm";
   // Inside a Pro pane the "mobile" layout must cover the pane, not the
   // viewport - a `fixed inset-0` editor from a split pane would take over
@@ -308,7 +309,7 @@ export function EventModal({
       return getEventEndDate(event);
     }
     if (defaultEndDate) return new Date(defaultEndDate);
-    return addHours(getInitialStart(), 1);
+    return applySpeedyMeetings(getInitialStart(), addHours(getInitialStart(), 1), speedyMeetings);
   };
 
   const [title, setTitle] = useState(event?.title || defaultTitle || "");

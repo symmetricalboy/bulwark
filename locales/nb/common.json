@@ -4256,5 +4256,30 @@
     "preview_empty": "Velg et resultat for å forhåndsvise det",
     "open_full": "Åpne",
     "view_label": "Visning"
+  },
+  "video_meeting": {
+    "quick_add": "Add a video call",
+    "jitsi_label": "Jitsi",
+    "jitsi_hint": "Create an instant Jitsi room. No account needed.",
+    "provider_hint": "Create a {provider} meeting in your account and paste its link",
+    "generic_name": "Video call",
+    "badge": "Video call",
+    "join": "Join",
+    "join_meeting": "Join meeting",
+    "copy_link": "Copy meeting link",
+    "copied": "Meeting link copied",
+    "copy_failed": "Couldn't copy the link",
+    "open_link": "Open link in a new tab",
+    "remove_link": "Remove meeting link",
+    "attached": "{provider} link added",
+    "inserted": "{provider} invitation inserted",
+    "paste_title": "Paste your {provider} link",
+    "paste_message": "{provider} opened in a new tab. Create or schedule the meeting there, copy its invite link and paste it here, so every guest joins the same room.",
+    "paste_placeholder": "https://",
+    "paste_confirm": "Add link",
+    "invalid_link": "That isn't a {provider} meeting link. Copy the invite link of the meeting itself.",
+    "snippet_heading": "Video call",
+    "snippet_heading_titled": "{title} · Video call",
+    "snippet_join": "Join with {provider}:"
   }
 }

@@ -1,13 +1,14 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   generateJitsiMeetingUrl,
-  getGoogleMeetNewUrl,
-  getTeamsNewUrl,
-  getZoomNewUrl,
-  type VideoMeetingProviderId,
+  getProviderMeta,
+  isSafeMeetingHref,
+  type LinkedMeetingProviderId,
 } from "@/lib/video-meetings";
 import { MeetingProviderIcon } from "./meeting-provider-icon";
+import { useMeetingLinkFlow } from "./use-meeting-link-flow";
 import { toast } from "@/stores/toast-store";
 import { X, ExternalLink } from "@/components/icons";
 
@@ -18,109 +19,82 @@ interface VideoMeetingCreatorButtonsProps {
   onClearUrl?: () => void;
 }
 
+const LINKED_PROVIDERS: LinkedMeetingProviderId[] = ["google-meet", "teams", "zoom"];
+
+const chipClass =
+  "inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted text-foreground border border-border/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
 export function VideoMeetingCreatorButtons({
   currentUrl,
   eventTitle,
   onSelectUrl,
   onClearUrl,
 }: VideoMeetingCreatorButtonsProps) {
-  const handleCreate = (providerId: VideoMeetingProviderId) => {
-    let generated = "";
-    let providerName = "";
+  const t = useTranslations("video_meeting");
 
-    switch (providerId) {
-      case "jitsi":
-        generated = generateJitsiMeetingUrl(eventTitle);
-        providerName = "Instant Jitsi Meet";
-        break;
-      case "google-meet":
-        generated = getGoogleMeetNewUrl();
-        providerName = "Google Meet";
-        break;
-      case "teams":
-        generated = getTeamsNewUrl();
-        providerName = "Microsoft Teams";
-        break;
-      case "zoom":
-        generated = getZoomNewUrl();
-        providerName = "Zoom";
-        break;
-    }
-
-    if (generated) {
-      onSelectUrl(generated);
-      toast.success(`${providerName} attached`);
-    }
+  const attach = (url: string, providerName: string) => {
+    onSelectUrl(url);
+    toast.success(t("attached", { provider: providerName }));
   };
+  const { start, dialog } = useMeetingLinkFlow(attach);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
-      <span className="text-[11px] font-medium text-muted-foreground mr-1">Quick Add:</span>
+      <span className="text-xs text-muted-foreground me-1">{t("quick_add")}</span>
       <button
         type="button"
-        onClick={() => handleCreate("jitsi")}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
-        title="Add Instant Sovereign Jitsi Meet room (no login required)"
+        onClick={() => attach(generateJitsiMeetingUrl(eventTitle), getProviderMeta("jitsi").name)}
+        className={chipClass}
+        title={t("jitsi_hint")}
       >
-        <MeetingProviderIcon providerId="jitsi" className="w-3 h-3 text-[#17A8F5]" />
-        <span>Instant Jitsi</span>
+        <MeetingProviderIcon providerId="jitsi" className="w-3.5 h-3.5 text-sky-500" />
+        <span>{t("jitsi_label")}</span>
       </button>
 
-      <button
-        type="button"
-        onClick={() => handleCreate("google-meet")}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
-        title="Add Google Meet link"
-      >
-        <MeetingProviderIcon providerId="google-meet" className="w-3 h-3" />
-        <span>Google Meet</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => handleCreate("teams")}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
-        title="Add Microsoft Teams meeting link"
-      >
-        <MeetingProviderIcon providerId="teams" className="w-3 h-3" />
-        <span>MS Teams</span>
-      </button>
-
-      <button
-        type="button"
-        onClick={() => handleCreate("zoom")}
-        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
-        title="Add Zoom meeting link"
-      >
-        <MeetingProviderIcon providerId="zoom" className="w-3 h-3" />
-        <span>Zoom</span>
-      </button>
+      {LINKED_PROVIDERS.map((id) => {
+        const meta = getProviderMeta(id);
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => start(id)}
+            className={chipClass}
+            title={t("provider_hint", { provider: meta.name })}
+          >
+            <MeetingProviderIcon providerId={id} className="w-3.5 h-3.5" />
+            <span>{meta.name}</span>
+          </button>
+        );
+      })}
 
       {currentUrl && (
-        <div className="flex items-center gap-1 ml-auto">
-          <a
-            href={currentUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Test link in new tab"
-            aria-label="Test link in new tab"
-          >
-            <ExternalLink className="w-3 h-3" />
-          </a>
+        <div className="flex items-center gap-1 ms-auto">
+          {isSafeMeetingHref(currentUrl) && (
+            <a
+              href={currentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title={t("open_link")}
+              aria-label={t("open_link")}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
           {onClearUrl && (
             <button
               type="button"
               onClick={onClearUrl}
-              className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Remove meeting link"
-              aria-label="Remove meeting link"
+              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title={t("remove_link")}
+              aria-label={t("remove_link")}
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       )}
+      {dialog}
     </div>
   );
 }
