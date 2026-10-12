@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useEffectiveMailLayout } from '@/hooks/use-effective-mail-layout';
-import type { ArchiveMode, HoverAction } from '@/stores/settings-store';
+import type { ArchiveMode, HoverAction, ConversationGroupingMode } from '@/stores/settings-store';
 import { ALL_HOVER_ACTIONS } from '@/stores/settings-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
 import { cn } from '@/lib/utils';
-import { SettingsSection, SettingItem, Select, ToggleSwitch } from './settings-section';
+import { SettingsSection, SettingItem, Select, ToggleSwitch, RadioGroup } from './settings-section';
 import { AlertTriangle, FolderSync, Loader2 } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 
@@ -29,7 +29,7 @@ export function ReadingSettings() {
     clearSearchOnFolderChange,
     showPreview,
     showVerificationCodes,
-    disableThreading,
+    conversationGrouping,
     emailsPerPage,
     mailAttachmentAction,
     attachmentPosition,
@@ -271,11 +271,27 @@ export function ReadingSettings() {
         />
       </SettingItem>
 
-      <SettingItem label={t('disable_threading.label')} description={t('disable_threading.description')}>
-        <ToggleSwitch
-          checked={disableThreading}
-          onChange={(checked) => updateSetting('disableThreading', checked)}
-        />
+      <SettingItem
+        label={t('conversation_grouping.label')}
+        description={t('conversation_grouping.description')}
+        locked={isSettingLocked('conversationGrouping') || isSettingLocked('disableThreading')}
+      >
+        <div className="flex flex-col items-end gap-1.5">
+          <RadioGroup
+            value={conversationGrouping}
+            onChange={(val) => updateSetting('conversationGrouping', val as ConversationGroupingMode)}
+            options={[
+              { value: 'separate', label: t('conversation_grouping.separate') },
+              { value: 'nested', label: t('conversation_grouping.nested') },
+              { value: 'combined', label: t('conversation_grouping.combined') },
+            ]}
+          />
+          <p className="text-[11px] text-muted-foreground italic text-end max-w-sm">
+            {conversationGrouping === 'separate' && t('conversation_grouping.separate_desc')}
+            {conversationGrouping === 'nested' && t('conversation_grouping.nested_desc')}
+            {conversationGrouping === 'combined' && t('conversation_grouping.combined_desc')}
+          </p>
+        </div>
       </SettingItem>
 
       <SettingItem label={t('hide_inline_image_attachments.label')} description={t('hide_inline_image_attachments.description')}>

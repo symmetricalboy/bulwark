@@ -870,6 +870,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
+    const conversationGrouping = useSettingsStore((state) => state.conversationGrouping);
     // A collapsed row speaks for every message under it, so it carries their tags too.
     const tagIds = sortTagIds(getThreadTagIds(thread.emails));
     const threadTintSource = threadAccountColor
@@ -892,7 +893,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           ref={ref}
           email={latestEmail}
           selected={selectedEmailId === latestEmail.id}
-          onClick={() => onEmailSelect(latestEmail)}
+          onClick={() => (conversationGrouping === 'combined' && onOpenConversation ? onOpenConversation(thread) : onEmailSelect(latestEmail))}
           onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(latestEmail) : undefined}
           onContextMenu={onContextMenu}
           showPreview={showPreview}
@@ -945,6 +946,15 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       if (e.shiftKey) {
         e.preventDefault();
         selectRangeEmails(latestEmail);
+        return;
+      }
+
+      if (conversationGrouping === 'combined') {
+        if (onOpenConversation) {
+          onOpenConversation(thread);
+        } else {
+          onEmailSelect(latestEmail);
+        }
         return;
       }
 
@@ -1064,7 +1074,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   selectLabel={tBatch('select')}
                 />
                 {hasUnread && <UnreadDot besideAvatar />}
-                {!isMobile && (
+                {!isMobile && conversationGrouping !== 'combined' && (
                   <button
                     data-expand-toggle
                     onClick={(e) => {
@@ -1335,7 +1345,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           )}
         </div>
 
-        {isExpanded && !isMobile && (
+        {isExpanded && !isMobile && conversationGrouping !== 'combined' && (
           <div className="bg-muted/20 animate-in slide-in-from-top-2 duration-200">
             {isLoading ? (
               <div className="py-4 flex items-center justify-center text-sm text-muted-foreground">

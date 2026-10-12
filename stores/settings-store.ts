@@ -404,6 +404,8 @@ export const DEV_KEYWORDS: KeywordDefinition[] = [
 
 const USING_MOCK_SERVER = process.env.NEXT_PUBLIC_DEV_MOCK_JMAP === 'true';
 
+export type ConversationGroupingMode = 'separate' | 'nested' | 'combined';
+
 interface SettingsState {
   // Appearance
   fontSize: FontSize;
@@ -567,7 +569,8 @@ interface SettingsState {
   preferredIdentityIds: Record<string, string>;
 
   // Email Display
-  disableThreading: boolean; // Show emails as individual messages instead of grouped by conversation
+  conversationGrouping: ConversationGroupingMode; // 'separate' | 'nested' | 'combined'
+  disableThreading: boolean; // Backwards-compatible flag: true if conversationGrouping === 'separate'
 
   senderFavicons: boolean;
   showAvatarsInJunk: boolean; // Show profile images/favicons in the junk folder
@@ -819,6 +822,7 @@ const DEFAULT_SETTINGS = {
   enableCrossAllView: false,
 
   // Email Display
+  conversationGrouping: 'nested' as ConversationGroupingMode,
   disableThreading: false,
 
   senderFavicons: true,
@@ -957,6 +961,24 @@ export const useSettingsStore = create<SettingsState>()(
           applyInterfaceLayout(value as InterfaceLayout, get().density);
         }
 
+        if (key === 'conversationGrouping') {
+          const mode = value as ConversationGroupingMode;
+          set({
+            conversationGrouping: mode,
+            disableThreading: mode === 'separate',
+          });
+          return;
+        }
+
+        if (key === 'disableThreading') {
+          const disabled = Boolean(value);
+          set({
+            disableThreading: disabled,
+            conversationGrouping: disabled ? 'separate' : 'nested',
+          });
+          return;
+        }
+
         // Apply animations to document root
         if (key === 'animationsEnabled') {
           applyAnimations(value as boolean);
@@ -1007,6 +1029,7 @@ export const useSettingsStore = create<SettingsState>()(
           hoverActionsCorner: state.hoverActionsCorner,
           swipeRightAction: state.swipeRightAction,
           swipeLeftAction: state.swipeLeftAction,
+          conversationGrouping: state.conversationGrouping,
           disableThreading: state.disableThreading,
           trustedSenders: state.trustedSenders,
           autoSaveDraftInterval: state.autoSaveDraftInterval,
@@ -1472,6 +1495,9 @@ export const useSettingsStore = create<SettingsState>()(
             }
             if (!isPlainRecord(state.preferredIdentityIds)) {
               state.preferredIdentityIds = {};
+            }
+            if (!state.conversationGrouping) {
+              state.conversationGrouping = state.disableThreading ? 'separate' : 'nested';
             }
             state.messageListOrder = sanitizeSortLevels(state.messageListOrder);
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {

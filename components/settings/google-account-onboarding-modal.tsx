@@ -140,7 +140,7 @@ export function GoogleAccountOnboardingModal() {
   return (
     <div
       data-google-onboarding-dialog="true"
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[90] p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[90] p-4 sm:p-6 md:p-8 animate-in fade-in duration-150"
     >
       <div
         ref={dialogRef}
@@ -148,33 +148,33 @@ export function GoogleAccountOnboardingModal() {
         aria-modal="true"
         aria-labelledby={`${id}-title`}
         aria-describedby={`${id}-desc`}
-        className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200"
+        className="bg-background border border-border/80 rounded-2xl md:rounded-3xl shadow-2xl w-[94vw] max-w-4xl lg:max-w-5xl h-[88vh] max-h-[920px] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
       >
         {/* Header */}
-        <div className="p-6 border-b border-border bg-muted/30 flex items-start justify-between gap-4">
+        <div className="px-6 py-5 md:px-8 md:py-6 border-b border-border bg-muted/30 flex items-start justify-between gap-6 flex-shrink-0">
           <div className="flex items-start gap-4 min-w-0">
             <div className="relative">
               <Avatar
                 src={account.picture}
                 name={account.name || account.email}
                 email={account.email}
-                size="md"
-                className="w-12 h-12 text-sm"
+                size="lg"
+                className="w-14 h-14 text-base"
                 disableFavicon
               />
-              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5 shadow-xs border border-border">
+              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 shadow-xs border border-border">
                 <GoogleIcon className="w-4 h-4" />
               </div>
             </div>
             <div className="min-w-0">
-              <h2 id={`${id}-title`} className="text-lg font-bold text-foreground">
+              <h2 id={`${id}-title`} className="text-xl font-bold text-foreground">
                 {t('onboarding.title')}
               </h2>
-              <p className="text-xs font-mono text-muted-foreground truncate mt-0.5">
+              <p className="text-sm font-mono text-muted-foreground truncate mt-0.5">
                 {toUnicodeEmail(account.email)}
               </p>
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-flex">
-                <ShieldCheck className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5 mt-2.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full inline-flex">
+                <ShieldCheck className="w-4 h-4" />
                 <span>Strictly opt-in: all services disabled by default</span>
               </div>
             </div>
@@ -182,7 +182,7 @@ export function GoogleAccountOnboardingModal() {
           <button
             type="button"
             onClick={handleClose}
-            className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+            className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-muted transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -190,14 +190,14 @@ export function GoogleAccountOnboardingModal() {
         </div>
 
         {/* Subtitle instructions */}
-        <div className="px-6 pt-4 pb-2">
-          <p id={`${id}-desc`} className="text-xs text-muted-foreground">
+        <div className="px-6 md:px-8 pt-5 pb-3 flex-shrink-0">
+          <p id={`${id}-desc`} className="text-sm text-muted-foreground leading-relaxed">
             {t('onboarding.subtitle')}
           </p>
         </div>
 
         {/* Services configuration form */}
-        <div className="px-6 py-2 overflow-y-auto flex-1">
+        <div className="px-6 md:px-8 py-3 overflow-y-auto flex-1">
           <GoogleAccountServicesConfig
             accountEmail={account.email}
             values={servicesValues}
@@ -207,23 +207,23 @@ export function GoogleAccountOnboardingModal() {
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 md:px-8 py-5 border-t border-border bg-muted/20 flex-shrink-0">
           <Button
             variant="ghost"
-            size="sm"
+            size="md"
             onClick={handleClose}
             disabled={isSaving}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="text-sm text-muted-foreground hover:text-foreground px-4"
           >
             {t('onboarding.skip')}
           </Button>
           <Button
-            size="sm"
+            size="md"
             onClick={handleSave}
             disabled={isSaving}
-            className="gap-2 text-xs font-medium px-4"
+            className="gap-2 text-sm font-medium px-6 h-10"
           >
-            <Check className="w-3.5 h-3.5" />
+            <Check className="w-4 h-4" />
             {isSaving ? 'Saving...' : t('onboarding.save_and_continue')}
           </Button>
         </div>

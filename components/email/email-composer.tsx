@@ -5,7 +5,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users, PackageCheck, LockKeyhole, Type, HardDrive, GoogleDriveIcon, SlidersHorizontal, LayoutTemplate, Upload, FolderOpen } from "@/components/icons";
+import { X, Paperclip, Send, Save, Check, Loader2, AlertCircle, FileText, BookmarkPlus, CalendarClock, ChevronDown, MailCheck, Search, Users, PackageCheck, LockKeyhole, Type, GoogleDriveIcon, SlidersHorizontal, LayoutTemplate, Upload, FolderOpen } from "@/components/icons";
 import { ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { schedulePresets } from "@/lib/schedule-presets";
@@ -3561,15 +3561,23 @@ export function EmailComposer({
               className="hidden"
               accept="*/*"
             />
-            {filesEnabled && composerClient?.supportsFiles?.() ? (
-              <ComposerToolbarMenu icon={Paperclip} label={t('attach')} testId="composer-attach-menu">
-                {(close) => <>
-                  <ComposerToolbarMenuItem
-                    icon={Upload}
-                    onSelect={() => { close(); fileInputRef.current?.click(); }}
-                  >
-                    {t('attach_from_device')}
-                  </ComposerToolbarMenuItem>
+            <ComposerToolbarMenu icon={Paperclip} label={t('attach')} testId="composer-attach-menu">
+              {(close) => <>
+                <ComposerToolbarMenuItem
+                  icon={Upload}
+                  onSelect={() => { close(); fileInputRef.current?.click(); }}
+                  testId="composer-attach-from-device"
+                >
+                  {t('attach_from_device')}
+                </ComposerToolbarMenuItem>
+                <ComposerToolbarMenuItem
+                  icon={GoogleDriveIcon}
+                  onSelect={() => { close(); setShowGoogleDrivePicker(true); }}
+                  testId="composer-attach-from-google-drive"
+                >
+                  {t('attach_from_google_drive')}
+                </ComposerToolbarMenuItem>
+                {filesEnabled && composerClient?.supportsFiles?.() && (
                   <ComposerToolbarMenuItem
                     icon={FolderOpen}
                     onSelect={() => { close(); setFilesPicker({ client: composerClient, accountId: composerAccountId }); }}
@@ -3577,31 +3585,9 @@ export function EmailComposer({
                   >
                     {t('attach_from_files')}
                   </ComposerToolbarMenuItem>
-                </>}
-              </ComposerToolbarMenu>
-            ) : (
-              <Button
-                variant="ghost"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-9 gap-1.5 px-2 sm:px-2.5"
-                title={t('attach')}
-                aria-label={t('attach')}
-              >
-                <Paperclip className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm">{t('attach')}</span>
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowGoogleDrivePicker(true)}
-              className="h-9 w-9"
-              title={t('attach_from_google_drive')}
-              aria-label={t('attach_from_google_drive')}
-              data-testid="composer-attach-from-google-drive"
-            >
-              <GoogleDriveIcon className="w-4 h-4" />
-            </Button>
+                )}
+              </>}
+            </ComposerToolbarMenu>
             {!plainTextMode && (
               <Button
                 variant="ghost"

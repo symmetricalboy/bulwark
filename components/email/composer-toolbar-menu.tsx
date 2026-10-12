@@ -82,7 +82,7 @@ export function ComposerToolbarMenu({ icon: Icon, label, activeCount = 0, testId
 }
 
 interface ItemProps {
-  icon?: AppIcon;
+  icon?: AppIcon | React.ComponentType<{ className?: string }>;
   onSelect: () => void;
   testId?: string;
   children: React.ReactNode;

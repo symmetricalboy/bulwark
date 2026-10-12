@@ -151,6 +151,7 @@ export function EmailList({
     ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
 
   const disableThreading = useSettingsStore((state) => state.disableThreading);
+  const conversationGrouping = useSettingsStore((state) => state.conversationGrouping);
   // The order the current folder view was fetched in (#718), so thread
   // grouping mirrors the server order instead of re-sorting the page by date.
   // Search results and cross-account views are always chronological.
@@ -167,9 +168,10 @@ export function EmailList({
 
   const threadGroups = useMemo(() => {
     const listOrder = searchQuery || crossView || !isFilterEmpty(searchFilters) ? [] : fetchedListOrder;
-    const groups = groupEmailsByThread(emails, disableThreading || isScheduledView, threadEmailCounts);
+    const isSeparate = conversationGrouping === 'separate' || disableThreading;
+    const groups = groupEmailsByThread(emails, isSeparate || isScheduledView, threadEmailCounts);
     return sortThreadGroups(groups, listOrder, listHold?.keywords);
-  }, [emails, disableThreading, isScheduledView, threadEmailCounts, fetchedListOrder, searchQuery, crossView, searchFilters, listHold]);
+  }, [emails, disableThreading, conversationGrouping, isScheduledView, threadEmailCounts, fetchedListOrder, searchQuery, crossView, searchFilters, listHold]);
 
   const { contextMenu, openContextMenu, closeContextMenu, menuRef } = useContextMenu<Email>();
   /**

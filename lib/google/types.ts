@@ -205,3 +205,61 @@ export interface GoogleDriveFilesResponse {
   files: GoogleDriveFile[];
   nextPageToken?: string;
 }
+
+export interface GmailLabel {
+  id: string;
+  name: string;
+  type?: 'system' | 'user';
+  messageListVisibility?: string;
+  labelListVisibility?: string;
+  messagesTotal?: number;
+  messagesUnread?: number;
+  threadsTotal?: number;
+  threadsUnread?: number;
+}
+
+export interface GmailMessagePartHeader {
+  name: string;
+  value: string;
+}
+
+export interface GmailMessagePartBody {
+  attachmentId?: string;
+  size: number;
+  data?: string;
+}
+
+export interface GmailMessagePart {
+  partId?: string;
+  mimeType: string;
+  filename?: string;
+  headers?: GmailMessagePartHeader[];
+  body?: GmailMessagePartBody;
+  parts?: GmailMessagePart[];
+}
+
+export interface GmailMessage {
+  id: string;
+  threadId: string;
+  labelIds?: string[];
+  snippet?: string;
+  historyId?: string;
+  internalDate: string;
+  payload?: GmailMessagePart;
+  sizeEstimate?: number;
+  raw?: string;
+}
+
+export interface GmailThread {
+  id: string;
+  snippet?: string;
+  historyId?: string;
+  messages?: GmailMessage[];
+}
+
+export interface GmailListMessagesResponse {
+  messages?: Array<{ id: string; threadId: string }>;
+  nextPageToken?: string;
+  resultSizeEstimate?: number;
+}
+

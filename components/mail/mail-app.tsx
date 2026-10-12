@@ -59,7 +59,7 @@ import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor, getThreadParticipants } from "@/lib/thread-utils";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -174,6 +174,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const tQuote = useTranslations('quote_header');
   const mailLayout = useEffectiveMailLayout();
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
+  const conversationGrouping = useSettingsStore((state) => state.conversationGrouping);
   // Phones present search full-screen from the header field rather than
   // giving it a permanent second bar under the header.
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -2837,6 +2838,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setTabletListVisible(true);
     }
 
+    if (mailboxId.startsWith('google:')) {
+      await fetchEmails(client!, mailboxId);
+      return;
+    }
+
     if (client) {
       // If there's an active search, re-run it in the new mailbox unless the
       // user opted to reset search on folder change. Advanced filters must go
@@ -3589,6 +3595,34 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setShowComposer(false);
     }
 
+    if (conversationGrouping !== 'combined' && conversationThread) {
+      setConversationThread(null);
+      setConversationEmails([]);
+    }
+
+    if (conversationGrouping === 'combined') {
+      const threadKey = threadKeyFor(email as Email);
+      const matchingThread = activeEmails.filter(e => threadKeyFor(e) === threadKey);
+      if (matchingThread.length > 0) {
+        const sorted = [...matchingThread].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+        void handleOpenConversation({
+          threadId: sorted[0].threadId || sorted[0].id,
+          threadKey,
+          emails: sorted,
+          latestEmail: sorted[0],
+          participantNames: getThreadParticipants(sorted),
+          hasUnread: sorted.some(e => !e.keywords?.$seen),
+          hasStarred: sorted.some(e => e.keywords?.$flagged),
+          hasPinned: sorted.some(e => e.keywords?.['$pinned']),
+          hasAttachment: sorted.some(e => e.hasAttachment),
+          hasAnswered: sorted.some(e => e.keywords?.$answered),
+          hasForwarded: sorted.some(e => e.keywords?.$forwarded),
+          emailCount: sorted.length,
+        });
+        return;
+      }
+    }
+
     // Find the list-level email for metadata (accountId, scheduled flags, etc.)
     // but don't select it yet — wait for the full fetch to avoid a toolbar flash
     // caused by rendering with the stub (no bodyValues) then re-rendering with the full email.
@@ -3620,6 +3654,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
     // Fetch the full content
     try {
+      if (email.id.startsWith('google:')) {
+        const { fetchGoogleEmail } = await import('@/lib/google/google-mail-client');
+        const fullEmail = await fetchGoogleEmail(email.id);
+        if (fullEmail) {
+          selectEmail(fullEmail);
+        }
+        return;
+      }
+
       const { client: fetchClient, accountId } = resolveEmailBlobContext(listEmail ?? null, client);
       if (!fetchClient) {
         console.warn('[mail-app] No connected client for email source');
@@ -3693,9 +3736,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     useEmailStore.getState().holdListRow(thread.threadKey);
     setConversationThread(thread);
     setIsLoadingConversation(true);
-    setActiveView("viewer");
+    selectEmail(thread.latestEmail);
+    if (isMobile) {
+      setActiveView("viewer");
+    }
+    if (isTablet) {
+      setTabletListVisible(false);
+    }
 
     try {
+      if (thread.emails?.[0]?.id.startsWith('google:')) {
+        setConversationEmails(thread.emails);
+        setIsLoadingConversation(false);
+        return;
+      }
+
       // The thread may belong to another account: in unified/aggregate views via
       // the email's own source stamp (#281), and in a directly-browsed shared
       // folder via the selected mailbox's owner (#814). Either way the fetch has
@@ -4644,8 +4699,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 />
               </button>
             )}
-            {/* Mobile Conversation View - shown when thread is selected on mobile */}
-            {isMobile && conversationThread ? (
+            {/* Conversation View - shown when thread is selected */}
+            {conversationThread ? (
               <ThreadConversationView
                 thread={conversationThread}
                 emails={conversationEmails}

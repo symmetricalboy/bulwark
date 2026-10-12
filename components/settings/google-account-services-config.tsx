@@ -74,11 +74,11 @@ export function GoogleAccountServicesConfig({
     const activeItem = modes.find((m) => m.key === currentMode) || modes[0];
 
     return (
-      <div className="flex flex-col gap-1.5 mt-2 sm:mt-0 items-start sm:items-end">
+      <div className="flex flex-col gap-2 mt-2 sm:mt-0 items-start sm:items-end">
         <div
           role="radiogroup"
           aria-label={`${ariaLabelPrefix} mode for ${accountEmail}`}
-          className="inline-flex items-center p-1 rounded-lg bg-muted/70 border border-border/60 text-xs gap-1"
+          className="inline-flex items-center p-1 rounded-xl bg-muted/70 border border-border/60 text-xs gap-1"
         >
           {modes.map(({ key, label, icon: Icon, activeClass }) => {
             const isSelected = currentMode === key;
@@ -91,19 +91,19 @@ export function GoogleAccountServicesConfig({
                 disabled={disabled}
                 onClick={() => onChange({ [appKey]: key })}
                 className={cn(
-                  'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all cursor-pointer',
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer',
                   isSelected
                     ? activeClass
                     : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
                 )}
               >
-                <Icon className={cn('w-3 h-3', isSelected && key === 'sync' && 'animate-spin-reverse')} />
+                <Icon className={cn('w-3.5 h-3.5', isSelected && key === 'sync' && 'animate-spin-reverse')} />
                 <span>{label}</span>
               </button>
             );
           })}
         </div>
-        <p className="text-[11px] text-muted-foreground italic sm:text-end max-w-xs">
+        <p className="text-xs text-muted-foreground italic sm:text-end max-w-sm">
           {activeItem.desc}
         </p>
       </div>
@@ -111,18 +111,18 @@ export function GoogleAccountServicesConfig({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* 1. Gmail - Simple toggle */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 hover:bg-muted/20 transition-colors">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-            <GmailIcon className="w-5 h-5" />
+      <div className="flex items-center justify-between p-4 md:p-5 rounded-2xl border border-border/70 bg-card/40 hover:bg-muted/30 transition-all shadow-2xs">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-background border border-border/80 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <GmailIcon className="w-6 h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               {t('apps.gmail')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {t('apps.gmail_desc')}
             </p>
           </div>
@@ -136,16 +136,16 @@ export function GoogleAccountServicesConfig({
       </div>
 
       {/* 2. Drive - Simple toggle */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-border/60 hover:bg-muted/20 transition-colors">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-            <GoogleDriveIcon className="w-5 h-5" />
+      <div className="flex items-center justify-between p-4 md:p-5 rounded-2xl border border-border/70 bg-card/40 hover:bg-muted/30 transition-all shadow-2xs">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-background border border-border/80 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <GoogleDriveIcon className="w-6 h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               {t('apps.drive')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {t('apps.drive_desc')}
             </p>
           </div>
@@ -159,16 +159,16 @@ export function GoogleAccountServicesConfig({
       </div>
 
       {/* 3. Calendar - 3 options */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-border/60 hover:bg-muted/20 transition-colors gap-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-            <GoogleCalendarIcon className="w-5 h-5" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-5 rounded-2xl border border-border/70 bg-card/40 hover:bg-muted/30 transition-all shadow-2xs gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-background border border-border/80 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <GoogleCalendarIcon className="w-6 h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               {t('apps.calendar')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {t('apps.calendar_desc')}
             </p>
           </div>
@@ -177,16 +177,16 @@ export function GoogleAccountServicesConfig({
       </div>
 
       {/* 4. Tasks - 3 options */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-border/60 hover:bg-muted/20 transition-colors gap-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-            <GoogleTasksIcon className="w-5 h-5" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-5 rounded-2xl border border-border/70 bg-card/40 hover:bg-muted/30 transition-all shadow-2xs gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-background border border-border/80 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <GoogleTasksIcon className="w-6 h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               {t('apps.tasks')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {t('apps.tasks_desc')}
             </p>
           </div>
@@ -195,16 +195,16 @@ export function GoogleAccountServicesConfig({
       </div>
 
       {/* 5. Contacts - 3 options */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-border/60 hover:bg-muted/20 transition-colors gap-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-background border border-border/70 flex items-center justify-center flex-shrink-0 shadow-2xs">
-            <GoogleContactsIcon className="w-5 h-5" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-5 rounded-2xl border border-border/70 bg-card/40 hover:bg-muted/30 transition-all shadow-2xs gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-12 h-12 rounded-xl bg-background border border-border/80 flex items-center justify-center flex-shrink-0 shadow-xs">
+            <GoogleContactsIcon className="w-6 h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-sm font-semibold text-foreground">
               {t('apps.contacts')}
             </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
               {t('apps.contacts_desc')}
             </p>
           </div>

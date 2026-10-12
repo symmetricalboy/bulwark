@@ -41,6 +41,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { isFilePreviewable, toInertBlob } from "@/lib/file-preview";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
+import { useUIStore } from "@/stores/ui-store";
 
 interface ThreadConversationViewProps {
   thread: ThreadGroup;
@@ -95,6 +96,7 @@ export function ThreadConversationView({
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
   const isTrustedAddressBookSender = useContactStore((state) => state.isTrustedAddressBookSender);
   const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
+  const isMobile = useUIStore((state) => state.isMobile);
   const { client } = useAuthStore();
 
   // Track which emails are expanded (most recent by default)
@@ -155,14 +157,16 @@ export function ThreadConversationView({
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="flex items-center px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-10" style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-header-py)' }}>
-        <button
-          onClick={onBack}
-          className="p-2 -ms-2 rounded-full hover:bg-muted transition-colors"
-          aria-label={t('email_viewer.back_to_list')}
-          title={t('email_viewer.back_to_list')}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className={cn("p-2 -ms-2 rounded-full hover:bg-muted transition-colors", !isMobile && "md:hidden")}
+            aria-label={t('email_viewer.back_to_list')}
+            title={t('email_viewer.back_to_list')}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-foreground break-words">
             {thread.latestEmail.subject || t("email_viewer.no_subject")}

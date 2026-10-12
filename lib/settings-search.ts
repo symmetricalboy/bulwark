@@ -84,6 +84,7 @@ export const tabSearchPaths: Record<Tab, string[]> = {
     'settings.email_behavior.attachment_click_action',
     'settings.email_behavior.attachment_image_previews',
     'settings.email_behavior.attachment_position',
+    'settings.email_behavior.conversation_grouping',
     'settings.email_behavior.disable_threading',
     'settings.email_behavior.emails_per_page',
     'settings.email_behavior.hide_inline_image_attachments',

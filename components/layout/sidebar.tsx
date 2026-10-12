@@ -63,6 +63,8 @@ import { MAILBOX_DRAG_MIME } from "@/components/pro/pro-shell-drop";
 import { useTagDrop } from "@/hooks/use-tag-drop";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
+import { useGoogleMail } from "@/hooks/use-google-mail";
+import { GoogleMailSidebarSection } from "@/components/mail/google-mail-sidebar-section";
 import { unifiedLoadProgress } from "@/lib/unified-mailbox";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useSettingsStore, getKeywordVisibility } from "@/stores/settings-store";
@@ -869,6 +871,7 @@ export function Sidebar({
   const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
   const isCollapsed = sidebarCollapsed && !hoverExpanded;
   const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore();
+  const googleMail = useGoogleMail();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
   const [showAllTags, setShowAllTags] = useState(false);
@@ -1531,6 +1534,17 @@ export function Sidebar({
               </>
             )}
           </div>
+        )}
+
+        {googleMail.hasGmailAccounts && (
+          <GoogleMailSidebarSection
+            accountsData={googleMail.accountsData}
+            selectedMailbox={selectedMailbox}
+            onMailboxSelect={(mbId) => {
+              onMailboxSelect?.(mbId);
+            }}
+            isCollapsed={isCollapsed}
+          />
         )}
 
         {!useMultiAccount && showSecondary && sharedAccounts.length > 0 && (

@@ -2191,6 +2191,28 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return;
       }
 
+      if (targetMailboxId && targetMailboxId.startsWith('google:')) {
+        const { fetchGoogleEmails } = await import('@/lib/google/google-mail-client');
+        const { parseGoogleMailboxId } = await import('@/lib/google/gmail-mapper');
+        const parsed = parseGoogleMailboxId(targetMailboxId);
+        const { emails, total } = await fetchGoogleEmails({
+          mailboxId: targetMailboxId,
+          googleAccountId: parsed?.accountEmail,
+        });
+        if (!isCurrentView()) return;
+        set({
+          emails,
+          hasMoreEmails: false,
+          totalEmails: total ?? emails.length,
+          isLoading: false,
+          error: null,
+          emailListSync: null,
+          threadEmailsCache: new Map(),
+          threadEmailCounts: new Map(),
+        });
+        return;
+      }
+
       // Unified / cross-account views use client-only virtual mailbox ids
       // (`__cross_*`, `__unified_*`) that no JMAP server accepts as `inMailbox`.
       // Route them through the fan-out loaders (mirrors loadMoreEmails /
@@ -2712,6 +2734,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   deleteEmail: async (client, emailId, forceDelete) => {
     try {
+      if (emailId.startsWith('google:')) {
+        const { deleteGoogleEmail, updateGoogleEmail } = await import('@/lib/google/google-mail-client');
+        if (forceDelete) {
+          await deleteGoogleEmail(emailId, true);
+        } else {
+          await updateGoogleEmail(emailId, { action: 'trash' });
+        }
+        set((state) => ({
+          emails: state.emails.filter(e => e.id !== emailId),
+          selectedEmail: state.selectedEmail?.id === emailId ? null : state.selectedEmail,
+          totalEmails: Math.max(0, state.totalEmails - 1),
+        }));
+        return;
+      }
+
       // Get the email to check if it's unread and which mailboxes it belongs to
       const email = get().emails.find(e => e.id === emailId);
       if (!email) return;
@@ -2829,6 +2866,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   markAsRead: async (client, emailId, read) => {
     try {
+      if (emailId.startsWith('google:')) {
+        const { updateGoogleEmail } = await import('@/lib/google/google-mail-client');
+        await updateGoogleEmail(emailId, { read });
+        set((state) => ({
+          emails: state.emails.map((e) =>
+            e.id === emailId ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
+          ),
+          selectedEmail:
+            state.selectedEmail?.id === emailId
+              ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: read } }
+              : state.selectedEmail,
+        }));
+        return;
+      }
+
       // Check if this email is already being processed
       const processingKey = `${emailId}-${read}`;
       const currentProcessing = get().processingReadStatus;
@@ -3382,6 +3434,26 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       searchAbortController: controller,
     }); // Clear emails for loading state
     try {
+      const targetMailboxId = get().selectedMailbox;
+      if (targetMailboxId && targetMailboxId.startsWith('google:')) {
+        const { fetchGoogleEmails } = await import('@/lib/google/google-mail-client');
+        const { parseGoogleMailboxId } = await import('@/lib/google/gmail-mapper');
+        const parsed = parseGoogleMailboxId(targetMailboxId);
+        const { emails, total } = await fetchGoogleEmails({
+          mailboxId: targetMailboxId,
+          googleAccountId: parsed?.accountEmail,
+          query,
+        });
+        set({
+          emails,
+          hasMoreEmails: false,
+          totalEmails: total ?? emails.length,
+          isLoading: false,
+          error: null,
+        });
+        return;
+      }
+
       const { isUnifiedView, unifiedRole, crossView, searchMailboxId, searchFilters, selectedKeyword } = get();
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
 
@@ -3637,6 +3709,22 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
   toggleStar: async (client, emailId) => {
     try {
+      if (emailId.startsWith('google:')) {
+        const email = get().emails.find(e => e.id === emailId);
+        const isFlagged = email?.keywords?.$flagged || false;
+        const { updateGoogleEmail } = await import('@/lib/google/google-mail-client');
+        await updateGoogleEmail(emailId, { starred: !isFlagged });
+        set((state) => ({
+          emails: state.emails.map(e =>
+            e.id === emailId ? { ...e, keywords: { ...e.keywords, $flagged: !isFlagged } } : e
+          ),
+          selectedEmail: state.selectedEmail?.id === emailId
+            ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $flagged: !isFlagged } }
+            : state.selectedEmail,
+        }));
+        return;
+      }
+
       const email = get().emails.find(e => e.id === emailId);
       if (!email) return;
 
@@ -4537,6 +4625,19 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
     if (!selectedKeyword && selectedMailbox === VIRTUAL_SCHEDULED_MAILBOX_ID) {
       await get().fetchScheduledEmails(client);
+      return;
+    }
+
+    if (!selectedKeyword && selectedMailbox?.startsWith('google:')) {
+      const { fetchGoogleEmails } = await import('@/lib/google/google-mail-client');
+      const { parseGoogleMailboxId } = await import('@/lib/google/gmail-mapper');
+      const parsed = parseGoogleMailboxId(selectedMailbox);
+      const { emails, total } = await fetchGoogleEmails({
+        mailboxId: selectedMailbox,
+        googleAccountId: parsed?.accountEmail,
+      });
+      if (!isCurrentView()) return;
+      set({ emails, totalEmails: total ?? emails.length });
       return;
     }
 

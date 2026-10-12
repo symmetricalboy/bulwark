@@ -212,10 +212,11 @@ describe('attach from Google Drive', () => {
     vi.clearAllMocks();
   });
 
-  it('renders Google Drive attach button in the composer toolbar', () => {
+  it('renders Google Drive attach button in the composer toolbar menu', () => {
     useAuthStore.setState({ client: mockClient() as never });
     render(<EmailComposer onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByTestId('composer-attach-menu'));
     expect(screen.getByTestId('composer-attach-from-google-drive')).toBeInTheDocument();
   });
 
@@ -232,6 +233,7 @@ describe('attach from Google Drive', () => {
       },
     ];
 
+    fireEvent.click(screen.getByTestId('composer-attach-menu'));
     fireEvent.click(screen.getByTestId('composer-attach-from-google-drive'));
     expect(screen.getByTestId('fake-gdrive-picker')).toBeInTheDocument();
 

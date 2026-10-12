@@ -249,31 +249,31 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-[60] p-4 animate-in fade-in duration-150">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[60] p-4 sm:p-6 md:p-8 animate-in fade-in duration-150">
         <div
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby={`${id}-title`}
           aria-describedby={`${id}-desc`}
-          className="bg-background border border-border rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+          className="bg-background border border-border/80 rounded-2xl md:rounded-3xl shadow-2xl w-[94vw] max-w-4xl lg:max-w-5xl h-[88vh] max-h-[920px] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20 flex-shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                <LinkIcon className="w-4 h-4" />
+          <div className="flex items-center justify-between px-6 py-5 md:px-8 md:py-6 border-b border-border bg-muted/20 flex-shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0 shadow-2xs">
+                <LinkIcon className="w-5 h-5" />
               </div>
               <div>
-                <h2 id={`${id}-title`} className="text-base font-semibold text-foreground flex items-center gap-2">
+                <h2 id={`${id}-title`} className="text-lg md:text-xl font-semibold text-foreground flex items-center gap-2">
                   <span>{t('title')}</span>
                   {comailAccountLabel && (
-                    <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-primary/10 text-primary truncate max-w-[200px]" title={comailAccountLabel}>
+                    <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-primary/10 text-primary truncate max-w-[240px]" title={comailAccountLabel}>
                       {comailAccountLabel}
                     </span>
                   )}
                 </h2>
-                <p id={`${id}-desc`} className="text-xs text-muted-foreground">
+                <p id={`${id}-desc`} className="text-xs md:text-sm text-muted-foreground mt-0.5">
                   {t('description')}
                 </p>
               </div>
@@ -281,19 +281,19 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
               aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1">
             {!configured && (
-              <div className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <div className="text-xs space-y-1">
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
+                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div className="text-sm space-y-1">
                   <p className="font-medium">{t('not_configured')}</p>
                 </div>
               </div>
@@ -354,39 +354,39 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
                       )}
                     >
                       {/* Account Card Header */}
-                      <div className="p-4 bg-muted/30 border-b border-border flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-5 md:px-6 md:py-5 bg-muted/30 border-b border-border flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5 min-w-0">
                           <Avatar
                             src={acc.picture}
                             name={acc.name || acc.email}
                             email={acc.email}
-                            size="sm"
-                            className="w-9 h-9 text-xs flex-shrink-0"
+                            size="md"
+                            className="w-11 h-11 text-sm flex-shrink-0"
                             disableFavicon
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-foreground truncate">
+                              <p className="text-base font-semibold text-foreground truncate">
                                 {acc.name || toUnicodeEmail(acc.email)}
                               </p>
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                                <GoogleIcon className="w-2.5 h-2.5" />
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
+                                <GoogleIcon className="w-3 h-3" />
                                 Google
                               </span>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate font-mono">
+                            <p className="text-xs md:text-sm text-muted-foreground truncate font-mono mt-0.5">
                               {toUnicodeEmail(acc.email)}
                             </p>
                           </div>
                         </div>
 
                         {/* Reconnect & Remove buttons */}
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleConnect(acc.email)}
-                            className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                            className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground"
                             title={t('reconnect')}
                           >
                             <RefreshCw className="w-3.5 h-3.5 me-1.5" />
@@ -396,7 +396,7 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
                             variant="ghost"
                             size="sm"
                             onClick={() => setAccountToRemove(acc)}
-                            className="h-8 px-2.5 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            className="h-9 px-3 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             title={t('remove')}
                           >
                             <Trash2 className="w-3.5 h-3.5 me-1.5 text-destructive" />
@@ -406,8 +406,8 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
                       </div>
 
                       {/* App Population Toggles */}
-                      <div className="p-4 space-y-3">
-                        <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                      <div className="p-5 md:p-6 space-y-4">
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                           {t('apps_heading')}
                         </div>
 
