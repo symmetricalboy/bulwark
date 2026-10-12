@@ -16,6 +16,9 @@ import {
   AppleIcon,
   NextcloudIcon,
   AtprotoIcon,
+  Sparkles,
+  Check,
+  ExternalLink,
 } from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -188,6 +191,66 @@ export function AccountSettings() {
           </div>
         </SettingsSection>
       )}
+
+      {/* Comail Pro & Subscription Tier */}
+      <SettingsSection
+        title="Subscription & Comail Pro"
+        description="Unlock high-frequency continuous sync, custom domain relays via Comail Build, and sovereign ATProto encryption."
+      >
+        <div className="p-5 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-background to-muted/30 shadow-2xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0 shadow-2xs">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-base font-semibold text-foreground">Comail Sovereign</h4>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase tracking-wider">
+                    Free Tier
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Connected to sovereign ATProto Space and self-hosted JMAP
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://build.comail.at"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 shrink-0 shadow-2xs"
+            >
+              <span>Manage Comail Pro</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-border/60">
+            <div className="p-2.5 rounded-lg bg-background/80 border border-border/50 flex items-start gap-2">
+              <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <span className="font-semibold text-foreground block">Continuous Sync</span>
+                <span className="text-[11px] text-muted-foreground">Google, Microsoft, Apple & Nextcloud</span>
+              </div>
+            </div>
+            <div className="p-2.5 rounded-lg bg-background/80 border border-border/50 flex items-start gap-2">
+              <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <span className="font-semibold text-foreground block">Comail Build Relay</span>
+                <span className="text-[11px] text-muted-foreground">Domain routing, webhooks & webmail</span>
+              </div>
+            </div>
+            <div className="p-2.5 rounded-lg bg-background/80 border border-border/50 flex items-start gap-2">
+              <Check className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <span className="font-semibold text-foreground block">Sovereign Encryption</span>
+                <span className="text-[11px] text-muted-foreground">ATProto PDS & private key storage</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SettingsSection>
 
       {archiveEnabled && <AccountArchiveSettings />}
 
