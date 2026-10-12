@@ -1041,7 +1041,11 @@
       "content_senders": "Агуулга ба Илгээгчид",
       "about_data": "Тухай & Өгөгдөл",
       "debug": "Дабаглах",
-      "byomc": "Connect a mail client"
+      "byomc": "Connect a mail client",
+      "remote_content": "Remote content",
+      "display": "Display",
+      "writing": "Writing",
+      "plugins": "Plugins"
     },
     "themes": {
       "title": "Сэдэв",
@@ -1691,6 +1695,20 @@
       "tracker_blocker": {
         "label": "Block email tracking pixels",
         "description": "Prevent senders from tracking when, where, and how often you open their emails by stripping 1x1 transparent spy pixels and beacons"
+      },
+      "section_conversations": "Conversations & Message List",
+      "section_conversations_desc": "Configure conversation grouping, snippet previews, and list density",
+      "section_reading": "Reading Pane & Formatting",
+      "section_reading_desc": "Customize message spacing, plain-text typography, and attachment rendering",
+      "section_actions": "Actions & Archive",
+      "section_actions_desc": "Manage deletion behavior, junk cleanup, and archive folder organization",
+      "section_gestures": "Gestures & Quick Actions",
+      "section_gestures_desc": "Set up swipe gestures for mobile and hover buttons for desktop",
+      "groups": {
+        "images_tracking": "Images & Tracking",
+        "images_tracking_desc": "Control remote images, tracker blocking, and light mode fallback for incoming mail",
+        "trusted": "Trusted Senders",
+        "trusted_desc": "Manage senders whose images and content are always trusted and loaded"
       }
     },
     "composer": {
@@ -2667,7 +2685,13 @@
       "notifications": "Notifications & Sounds",
       "notifications_subtitle": "Push relays, sounds & calendar alerts",
       "advanced": "Cloud & Developer",
-      "advanced_subtitle": "Cloud sync, privacy, protocols & diagnostics"
+      "advanced_subtitle": "Cloud sync, privacy, protocols & diagnostics",
+      "privacy": "Privacy & security",
+      "privacy_subtitle": "Sign-in, remote content and encryption",
+      "compose": "Compose",
+      "compose_subtitle": "Writing, identities, signatures and templates",
+      "general": "General",
+      "general_subtitle": "Language, region and default apps"
     },
     "comail_build": {
       "badge": "BUILD",

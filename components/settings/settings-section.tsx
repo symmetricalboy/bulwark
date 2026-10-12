@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, createContext, useContext, useId } from 'react';
-import { Lock } from '@/components/icons';
+import { ChevronDown, Lock } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 /**
@@ -19,15 +19,15 @@ interface SettingsSectionProps {
 
 export function SettingsSection({ title, description, children }: SettingsSectionProps) {
   return (
-    <div data-search-label={title} className="space-y-4">
-      <div>
-        <h3 className="text-lg font-medium text-foreground">{title}</h3>
+    <section data-search-label={title} className="space-y-2.5">
+      <header className="px-1">
+        <h3 className="text-[0.9375rem] font-semibold tracking-tight text-foreground">{title}</h3>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 max-w-prose">{description}</p>
         )}
-      </div>
-      <div className="space-y-4">{children}</div>
-    </div>
+      </header>
+      <div className="rounded-xl border border-border/70 bg-card/50 px-4 py-1 shadow-2xs">{children}</div>
+    </section>
   );
 }
 
@@ -43,7 +43,7 @@ export function SettingItem({ label, description, children, locked }: SettingIte
   return (
     <div
       data-search-label={label}
-      className={cn("flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4 py-3 border-b border-border last:border-0", locked && "opacity-60")}
+      className={cn("flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 py-3.5 border-b border-border/60 last:border-0", locked && "opacity-60")}
     >
       <div className="flex-1 min-w-0 sm:pe-4">
         <div className="flex items-center gap-1.5">
@@ -51,7 +51,7 @@ export function SettingItem({ label, description, children, locked }: SettingIte
           {locked && <Lock className="w-3 h-3 text-muted-foreground" aria-label="Managed by administrator" />}
         </div>
         {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground mt-0.5">{description}</p>
         )}
       </div>
       <SettingLabelContext.Provider value={labelId}>
@@ -84,15 +84,15 @@ export function ToggleSwitch({ checked, onChange, disabled, ariaLabel, testId }:
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150',
-        checked ? 'bg-primary' : 'bg-muted',
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        checked ? 'bg-primary' : 'bg-muted-foreground/25',
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
       )}
     >
       <span
         className={cn(
-          'inline-block h-4 w-4 transform rounded-full bg-background transition-transform duration-150',
-          checked ? 'ltr:translate-x-6 rtl:-translate-x-6' : 'ltr:translate-x-1 rtl:-translate-x-1'
+          'inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+          checked ? 'ltr:translate-x-[22px] rtl:-translate-x-[22px]' : 'ltr:translate-x-0.5 rtl:-translate-x-0.5'
         )}
       />
     </button>
@@ -108,7 +108,11 @@ interface RadioGroupProps {
 export function RadioGroup({ value, onChange, options }: RadioGroupProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <div className="flex gap-1.5" role="group" aria-labelledby={labelledBy}>
+    <div
+      className="inline-flex max-w-full flex-wrap gap-0.5 rounded-lg bg-muted/70 p-0.5 ring-1 ring-inset ring-border/50"
+      role="group"
+      aria-labelledby={labelledBy}
+    >
       {options.map((option) => (
         <button
           key={option.value}
@@ -116,10 +120,10 @@ export function RadioGroup({ value, onChange, options }: RadioGroupProps) {
           aria-pressed={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            'px-3 py-1.5 text-xs rounded-md transition-colors duration-150',
+            'px-3 py-1.5 text-xs rounded-md transition-all duration-150 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             value === option.value
-              ? 'bg-primary text-primary-foreground font-medium'
-              : 'bg-muted hover:bg-accent text-foreground'
+              ? 'bg-background text-foreground font-semibold shadow-sm ring-1 ring-border/60'
+              : 'text-muted-foreground hover:text-foreground'
           )}
         >
           {option.label}
@@ -141,24 +145,26 @@ interface SelectProps {
 export function Select({ value, onChange, options, disabled, className, ariaLabel }: SelectProps) {
   const labelledBy = useContext(SettingLabelContext);
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      aria-labelledby={ariaLabel ? undefined : labelledBy}
-      dir="auto"
-      className={cn(
-        "px-3 py-1.5 text-sm rounded-md bg-muted border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors duration-150",
-        disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-muted-foreground",
-        className
-      )}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <span className={cn("relative inline-flex max-w-full", className)}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabel ? undefined : labelledBy}
+        dir="auto"
+        className={cn(
+          "h-9 w-full min-w-0 ps-3 pe-8 text-sm rounded-lg bg-background border border-border text-foreground appearance-none shadow-2xs focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150",
+          disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:border-muted-foreground/60",
+        )}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown aria-hidden="true" className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+    </span>
   );
 }

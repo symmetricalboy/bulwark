@@ -114,11 +114,14 @@ type Tab = SettingsSearchTab;
 
 export type SettingsHubId =
   | 'account'
+  | 'privacy'
   | 'appearance'
   | 'mail'
+  | 'compose'
   | 'organization'
   | 'apps'
   | 'notifications'
+  | 'general'
   | 'advanced';
 
 // A plugin that exposes a `settings-section` slot gets its own first-class
@@ -172,35 +175,38 @@ const tabIcons: Record<Tab, AppIcon> = {
 
 const TAB_TO_HUB: Record<Tab, SettingsHubId> = {
   account: 'account',
-  security: 'account',
   byomc: 'account',
-  language: 'account',
+
+  security: 'privacy',
+  content_senders: 'privacy',
 
   appearance: 'appearance',
   layout: 'appearance',
   themes: 'appearance',
 
   reading: 'mail',
-  composing: 'mail',
-  identities: 'mail',
-  vacation: 'mail',
-  downloads: 'mail',
 
-  keywords: 'organization',
+  composing: 'compose',
+  identities: 'compose',
+  templates: 'compose',
+
   folders: 'organization',
+  keywords: 'organization',
   filters: 'organization',
-  templates: 'organization',
+  vacation: 'organization',
 
   calendar: 'apps',
   contacts: 'apps',
   files: 'apps',
+  downloads: 'apps',
   sidebar_apps: 'apps',
 
   notifications: 'notifications',
 
+  language: 'general',
+  protocol_handlers: 'general',
+
   about_data: 'advanced',
-  content_senders: 'advanced',
-  protocol_handlers: 'advanced',
   plugins: 'advanced',
   debug: 'advanced',
 };
@@ -612,121 +618,154 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   const supportsFiles = client?.supportsFiles() ?? false;
   const supportsContacts = client?.supportsContacts() ?? false;
 
-  const hubs: HubDef[] = useMemo(() => [
-    {
-      id: 'account',
-      label: t('hubs.account'),
-      subtitle: t('hubs.account_subtitle'),
-      icon: User,
-      subTabs: [
-        { id: 'account', label: t('tabs.account'), icon: tabIcons.account },
-        ...(stalwartFeaturesEnabled && passwordSecurityEnabled
-          ? [{ id: 'security' as Tab, label: t('tabs.security'), icon: tabIcons.security }]
-          : []),
-        ...(byomcEnabled ? [{ id: 'byomc' as Tab, label: t('tabs.byomc'), icon: tabIcons.byomc }] : []),
-        { id: 'language', label: t('tabs.language'), icon: tabIcons.language },
-      ],
-    },
-    {
-      id: 'appearance',
-      label: t('hubs.appearance'),
-      subtitle: t('hubs.appearance_subtitle'),
-      icon: Palette,
-      subTabs: [
-        { id: 'appearance', label: t('tabs.appearance'), icon: tabIcons.appearance },
-        { id: 'layout', label: t('tabs.layout'), icon: tabIcons.layout },
-        ...(isFeatureEnabled('themesEnabled')
-          ? [{ id: 'themes' as Tab, label: t('tabs.themes'), icon: tabIcons.themes }]
-          : []),
-      ],
-    },
-    {
-      id: 'mail',
-      label: t('hubs.mail'),
-      subtitle: t('hubs.mail_subtitle'),
-      icon: Mail,
-      subTabs: [
-        { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading },
-        { id: 'composing', label: t('tabs.composing'), icon: tabIcons.composing },
-        { id: 'identities', label: t('tabs.identities'), icon: tabIcons.identities },
-        ...(supportsVacation
-          ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation }]
-          : []),
-        { id: 'downloads', label: t('tabs.downloads'), icon: tabIcons.downloads },
-      ],
-    },
-    {
-      id: 'organization',
-      label: t('hubs.organization'),
-      subtitle: t('hubs.organization_subtitle'),
-      icon: Tags,
-      subTabs: [
-        ...(isFeatureEnabled('customKeywordsEnabled')
-          ? [{ id: 'keywords' as Tab, label: t('tabs.keywords'), icon: tabIcons.keywords }]
-          : []),
-        { id: 'folders', label: t('tabs.folders'), icon: tabIcons.folders },
-        ...(supportsSieve
-          ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters }]
-          : []),
-        ...(isFeatureEnabled('templatesEnabled')
-          ? [{ id: 'templates' as Tab, label: t('tabs.templates'), icon: tabIcons.templates }]
-          : []),
-      ],
-    },
-    {
-      id: 'apps',
-      label: t('hubs.apps'),
-      subtitle: t('hubs.apps_subtitle'),
-      icon: LayoutGrid,
-      subTabs: [
-        ...(calendarConfigEnabled && supportsCalendar && isFeatureEnabled('calendarEnabled')
-          ? [{ id: 'calendar' as Tab, label: t('tabs.calendar'), icon: tabIcons.calendar }]
-          : []),
-        ...(contactsConfigEnabled && supportsContacts && isFeatureEnabled('contactsEnabled')
-          ? [{ id: 'contacts' as Tab, label: t('tabs.contacts'), icon: tabIcons.contacts }]
-          : []),
-        ...(filesConfigEnabled && supportsFiles && isFeatureEnabled('filesEnabled')
-          ? [{ id: 'files' as Tab, label: t('tabs.files'), icon: tabIcons.files }]
-          : []),
-        ...(appsConfigEnabled && isFeatureEnabled('sidebarAppsEnabled')
-          ? [{ id: 'sidebar_apps' as Tab, label: t('tabs.sidebar_apps'), icon: tabIcons.sidebar_apps }]
-          : []),
-        ...pluginSettingsOffers.map((offer): SubTabDef => ({
-          id: `plugin:${offer.pluginId}` as PluginTabId,
-          label: getActivePlugin(offer.pluginId)?.plugin.name ?? offer.pluginId,
-          icon: Puzzle,
-        })),
-      ],
-    },
-    {
-      id: 'notifications',
-      label: t('hubs.notifications'),
-      subtitle: t('hubs.notifications_subtitle'),
-      icon: Bell,
-      subTabs: [
-        { id: 'notifications', label: t('tabs.notifications'), icon: tabIcons.notifications },
-      ],
-    },
-    {
-      id: 'advanced',
-      label: t('hubs.advanced'),
-      subtitle: t('hubs.advanced_subtitle'),
-      icon: SettingsIcon,
-      subTabs: [
-        { id: 'about_data', label: t('tabs.about_data'), icon: tabIcons.about_data },
-        { id: 'content_senders', label: t('tabs.content_senders'), icon: tabIcons.content_senders },
-        ...(IS_LITE
-          ? []
-          : [{ id: 'protocol_handlers' as Tab, label: t('tabs.protocol_handlers'), icon: tabIcons.protocol_handlers }]),
-        ...(isFeatureEnabled('pluginsEnabled')
-          ? [{ id: 'plugins' as Tab, label: 'Plugins', icon: tabIcons.plugins }]
-          : []),
-        ...(isFeatureEnabled('debugModeEnabled')
-          ? [{ id: 'debug' as Tab, label: t('tabs.debug'), icon: tabIcons.debug }]
-          : []),
-      ],
-    },
-  ], [
+  const isCryptoPlugin = (pluginId: string) =>
+    getActivePlugin(pluginId)?.plugin.permissions.some((permission) => permission.startsWith('smime:') || permission.startsWith('pgp:')) ?? false;
+
+  const hubs: HubDef[] = useMemo(() => {
+    const pluginTab = (offer: (typeof pluginSettingsOffers)[number]): SubTabDef => ({
+      id: `plugin:${offer.pluginId}` as PluginTabId,
+      label: getActivePlugin(offer.pluginId)?.plugin.name ?? offer.pluginId,
+      icon: Puzzle,
+    });
+    return [
+      {
+        id: 'account',
+        label: t('hubs.account'),
+        subtitle: t('hubs.account_subtitle'),
+        icon: User,
+        subTabs: [
+          { id: 'account', label: t('tabs.account'), icon: tabIcons.account },
+          ...(byomcEnabled ? [{ id: 'byomc' as Tab, label: t('tabs.byomc'), icon: tabIcons.byomc }] : []),
+        ],
+      },
+      {
+        id: 'privacy',
+        label: t('hubs.privacy'),
+        subtitle: t('hubs.privacy_subtitle'),
+        icon: Shield,
+        subTabs: [
+          ...(stalwartFeaturesEnabled && passwordSecurityEnabled
+            ? [{ id: 'security' as Tab, label: t('tabs.security'), icon: tabIcons.security }]
+            : []),
+          { id: 'content_senders', label: t('tabs.remote_content'), icon: tabIcons.content_senders },
+          ...pluginSettingsOffers.filter((offer) => isCryptoPlugin(offer.pluginId)).map(pluginTab),
+        ],
+      },
+      {
+        id: 'appearance',
+        label: t('hubs.appearance'),
+        subtitle: t('hubs.appearance_subtitle'),
+        icon: Palette,
+        subTabs: [
+          ...(isFeatureEnabled('themesEnabled')
+            ? [{ id: 'themes' as Tab, label: t('tabs.themes'), icon: tabIcons.themes }]
+            : []),
+          { id: 'appearance', label: t('tabs.display'), icon: tabIcons.appearance },
+          { id: 'layout', label: t('tabs.layout'), icon: tabIcons.layout },
+        ],
+      },
+      {
+        id: 'mail',
+        label: t('hubs.mail'),
+        subtitle: t('hubs.mail_subtitle'),
+        icon: Mail,
+        subTabs: [
+          { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading },
+        ],
+      },
+      {
+        id: 'compose',
+        label: t('hubs.compose'),
+        subtitle: t('hubs.compose_subtitle'),
+        icon: PenLine,
+        subTabs: [
+          { id: 'composing', label: t('tabs.writing'), icon: tabIcons.composing },
+          { id: 'identities', label: t('tabs.identities'), icon: tabIcons.identities },
+          ...(isFeatureEnabled('templatesEnabled')
+            ? [{ id: 'templates' as Tab, label: t('tabs.templates'), icon: tabIcons.templates }]
+            : []),
+        ],
+      },
+      {
+        id: 'organization',
+        label: t('hubs.organization'),
+        subtitle: t('hubs.organization_subtitle'),
+        icon: Tags,
+        subTabs: [
+          { id: 'folders', label: t('tabs.folders'), icon: tabIcons.folders },
+          ...(isFeatureEnabled('customKeywordsEnabled')
+            ? [{ id: 'keywords' as Tab, label: t('tabs.keywords'), icon: tabIcons.keywords }]
+            : []),
+          ...(supportsSieve
+            ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters }]
+            : []),
+          ...(supportsVacation
+            ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation }]
+            : []),
+        ],
+      },
+      {
+        id: 'apps',
+        label: t('hubs.apps'),
+        subtitle: t('hubs.apps_subtitle'),
+        icon: LayoutGrid,
+        subTabs: [
+          ...(calendarConfigEnabled && supportsCalendar && isFeatureEnabled('calendarEnabled')
+            ? [{ id: 'calendar' as Tab, label: t('tabs.calendar'), icon: tabIcons.calendar }]
+            : []),
+          ...(contactsConfigEnabled && supportsContacts && isFeatureEnabled('contactsEnabled')
+            ? [{ id: 'contacts' as Tab, label: t('tabs.contacts'), icon: tabIcons.contacts }]
+            : []),
+          ...(filesConfigEnabled && supportsFiles && isFeatureEnabled('filesEnabled')
+            ? [{ id: 'files' as Tab, label: t('tabs.files'), icon: tabIcons.files }]
+            : []),
+          { id: 'downloads', label: t('tabs.downloads'), icon: tabIcons.downloads },
+          ...(appsConfigEnabled && isFeatureEnabled('sidebarAppsEnabled')
+            ? [{ id: 'sidebar_apps' as Tab, label: t('tabs.sidebar_apps'), icon: tabIcons.sidebar_apps }]
+            : []),
+          ...pluginSettingsOffers.filter((offer) => !isCryptoPlugin(offer.pluginId)).map(pluginTab),
+        ],
+      },
+      {
+        id: 'notifications',
+        label: t('hubs.notifications'),
+        subtitle: t('hubs.notifications_subtitle'),
+        icon: Bell,
+        subTabs: [
+          { id: 'notifications', label: t('tabs.notifications'), icon: tabIcons.notifications },
+        ],
+      },
+      {
+        id: 'general',
+        label: t('hubs.general'),
+        subtitle: t('hubs.general_subtitle'),
+        icon: Languages,
+        subTabs: [
+          { id: 'language', label: t('tabs.language'), icon: tabIcons.language },
+          ...(IS_LITE
+            ? []
+            : [{ id: 'protocol_handlers' as Tab, label: t('tabs.protocol_handlers'), icon: tabIcons.protocol_handlers }]),
+        ],
+      },
+      {
+        id: 'advanced',
+        label: t('hubs.advanced'),
+        subtitle: t('hubs.advanced_subtitle'),
+        icon: SettingsIcon,
+        subTabs: [
+          { id: 'about_data', label: t('tabs.about_data'), icon: tabIcons.about_data },
+          ...(isFeatureEnabled('pluginsEnabled')
+            ? [{ id: 'plugins' as Tab, label: t('tabs.plugins'), icon: tabIcons.plugins }]
+            : []),
+          ...(isFeatureEnabled('debugModeEnabled')
+            ? [{ id: 'debug' as Tab, label: t('tabs.debug'), icon: tabIcons.debug }]
+            : []),
+        ],
+      },
+    ];
+    // isCryptoPlugin only reads the plugin registry, which pluginSettingsOffers tracks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
     t,
     stalwartFeaturesEnabled,
     passwordSecurityEnabled,
@@ -808,8 +847,11 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     ? activeTab
     : (allVisibleSubTabs[0]?.id ?? 'appearance');
 
-  const activeHubId = getHubForTab(effectiveActiveTab);
-  const currentHub = visibleHubs.find((h) => h.id === activeHubId) ?? visibleHubs[0];
+  const currentHub =
+    visibleHubs.find((h) => h.subTabs.some((s) => s.id === effectiveActiveTab)) ??
+    visibleHubs.find((h) => h.id === getHubForTab(effectiveActiveTab)) ??
+    visibleHubs[0];
+  const activeHubId = currentHub?.id;
 
   const handleTabSelect = (tabId: SettingsTabId) => {
     setActiveTab(tabId);
@@ -873,25 +915,30 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
         {/* Sub-tabs horizontal segmented bar */}
         {currentHub && currentHub.subTabs.length > 1 && (
-          <div className="mb-6 pb-2 border-b border-border/50">
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+          <div className="mb-6">
+            <div
+              role="tablist"
+              className="inline-flex max-w-full items-center gap-1 p-1 bg-muted/60 rounded-xl border border-border/50 overflow-x-auto no-scrollbar"
+            >
               {currentHub.subTabs.map((subTab) => {
                 const SubIcon = subTab.icon;
                 const isActive = effectiveActiveTab === subTab.id;
                 return (
                   <button
                     key={subTab.id}
-                    data-testid={`settings-tab-${subTab.id}`}
+                    data-testid={`settings-pill-${subTab.id}`}
                     type="button"
+                    role="tab"
+                    aria-selected={isActive}
                     onClick={() => handleTabSelect(subTab.id)}
                     className={cn(
-                      "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shrink-0",
+                      "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-spring whitespace-nowrap shrink-0",
                       isActive
-                        ? "bg-primary text-primary-foreground shadow-sm font-semibold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                        ? "bg-background text-foreground shadow-2xs font-semibold ring-1 ring-border/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                     )}
                   >
-                    <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                    <SubIcon className={cn("w-3.5 h-3.5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
                     <span>{subTab.label}</span>
                   </button>
                 );
@@ -1420,45 +1467,6 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
       <div ref={attachContentScroll} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6">
-          {currentHub && (
-            <div className="mb-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-2xs">
-                  <currentHub.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight text-foreground">{currentHub.label}</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">{currentHub.subtitle}</p>
-                </div>
-              </div>
-
-              {currentHub.subTabs.length > 1 && (
-                <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border/50 overflow-x-auto no-scrollbar">
-                  {currentHub.subTabs.map((subTab) => {
-                    const SubIcon = subTab.icon;
-                    const isSubActive = effectiveActiveTab === subTab.id;
-                    return (
-                      <button
-                        key={subTab.id}
-                        data-testid={`settings-pill-${subTab.id}`}
-                        onClick={() => handleTabSelect(subTab.id)}
-                        className={cn(
-                          "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all transition-spring whitespace-nowrap",
-                          isSubActive
-                            ? "bg-background text-foreground shadow-2xs font-semibold ring-1 ring-border/60"
-                            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                        )}
-                      >
-                        <SubIcon className={cn("w-3.5 h-3.5 shrink-0", isSubActive ? "text-primary" : "text-muted-foreground")} />
-                        <span>{subTab.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
           <div key={effectiveActiveTab} className="animate-spring-fade-in">
             {renderTabContent()}
           </div>
