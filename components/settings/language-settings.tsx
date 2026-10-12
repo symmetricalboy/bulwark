@@ -9,13 +9,26 @@ import type { DateFormat, DateLocale, TimeFormat, FirstDayOfWeek } from '@/store
 import { formatDate } from '@/lib/utils';
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { AUTO_TIME_ZONE, getBrowserTimeZone, getEffectiveTimeZone, listTimeZones } from '@/lib/timezone';
-import { SettingsSection, SettingItem, Select, RadioGroup } from './settings-section';
+import { SettingsSection, SettingItem, Select, RadioGroup, ToggleSwitch } from './settings-section';
+import { useTour } from '@/components/tour/tour-provider';
+import { Button } from '@/components/ui/button';
+import { PlayCircle } from '@/components/icons';
 
 export function LanguageSettings() {
   const t = useTranslations('settings.language_region');
   const tDays = useTranslations('calendar.days');
+  const tTour = useTranslations('tour');
 
-  const { dateFormat, dateLocale, timeFormat, firstDayOfWeek, timeZone, updateSetting } = useSettingsStore();
+  const {
+    dateFormat,
+    dateLocale,
+    timeFormat,
+    firstDayOfWeek,
+    timeZone,
+    showOnboardingOnNewDevices,
+    updateSetting,
+  } = useSettingsStore();
+  const { startTour, resetTourCompletion } = useTour();
 
   // Browser zone + zone list are read after mount: SSR has no browser, and a
   // server/client mismatch in the option list would trip hydration.
@@ -97,91 +110,122 @@ export function LanguageSettings() {
   }, [timeZone, timeFormat, locale]);
 
   return (
-    <SettingsSection title={t('title')} description={t('description')}>
-      <SettingItem label={t('language.label')} description={t('language.description')}>
-        <LanguageSwitcher />
-      </SettingItem>
+    <div className="space-y-6">
+      {/* 1. Language & Regional Formatting */}
+      <SettingsSection
+        title={t('section_regional')}
+        description={t('section_regional_desc')}
+      >
+        <SettingItem label={t('language.label')} description={t('language.description')}>
+          <LanguageSwitcher />
+        </SettingItem>
 
-      <SettingItem label={t('date_format.label')} description={t('date_format.description')}>
-        <div className="flex flex-col items-end gap-2">
-          <Select
-            value={dateFormat}
-            onChange={(value) => updateSetting('dateFormat', value as DateFormat)}
-            options={[
-              { value: 'smart', label: withExample(t('date_format.smart'), preview.dateFormat.smart) },
-              { value: 'relative', label: withExample(t('date_format.relative'), preview.dateFormat.relative) },
-              { value: 'full', label: withExample(t('date_format.full'), preview.dateFormat.full) },
-            ]}
-          />
-          <div className="text-xs text-muted-foreground text-end space-y-0.5 font-mono">
-            <div>
-              <span className="opacity-70">{t('date_format.preview_today')} </span>
-              <span className="text-foreground/90">{preview.today}</span>
-            </div>
-            <div>
-              <span className="opacity-70">{t('date_format.preview_this_week')} </span>
-              <span className="text-foreground/90">{preview.thisWeek}</span>
-            </div>
-            <div>
-              <span className="opacity-70">{t('date_format.preview_older')} </span>
-              <span className="text-foreground/90">{preview.older}</span>
+        <SettingItem label={t('date_format.label')} description={t('date_format.description')}>
+          <div className="flex flex-col items-end gap-2">
+            <Select
+              value={dateFormat}
+              onChange={(value) => updateSetting('dateFormat', value as DateFormat)}
+              options={[
+                { value: 'smart', label: withExample(t('date_format.smart'), preview.dateFormat.smart) },
+                { value: 'relative', label: withExample(t('date_format.relative'), preview.dateFormat.relative) },
+                { value: 'full', label: withExample(t('date_format.full'), preview.dateFormat.full) },
+              ]}
+            />
+            <div className="text-xs text-muted-foreground text-end space-y-0.5 font-mono">
+              <div>
+                <span className="opacity-70">{t('date_format.preview_today')} </span>
+                <span className="text-foreground/90">{preview.today}</span>
+              </div>
+              <div>
+                <span className="opacity-70">{t('date_format.preview_this_week')} </span>
+                <span className="text-foreground/90">{preview.thisWeek}</span>
+              </div>
+              <div>
+                <span className="opacity-70">{t('date_format.preview_older')} </span>
+                <span className="text-foreground/90">{preview.older}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </SettingItem>
+        </SettingItem>
 
-      <SettingItem label={t('date_locale.label')} description={t('date_locale.description')}>
-        <Select
-          value={dateLocale}
-          onChange={(value) => updateSetting('dateLocale', value as DateLocale)}
-          options={[
-            { value: 'auto', label: withExample(t('date_locale.auto'), preview.dateLocale.auto) },
-            { value: 'iso', label: withExample(t('date_locale.iso'), preview.dateLocale.iso) },
-            { value: 'en-GB', label: withExample(t('date_locale.dmy'), preview.dateLocale['en-GB']) },
-            { value: 'en-US', label: withExample(t('date_locale.mdy'), preview.dateLocale['en-US']) },
-          ]}
-        />
-      </SettingItem>
-
-      <SettingItem label={t('time_format.label')} description={t('time_format.description')}>
-        <RadioGroup
-          value={timeFormat}
-          onChange={(value) => updateSetting('timeFormat', value as TimeFormat)}
-          options={[
-            { value: '12h', label: t('time_format.12h') },
-            { value: '24h', label: t('time_format.24h') },
-          ]}
-        />
-      </SettingItem>
-
-      <SettingItem label={t('time_zone.label')} description={t('time_zone.description')}>
-        <div className="flex flex-col items-end gap-2">
+        <SettingItem label={t('date_locale.label')} description={t('date_locale.description')}>
           <Select
-            value={timeZone}
-            onChange={(value) => updateSetting('timeZone', value)}
-            options={timeZoneOptions}
-            className="max-w-[16rem]"
+            value={dateLocale}
+            onChange={(value) => updateSetting('dateLocale', value as DateLocale)}
+            options={[
+              { value: 'auto', label: withExample(t('date_locale.auto'), preview.dateLocale.auto) },
+              { value: 'iso', label: withExample(t('date_locale.iso'), preview.dateLocale.iso) },
+              { value: 'en-GB', label: withExample(t('date_locale.dmy'), preview.dateLocale['en-GB']) },
+              { value: 'en-US', label: withExample(t('date_locale.mdy'), preview.dateLocale['en-US']) },
+            ]}
           />
-          {timeZonePreview && (
-            <div className="text-xs text-muted-foreground text-end font-mono">
-              <span className="opacity-70">{t('time_zone.preview_now')} </span>
-              <span className="text-foreground/90">{timeZonePreview}</span>
-            </div>
-          )}
-        </div>
-      </SettingItem>
+        </SettingItem>
 
-      <SettingItem label={t('first_day.label')} description={t('first_day.description')}>
-        <Select
-          value={firstDayOfWeek.toString()}
-          onChange={(value) => updateSetting('firstDayOfWeek', parseInt(value) as FirstDayOfWeek)}
-          options={[
-            { value: '1', label: tDays('monday') },
-            { value: '6', label: tDays('saturday') },
-            { value: '0', label: tDays('sunday') },
-          ]}
-        />
-      </SettingItem>
-    </SettingsSection>
+        <SettingItem label={t('time_format.label')} description={t('time_format.description')}>
+          <RadioGroup
+            value={timeFormat}
+            onChange={(value) => updateSetting('timeFormat', value as TimeFormat)}
+            options={[
+              { value: '12h', label: t('time_format.12h') },
+              { value: '24h', label: t('time_format.24h') },
+            ]}
+          />
+        </SettingItem>
+
+        <SettingItem label={t('time_zone.label')} description={t('time_zone.description')}>
+          <div className="flex flex-col items-end gap-2">
+            <Select
+              value={timeZone}
+              onChange={(value) => updateSetting('timeZone', value)}
+              options={timeZoneOptions}
+              className="max-w-[16rem]"
+            />
+            {timeZonePreview && (
+              <div className="text-xs text-muted-foreground text-end font-mono">
+                <span className="opacity-70">{t('time_zone.preview_now')} </span>
+                <span className="text-foreground/90">{timeZonePreview}</span>
+              </div>
+            )}
+          </div>
+        </SettingItem>
+
+        <SettingItem label={t('first_day.label')} description={t('first_day.description')}>
+          <Select
+            value={firstDayOfWeek.toString()}
+            onChange={(value) => updateSetting('firstDayOfWeek', parseInt(value) as FirstDayOfWeek)}
+            options={[
+              { value: '1', label: tDays('monday') },
+              { value: '6', label: tDays('saturday') },
+              { value: '0', label: tDays('sunday') },
+            ]}
+          />
+        </SettingItem>
+      </SettingsSection>
+
+      {/* 2. Walkthrough & Onboarding */}
+      <SettingsSection
+        title={t('section_tour')}
+        description={t('section_tour_desc')}
+      >
+        <SettingItem label={tTour('restart_title')} description={tTour('restart_desc')}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { resetTourCompletion(); startTour(); }}
+            className="text-xs h-7"
+          >
+            <PlayCircle className="w-3.5 h-3.5 me-1" />
+            {tTour('restart_button')}
+          </Button>
+        </SettingItem>
+
+        <SettingItem label={tTour('show_on_new_devices_title')} description={tTour('show_on_new_devices_desc')}>
+          <ToggleSwitch
+            checked={showOnboardingOnNewDevices}
+            onChange={(checked) => updateSetting('showOnboardingOnNewDevices', checked)}
+          />
+        </SettingItem>
+      </SettingsSection>
+    </div>
   );
 }

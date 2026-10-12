@@ -4,9 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useSettingsStore, type Density, type IconSet, type IconColorPalette } from '@/stores/settings-store';
 import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settings-section';
 import { cn } from '@/lib/utils';
-import { useTour } from '@/components/tour/tour-provider';
-import { Button } from '@/components/ui/button';
-import { PlayCircle, Star } from '@/components/icons';
+import { Star } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { IS_LITE } from '@/lib/lite';
 import { MessageListOrderSettings } from './message-list-order-settings';
@@ -75,115 +73,115 @@ function DensityPreview({ density }: { density: Density }) {
 export function AppearanceSettings() {
   const t = useTranslations('settings.appearance');
   const tAdvanced = useTranslations('settings.advanced');
-  const tTour = useTranslations('tour');
-  const { fontSize, density, iconSet, iconColorPalette, animationsEnabled, senderFavicons, showAvatarsInJunk, showOnboardingOnNewDevices, updateSetting } = useSettingsStore();
-  const { startTour, resetTourCompletion } = useTour();
+  const { fontSize, density, iconSet, iconColorPalette, animationsEnabled, senderFavicons, showAvatarsInJunk, updateSetting } = useSettingsStore();
   const { isSettingLocked, isSettingHidden } = usePolicyStore();
 
   return (
-    <SettingsSection title={t('title')} description={t('description')}>
+    <div className="space-y-6">
+      {/* 1. Typography & Scale */}
+      <SettingsSection
+        title={t('section_typography')}
+        description={t('section_typography_desc')}
+      >
+        {!isSettingHidden('fontSize') && (
+          <SettingItem label={t('font_size.label')} description={t('font_size.description')} locked={isSettingLocked('fontSize')}>
+            <RadioGroup
+              value={fontSize}
+              onChange={(value) => updateSetting('fontSize', value as 'small' | 'medium' | 'large')}
+              options={[
+                { value: 'small', label: t('font_size.small') },
+                { value: 'medium', label: t('font_size.medium') },
+                { value: 'large', label: t('font_size.large') },
+              ]}
+            />
+          </SettingItem>
+        )}
+      </SettingsSection>
 
+      {/* 2. Density & List Layout */}
+      <SettingsSection
+        title={t('section_density')}
+        description={t('section_density_desc')}
+      >
+        {!isSettingHidden('density') && (
+          <SettingItem label={t('list_density.label')} description={t('list_density.description')} locked={isSettingLocked('density')}>
+            <RadioGroup
+              value={density}
+              onChange={(value) =>
+                updateSetting('density', value as Density)
+              }
+              options={[
+                { value: 'extra-compact', label: t('list_density.extra_compact') },
+                { value: 'compact', label: t('list_density.compact') },
+                { value: 'regular', label: t('list_density.regular') },
+                { value: 'comfortable', label: t('list_density.comfortable') },
+              ]}
+            />
+            <DensityPreview density={density} />
+          </SettingItem>
+        )}
 
-      {!isSettingHidden('iconSet') && (
-      <SettingItem label={t('icon_set.label')} description={t('icon_set.description')} locked={isSettingLocked('iconSet')}>
-        <RadioGroup
-          value={iconSet}
-          onChange={(value) => updateSetting('iconSet', value as IconSet)}
-          options={[
-            { value: 'tabler', label: t('icon_set.tabler') },
-            { value: 'material-symbols', label: t('icon_set.material_symbols') },
-            { value: 'lucide', label: t('icon_set.lucide') },
-          ]}
-        />
-      </SettingItem>
-      )}
+        <MessageListOrderSettings />
+      </SettingsSection>
 
-      {!isSettingHidden('iconColorPalette') && (
-      <SettingItem label={t('icon_color_palette.label')} description={t('icon_color_palette.description')} locked={isSettingLocked('iconColorPalette')}>
-        <RadioGroup
-          value={iconColorPalette}
-          onChange={(value) => updateSetting('iconColorPalette', value as IconColorPalette)}
-          options={[
-            { value: 'monochrome', label: t('icon_color_palette.monochrome') },
-            { value: 'theme-accent', label: t('icon_color_palette.theme_accent') },
-            { value: 'rainbow', label: t('icon_color_palette.rainbow') },
-          ]}
-        />
-      </SettingItem>
-      )}
+      {/* 3. Theme, Icons & Motion */}
+      <SettingsSection
+        title={t('section_theme_icons')}
+        description={t('section_theme_icons_desc')}
+      >
+        {!isSettingHidden('iconSet') && (
+          <SettingItem label={t('icon_set.label')} description={t('icon_set.description')} locked={isSettingLocked('iconSet')}>
+            <RadioGroup
+              value={iconSet}
+              onChange={(value) => updateSetting('iconSet', value as IconSet)}
+              options={[
+                { value: 'tabler', label: t('icon_set.tabler') },
+                { value: 'material-symbols', label: t('icon_set.material_symbols') },
+                { value: 'lucide', label: t('icon_set.lucide') },
+              ]}
+            />
+          </SettingItem>
+        )}
 
-      {!isSettingHidden('fontSize') && (
-      <SettingItem label={t('font_size.label')} description={t('font_size.description')} locked={isSettingLocked('fontSize')}>
-        <RadioGroup
-          value={fontSize}
-          onChange={(value) => updateSetting('fontSize', value as 'small' | 'medium' | 'large')}
-          options={[
-            { value: 'small', label: t('font_size.small') },
-            { value: 'medium', label: t('font_size.medium') },
-            { value: 'large', label: t('font_size.large') },
-          ]}
-        />
-      </SettingItem>
-      )}
+        {!isSettingHidden('iconColorPalette') && (
+          <SettingItem label={t('icon_color_palette.label')} description={t('icon_color_palette.description')} locked={isSettingLocked('iconColorPalette')}>
+            <RadioGroup
+              value={iconColorPalette}
+              onChange={(value) => updateSetting('iconColorPalette', value as IconColorPalette)}
+              options={[
+                { value: 'monochrome', label: t('icon_color_palette.monochrome') },
+                { value: 'theme-accent', label: t('icon_color_palette.theme_accent') },
+                { value: 'rainbow', label: t('icon_color_palette.rainbow') },
+              ]}
+            />
+          </SettingItem>
+        )}
 
-      {!isSettingHidden('density') && (
-      <SettingItem label={t('list_density.label')} description={t('list_density.description')} locked={isSettingLocked('density')}>
-        <RadioGroup
-          value={density}
-          onChange={(value) =>
-            updateSetting('density', value as Density)
-          }
-          options={[
-            { value: 'extra-compact', label: t('list_density.extra_compact') },
-            { value: 'compact', label: t('list_density.compact') },
-            { value: 'regular', label: t('list_density.regular') },
-            { value: 'comfortable', label: t('list_density.comfortable') },
-          ]}
-        />
-        <DensityPreview density={density} />
-      </SettingItem>
-      )}
+        {!isSettingHidden('animationsEnabled') && (
+          <SettingItem label={t('animations.label')} description={t('animations.description')} locked={isSettingLocked('animationsEnabled')}>
+            <ToggleSwitch
+              checked={animationsEnabled}
+              onChange={(checked) => updateSetting('animationsEnabled', checked)}
+            />
+          </SettingItem>
+        )}
+      </SettingsSection>
 
-      <MessageListOrderSettings />
+      {/* 4. Media & Avatars */}
+      <SettingsSection
+        title={t('section_media_avatars')}
+        description={t('section_media_avatars_desc')}
+      >
+        {!IS_LITE && (
+          <SettingItem label={tAdvanced('sender_favicons.label')} description={tAdvanced('sender_favicons.description')}>
+            <ToggleSwitch checked={senderFavicons} onChange={(checked) => updateSetting('senderFavicons', checked)} />
+          </SettingItem>
+        )}
 
-      {!isSettingHidden('animationsEnabled') && (
-      <SettingItem label={t('animations.label')} description={t('animations.description')} locked={isSettingLocked('animationsEnabled')}>
-        <ToggleSwitch
-          checked={animationsEnabled}
-          onChange={(checked) => updateSetting('animationsEnabled', checked)}
-        />
-      </SettingItem>
-      )}
-
-      {/* Sender favicons come from the /api/favicon proxy, absent in the static Lite build (components/ui/avatar.tsx). */}
-      {!IS_LITE && (
-        <SettingItem label={tAdvanced('sender_favicons.label')} description={tAdvanced('sender_favicons.description')}>
-          <ToggleSwitch checked={senderFavicons} onChange={(checked) => updateSetting('senderFavicons', checked)} />
+        <SettingItem label={tAdvanced('show_avatars_in_junk.label')} description={tAdvanced('show_avatars_in_junk.description')}>
+          <ToggleSwitch checked={showAvatarsInJunk} onChange={(checked) => updateSetting('showAvatarsInJunk', checked)} />
         </SettingItem>
-      )}
-
-      <SettingItem label={tAdvanced('show_avatars_in_junk.label')} description={tAdvanced('show_avatars_in_junk.description')}>
-        <ToggleSwitch checked={showAvatarsInJunk} onChange={(checked) => updateSetting('showAvatarsInJunk', checked)} />
-      </SettingItem>
-
-      <SettingItem label={tTour('restart_title')} description={tTour('restart_desc')}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => { resetTourCompletion(); startTour(); }}
-          className="text-xs h-7"
-        >
-          <PlayCircle className="w-3.5 h-3.5 me-1" />
-          {tTour('restart_button')}
-        </Button>
-      </SettingItem>
-
-      <SettingItem label={tTour('show_on_new_devices_title')} description={tTour('show_on_new_devices_desc')}>
-        <ToggleSwitch
-          checked={showOnboardingOnNewDevices}
-          onChange={(checked) => updateSetting('showOnboardingOnNewDevices', checked)}
-        />
-      </SettingItem>
-    </SettingsSection>
+      </SettingsSection>
+    </div>
   );
 }

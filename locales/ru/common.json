@@ -1250,7 +1250,15 @@
         "monochrome": "Монохромный (По умолчанию)",
         "theme_accent": "Акцентные оттенки темы",
         "rainbow": "Цвета радуги"
-      }
+      },
+      "section_typography": "Typography & Text Size",
+      "section_typography_desc": "Adjust font scaling and readability across the app",
+      "section_density": "List Density & Layout",
+      "section_density_desc": "Choose spacing, message list order, and content density",
+      "section_theme_icons": "Icons & Motion",
+      "section_theme_icons_desc": "Customize icon styling, color accents, and animation preferences",
+      "section_media_avatars": "Media & Avatars",
+      "section_media_avatars_desc": "Control sender favicons and avatar previews in message lists"
     },
     "keywords": {
       "title": "Теги электронной почты",
@@ -1426,7 +1434,11 @@
         "description": "Show email and calendar times in this time zone instead of the one reported by your browser",
         "auto": "Automatic ({zone})",
         "preview_now": "Now:"
-      }
+      },
+      "section_regional": "Language & Region",
+      "section_regional_desc": "App language, date formatting, time formats, and active time zone",
+      "section_tour": "Walkthrough & Onboarding",
+      "section_tour_desc": "Restart the feature tour or configure onboarding on new devices"
     },
     "email_behavior": {
       "clear_search_on_folder_change": {
@@ -1706,7 +1718,17 @@
         "images_tracking_desc": "Control remote images, tracker blocking, and light mode fallback for incoming mail",
         "trusted": "Trusted Senders",
         "trusted_desc": "Manage senders whose images and content are always trusted and loaded"
-      }
+      },
+      "section_compose_editor": "Editor & Defaults",
+      "section_compose_editor_desc": "Set up editor modes, text direction, and undo send delay",
+      "section_compose_identities": "Replies & Addresses",
+      "section_compose_identities_desc": "Control automatic sender identity selection and sub-addressing delimiters",
+      "section_compose_signatures": "Signatures",
+      "section_compose_signatures_desc": "Configure signature placement and standard delimiters",
+      "section_compose_safety": "Safety & Reminders",
+      "section_compose_safety_desc": "Attachment warnings, missing subject prompts, and recipient mentions",
+      "section_compose_receipts": "Read Receipts",
+      "section_compose_receipts_desc": "Default read receipt requests and response policies"
     },
     "composer": {
       "title": "Редактор",
