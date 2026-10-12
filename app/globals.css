@@ -223,6 +223,81 @@
   border-color: transparent !important;
 }
 
+/* Sidebar folder row: single-box highlight, no nested button highlight on hover */
+[data-testid="folder-row"] button,
+[data-testid="folder-row"] button:hover,
+[data-testid="folder-row"] button:focus,
+[data-testid="folder-row"] button:active,
+[data-folder-btn],
+[data-folder-btn]:hover,
+[data-folder-btn]:focus,
+[data-folder-btn]:active,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:hover,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:focus,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:active,
+body[data-theme-skin="builtin-comail"] [data-folder-btn],
+body[data-theme-skin="builtin-comail"] [data-folder-btn]:hover,
+body[data-theme-skin="builtin-comail"] [data-folder-btn]:focus,
+body[data-theme-skin="builtin-comail"] [data-folder-btn]:active,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:hover,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:focus,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:active,
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn],
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn]:hover,
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn]:focus,
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn]:active,
+body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button,
+body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button:hover,
+body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button,
+body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Prominent selection box on currently selected folder row */
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] {
+  background-color: #1a5466 !important;
+  color: #ffffff !important;
+}
+
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"]:hover {
+  background-color: #20657a !important;
+  color: #ffffff !important;
+}
+
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] button,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] span,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] .text-foreground,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] .text-muted-foreground {
+  color: #ffffff !important;
+}
+
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] svg {
+  color: #8fd2e8 !important;
+}
+
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] {
+  background-color: #2a2d33 !important;
+  color: #e7e9ea !important;
+}
+
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"]:hover {
+  background-color: #353940 !important;
+  color: #ffffff !important;
+}
+
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"][data-selected="true"] svg {
+  color: #6dbfd6 !important;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);

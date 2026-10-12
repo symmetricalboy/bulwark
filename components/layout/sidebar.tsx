@@ -210,13 +210,14 @@ function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean
   if (colorful && roleKey && ROLE_ICON_COLOR[roleKey]) {
     return cn(base, ROLE_ICON_COLOR[roleKey]);
   }
-  return cn(base, isSelected ? "text-foreground" : "text-foreground/80");
+  return cn(base, isSelected ? "text-accent-foreground" : "text-foreground/80");
 }
 
 function SidebarRowCounts({
   unread,
   total,
   role,
+  isSelected: _isSelected,
   onUnreadClick,
 }: {
   unread?: number;
@@ -234,12 +235,15 @@ function SidebarRowCounts({
     if (count === 0) return null;
     return (
       <span
-        className={cn("ms-2 flex-shrink-0 text-xs tabular-nums", role === 'drafts' ? "text-muted-foreground" : "font-bold text-foreground")}
+        className="ms-auto flex-shrink-0 flex items-center justify-center text-xs tabular-nums"
+        style={{ minWidth: 16, marginInlineEnd: 28 }}
         data-testid="folder-counts"
         data-unread={unread ?? 0}
         data-total={role === 'drafts' ? count : 0}
       >
-        {count.toLocaleString()}
+        <span className={role === 'drafts' ? "text-muted-foreground" : "font-bold text-foreground"}>
+          {count.toLocaleString()}
+        </span>
       </span>
     );
   }
@@ -279,17 +283,20 @@ function SidebarRowCounts({
 
   return (
     <span
-      className="ms-2 flex-shrink-0 flex items-baseline gap-1"
+      className="ms-auto flex-shrink-0 flex items-center justify-center"
+      style={{ minWidth: 16, marginInlineEnd: 28 }}
       title={totalCount > 0 ? `${unreadCount} unread / ${totalCount} total` : `${unreadCount} unread`}
       data-testid="folder-counts"
       data-unread={unreadCount}
       data-total={totalCount}
     >
-      {unreadNode}
-      {unreadCount > 0 && totalCount > 0 && (
-        <span className="text-xs text-muted-foreground/60">/</span>
-      )}
-      {totalCount > 0 && <span className={totalClass}>{totalCount}</span>}
+      <span className="flex items-baseline gap-1">
+        {unreadNode}
+        {unreadCount > 0 && totalCount > 0 && (
+          <span className="text-xs text-muted-foreground/60">/</span>
+        )}
+        {totalCount > 0 && <span className={totalClass}>{totalCount}</span>}
+      </span>
     </span>
   );
 }
@@ -367,11 +374,11 @@ function SidebarRow({
         "group flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
         isCollapsed
           ? "w-full justify-center px-1"
-          : "mx-2 w-[calc(100%-16px)] rounded-md pe-2",
+          : "mx-2 w-[calc(100%-16px)] rounded-md pe-0",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
-            ? "bg-accent text-accent-foreground font-semibold"
+            ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
             : "hover:bg-muted/50 text-foreground",
         isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
         isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50"
@@ -394,9 +401,9 @@ function SidebarRow({
               title={isExpanded ? t('collapse_tooltip') : t('expand_tooltip')}
             >
               {isExpanded ? (
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
               ) : (
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
               )}
             </button>
           ) : (
@@ -408,10 +415,12 @@ function SidebarRow({
       <button
         onClick={() => !isVirtual && onClick?.()}
         disabled={isVirtual}
+        data-folder-btn=""
         className={cn(
-          "flex items-center gap-2 min-w-0 transition-colors",
+          "flex items-center gap-2 min-w-0 transition-colors bg-transparent hover:bg-transparent",
           isCollapsed ? "justify-center" : "flex-1 text-start",
-          isVirtual && "cursor-default select-none"
+          isVirtual && "cursor-default select-none",
+          isSelected ? "text-white" : ""
         )}
         title={isCollapsed ? label : undefined}
       >
@@ -467,56 +476,57 @@ function SidebarSectionHeader({
     return first ? null : <div className="h-px bg-border/50 mx-2 my-2" aria-hidden />;
   }
 
-  const paddingY = sub ? "pt-2" : first ? "pt-3" : "pt-5";
+  const topSpacing = sub ? "pt-2" : first ? "pt-3" : "pt-5";
   const textClass = sub
     ? "text-xs font-semibold text-muted-foreground truncate"
     : "text-sm font-semibold text-foreground truncate";
 
   return (
-    <button
-      onClick={onToggle}
-      onContextMenu={onContextMenu}
-      data-testid={testId}
-      data-section-name={label}
-      data-expanded={expanded ? 'true' : 'false'}
-      className={cn(
-        "group flex items-center pb-1 select-none rounded-md hover:bg-muted/40 transition-colors",
-        isCollapsed ? "w-full px-2" : "mx-2 w-[calc(100%-16px)] px-2",
-        paddingY
-      )}
-    >
-      {expanded ? (
-        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-      ) : (
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-      )}
-      {icon && <span className="ms-1.5 flex-shrink-0">{icon}</span>}
-      <span className={cn(textClass, icon ? "ms-1.5" : "ms-1.5")}>
-        {label}
-      </span>
-      {status}
-      {onSettings && (
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSettings();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
+    <div className={topSpacing}>
+      <button
+        onClick={onToggle}
+        onContextMenu={onContextMenu}
+        data-testid={testId}
+        data-section-name={label}
+        data-expanded={expanded ? 'true' : 'false'}
+        className={cn(
+          "group flex items-center py-1.5 select-none rounded-md hover:bg-muted/40 transition-colors",
+          isCollapsed ? "w-full px-2" : "mx-2 w-[calc(100%-16px)] px-2"
+        )}
+      >
+        {expanded ? (
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+        ) : (
+          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+        )}
+        {icon && <span className="ms-1.5 flex-shrink-0">{icon}</span>}
+        <span className={cn(textClass, "ms-1.5")}>
+          {label}
+        </span>
+        {status}
+        {onSettings && (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
               e.stopPropagation();
               onSettings();
-            }
-          }}
-          className="ms-auto p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          title={settingsTitle}
-        >
-          <Settings className="w-3.5 h-3.5" />
-        </span>
-      )}
-    </button>
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onSettings();
+              }
+            }}
+            className="ms-auto p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            title={settingsTitle}
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </span>
+        )}
+      </button>
+    </div>
   );
 }
 

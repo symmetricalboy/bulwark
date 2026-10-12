@@ -1201,8 +1201,8 @@ body[data-theme-skin="builtin-comail"] .w-14.bg-secondary a:hover,
 body[data-theme-skin="builtin-comail"] .w-14.bg-secondary button:hover,
 body[data-theme-skin="builtin-comail"] .bg-secondary.border-e a:hover,
 body[data-theme-skin="builtin-comail"] .bg-secondary.border-r a:hover,
-body[data-theme-skin="builtin-comail"] .bg-secondary.border-e button:hover,
-body[data-theme-skin="builtin-comail"] .bg-secondary.border-r button:hover {
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e button:not([data-folder-btn]):hover,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r button:not([data-folder-btn]):hover {
   background-color: #1a5466 !important;
   color: #ffffff !important;
 }
@@ -1300,8 +1300,8 @@ body[data-theme-skin="builtin-comail"] .bg-secondary.border-r .hover\\:bg-muted:
 .dark body[data-theme-skin="builtin-comail"] .w-14.bg-secondary button:hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e a:hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r a:hover,
-.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e button:hover,
-.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r button:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e button:not([data-folder-btn]):hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r button:not([data-folder-btn]):hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e .hover\\:bg-muted\\/50:hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r .hover\\:bg-muted\\/50:hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e .hover\\:bg-muted:hover,
@@ -1327,9 +1327,83 @@ body[data-theme-skin="builtin-comail"] .bg-secondary.border-r .hover\\:bg-muted:
   color: #e7e9ea !important;
 }
 
-body[data-theme-skin="builtin-comail"] .bg-secondary.border-e .bg-accent.text-accent-foreground,
-body[data-theme-skin="builtin-comail"] .bg-secondary.border-r .bg-accent.text-accent-foreground {
-  color: var(--color-accent-foreground) !important;
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:hover,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:focus,
+body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:active,
+body[data-theme-skin="builtin-comail"] [data-folder-btn],
+body[data-theme-skin="builtin-comail"] [data-folder-btn]:hover,
+body[data-theme-skin="builtin-comail"] [data-folder-btn]:focus,
+body[data-theme-skin="builtin-comail"] [data-folder-btn]:active,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:hover,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:focus,
+.dark body[data-theme-skin="builtin-comail"] [data-testid="folder-row"] button:active,
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn],
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn]:hover,
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn]:focus,
+.dark body[data-theme-skin="builtin-comail"] [data-folder-btn]:active,
+body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button,
+body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary [data-testid="folder-row"] button:hover,
+body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button,
+body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) [data-testid="folder-row"] button:hover {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"],
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] {
+  background-color: #1a5466 !important;
+  color: #ffffff !important;
+}
+
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] button,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] button,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] span,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] span,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] .text-foreground,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] .text-foreground,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] .text-muted-foreground,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] .text-muted-foreground {
+  color: #ffffff !important;
+}
+
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] svg,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] svg {
+  color: #8fd2e8 !important;
+}
+
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"]:hover,
+body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"]:hover {
+  background-color: #20657a !important;
+  color: #ffffff !important;
+}
+
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"],
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"],
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] button,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] button,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] span,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] span,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] svg,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] svg,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] .text-foreground,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] .text-foreground,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"] .text-muted-foreground,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"] .text-muted-foreground {
+  color: #6dbfd6 !important;
+}
+
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-e [data-selected="true"]:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary.border-r [data-selected="true"]:hover {
+  background-color: #353940 !important;
+  color: #6dbfd6 !important;
 }
 
 /* ── Contacts sidebar: bg-secondary WITHOUT border-r ─────────────────── */
@@ -1349,13 +1423,13 @@ body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-
 body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) a {
   color: #ecefcf !important;
 }
-body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) button:hover,
+body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) button:not([data-folder-btn]):hover,
 body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) a:hover,
 body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) .hover\\:bg-muted:hover {
   background-color: #1a5466 !important;
   color: #ffffff !important;
 }
-.dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) button:hover,
+.dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) button:not([data-folder-btn]):hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) a:hover,
 .dark body[data-theme-skin="builtin-comail"] .bg-secondary:not(.border-r):not(.border-e) .hover\\:bg-muted:hover {
   background-color: #2a2d33 !important;
