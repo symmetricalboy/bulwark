@@ -96,6 +96,7 @@ export const tabSearchPaths: Record<Tab, string[]> = {
     'settings.email_behavior.swipe_right_action',
     'settings.email_behavior.swipe_left_action',
     'settings.email_behavior.clear_search_on_folder_change',
+    'settings.email_behavior.tracker_blocker',
   ],
   composing: [
     'settings.email_behavior.attachment_reminder',

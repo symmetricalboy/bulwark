@@ -472,6 +472,8 @@ interface SettingsState {
   // `true` when the server supports contacts, otherwise left off. Once the user
   // toggles it, it holds a concrete boolean and is never auto-changed again.
   trustedSendersAddressBook: boolean | null;
+  /** Block email tracking pixels (spy pixels) and beacons. */
+  trackerBlockerEnabled: boolean;
 
   // Filters
   expandedFilterView: boolean;
@@ -490,6 +492,8 @@ interface SettingsState {
   calendarHideNonWorkingDays: boolean;
   /** Weekdays as `Date.getDay` numbers (0 = Sunday). */
   calendarWorkingDays: number[];
+  /** End meetings 5 min early (for 30m) or 10 min early (for 60m+). */
+  speedyMeetings: boolean;
 
   // Calendar Tasks
   enableCalendarTasks: boolean;
@@ -756,6 +760,7 @@ const DEFAULT_SETTINGS = {
   sessionTimeout: 0, // Never
   trustedSenders: [] as string[],
   trustedSendersAddressBook: null as boolean | null,
+  trackerBlockerEnabled: true,
 
   // Filters
   expandedFilterView: false,
@@ -770,6 +775,7 @@ const DEFAULT_SETTINGS = {
   calendarDayEndHour: 20,
   calendarHideNonWorkingDays: false,
   calendarWorkingDays: [1, 2, 3, 4, 5] as number[],
+  speedyMeetings: false,
 
   // Calendar Tasks
   enableCalendarTasks: false,
@@ -1073,6 +1079,8 @@ export const useSettingsStore = create<SettingsState>()(
           calendarDayEndHour: state.calendarDayEndHour,
           calendarHideNonWorkingDays: state.calendarHideNonWorkingDays,
           calendarWorkingDays: state.calendarWorkingDays,
+          speedyMeetings: state.speedyMeetings,
+          trackerBlockerEnabled: state.trackerBlockerEnabled,
           toolbarPosition: state.toolbarPosition,
           hideAccountSwitcher: state.hideAccountSwitcher,
           showRailAccountList: state.showRailAccountList,

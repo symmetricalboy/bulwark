@@ -6,42 +6,48 @@ import { SettingsSection, SettingItem, RadioGroup, ToggleSwitch } from './settin
 import { cn } from '@/lib/utils';
 import { useTour } from '@/components/tour/tour-provider';
 import { Button } from '@/components/ui/button';
-import { PlayCircle } from '@/components/icons';
+import { PlayCircle, Star } from '@/components/icons';
 import { usePolicyStore } from '@/stores/policy-store';
 import { IS_LITE } from '@/lib/lite';
 import { MessageListOrderSettings } from './message-list-order-settings';
 
 const DENSITY_PREVIEW: Record<Density, { py: string; gap: string; showAvatar: boolean; showPreview: boolean }> = {
-  'extra-compact': { py: 'py-0.5', gap: 'gap-1.5', showAvatar: false, showPreview: false },
-  compact:         { py: 'py-1',   gap: 'gap-2',   showAvatar: true,  showPreview: false },
+  'extra-compact': { py: 'py-1',   gap: 'gap-2',   showAvatar: false, showPreview: false },
+  compact:         { py: 'py-1.5', gap: 'gap-2.5', showAvatar: true,  showPreview: false },
   regular:         { py: 'py-2.5', gap: 'gap-3',   showAvatar: true,  showPreview: true },
-  comfortable:     { py: 'py-4',   gap: 'gap-4',   showAvatar: true,  showPreview: true },
+  comfortable:     { py: 'py-3.5', gap: 'gap-3.5', showAvatar: true,  showPreview: true },
 };
 
 function DensityPreview({ density }: { density: Density }) {
   const cfg = DENSITY_PREVIEW[density];
   const rows = [
-    { unread: true,  sender: 'Alice Johnson',  subject: 'Project update - Q1 roadmap', preview: 'Here are the latest numbers from…' },
-    { unread: false, sender: 'Bob Smith',       subject: 'Re: Meeting notes',           preview: 'Thanks, will review and get back...' },
-    { unread: true,  sender: 'Carol Lee',       subject: 'Invoice #4092',               preview: 'Please find attached the invoice…' },
+    { unread: true,  starred: true,  initials: 'AJ', color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400', sender: 'Alice Johnson',  subject: 'Project update - Q1 roadmap', preview: 'Here are the latest numbers from the team sync…' },
+    { unread: false, starred: false, initials: 'BS', color: 'bg-purple-500/15 text-purple-600 dark:text-purple-400', sender: 'Bob Smith',       subject: 'Re: Meeting notes',           preview: 'Thanks, will review and get back to you shortly.' },
+    { unread: true,  starred: false, initials: 'CL', color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400', sender: 'Carol Lee',       subject: 'Invoice #4092',               preview: 'Please find attached the monthly invoice for review…' },
   ];
 
   return (
-    <div className="mt-3 rounded-lg border border-border overflow-hidden bg-background text-xs select-none">
+    <div className="mt-3 rounded-xl border border-border/80 overflow-hidden bg-background text-xs select-none shadow-2xs">
       {rows.map((row, i) => (
         <div
           key={i}
           className={cn(
-            "flex items-center px-3 border-b border-border last:border-b-0",
+            "flex items-center px-3 border-b border-border/60 last:border-b-0 hover:bg-muted/30 transition-colors",
             cfg.py,
             cfg.gap
           )}
         >
+          {row.unread && (
+            <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+          )}
           {cfg.showAvatar && (
             <div className={cn(
-              "flex-shrink-0 rounded-full bg-muted",
-              density === 'comfortable' ? "w-8 h-8" : "w-6 h-6"
-            )} />
+              "flex-shrink-0 rounded-full flex items-center justify-center font-bold text-[10px]",
+              row.color,
+              density === 'comfortable' ? "w-8 h-8 text-xs" : "w-6 h-6"
+            )}>
+              {row.initials}
+            </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
@@ -57,6 +63,9 @@ function DensityPreview({ density }: { density: Density }) {
               <div className="truncate text-muted-foreground/70">{row.preview}</div>
             )}
           </div>
+          {row.starred && (
+            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+          )}
         </div>
       ))}
     </div>

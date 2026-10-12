@@ -1614,6 +1614,10 @@
         "use_address_book_label": "Sync with address book",
         "use_address_book_description": "Store trusted senders in a dedicated \"Trusted Senders\" address book so they sync across all your devices"
       },
+      "tracker_blocker": {
+        "label": "Block email tracking pixels",
+        "description": "Prevent senders from tracking when, where, and how often you open their emails by stripping 1x1 transparent spy pixels and beacons"
+      },
       "hover_actions": {
         "label": "Quick Hover Actions",
         "description": "Choose which quick actions appear when hovering over an email in the list",
@@ -3492,7 +3496,9 @@
       "organizer_identity_desc": "The calendar address used as organizer when you invite people to events.",
       "organizer_identity_failed": "Failed to change the organizer address",
       "show_birthday_calendar": "Contact birthday calendar",
-      "show_birthday_calendar_desc": "Show a virtual calendar with birthdays from your contacts"
+      "show_birthday_calendar_desc": "Show a virtual calendar with birthdays from your contacts",
+      "speedy_meetings": "Speedy meetings",
+      "speedy_meetings_desc": "End 30-minute meetings 5 minutes early, and longer meetings 10 minutes early to allow breaks between calls"
     },
     "days": {
       "monday": "Monday",

@@ -115,6 +115,124 @@ function MailLayoutPreview({
   );
 }
 
+function InterfaceLayoutPreview({
+  value,
+  onChange,
+  t,
+}: {
+  value: InterfaceLayout;
+  onChange: (value: InterfaceLayout) => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+      {/* Redmond Card */}
+      <button
+        type="button"
+        onClick={() => onChange('default')}
+        className={cn(
+          "flex flex-col text-start p-3 rounded-xl border transition-all duration-200 group relative",
+          value === 'default'
+            ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
+            : "border-border bg-background hover:bg-muted/40 hover:border-border/80"
+        )}
+      >
+        <div className="h-24 w-full rounded-lg border border-border/80 bg-muted/30 overflow-hidden p-1.5 flex gap-1 mb-2.5">
+          {/* Left dock rail */}
+          <div className="w-3 rounded bg-primary/25 flex flex-col items-center gap-1 py-1 shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/80" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+          </div>
+          {/* Folders list */}
+          <div className="w-12 rounded bg-background/80 border border-border/40 p-1 flex flex-col gap-1 shrink-0">
+            <div className="h-1.5 w-8 rounded bg-foreground/20" />
+            <div className="h-1.5 w-6 rounded bg-foreground/15" />
+            <div className="h-1.5 w-7 rounded bg-foreground/15" />
+          </div>
+          {/* Message list */}
+          <div className="w-16 rounded bg-background/90 border border-border/40 p-1 flex flex-col gap-1 shrink-0">
+            <div className="h-2 w-full rounded bg-primary/20" />
+            <div className="h-2 w-full rounded bg-foreground/10" />
+            <div className="h-2 w-full rounded bg-foreground/10" />
+          </div>
+          {/* Reading pane */}
+          <div className="flex-1 rounded bg-background border border-border/40 p-1.5 flex flex-col gap-1">
+            <div className="h-2 w-16 rounded bg-foreground/25" />
+            <div className="h-1 w-full rounded bg-foreground/10 mt-1" />
+            <div className="h-1 w-5/6 rounded bg-foreground/10" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between w-full">
+          <div>
+            <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <span>{t('interface_layout.default')}</span>
+              <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider px-1 py-0.2 rounded bg-muted">Classic</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Left rail dock & multi-pane hierarchy</p>
+          </div>
+          {value === 'default' && (
+            <div className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-2xs">
+              <Check className="w-2.5 h-2.5" />
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* Mountain View Card */}
+      <button
+        type="button"
+        onClick={() => onChange('mountain-view')}
+        className={cn(
+          "flex flex-col text-start p-3 rounded-xl border transition-all duration-200 group relative",
+          value === 'mountain-view'
+            ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-xs"
+            : "border-border bg-background hover:bg-muted/40 hover:border-border/80"
+        )}
+      >
+        <div className="h-24 w-full rounded-lg border border-border/80 bg-muted/30 overflow-hidden p-1.5 flex flex-col gap-1.5 mb-2.5">
+          {/* Top pill bar */}
+          <div className="h-4 w-full rounded-full bg-background border border-border/60 flex items-center px-2 gap-1 shrink-0">
+            <div className="w-2 h-2 rounded-full bg-primary/40 shrink-0" />
+            <div className="h-1 w-16 rounded bg-foreground/20" />
+            <div className="ms-auto flex gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-foreground/20" />
+              <div className="w-1.5 h-1.5 rounded-full bg-foreground/20" />
+            </div>
+          </div>
+          {/* Floating canvas body */}
+          <div className="flex-1 rounded-lg bg-background border border-border/40 p-1.5 flex gap-1.5">
+            <div className="w-14 rounded bg-muted/40 p-1 flex flex-col gap-1 shrink-0">
+              <div className="h-1.5 w-10 rounded bg-primary/25" />
+              <div className="h-1.5 w-8 rounded bg-foreground/15" />
+              <div className="h-1.5 w-9 rounded bg-foreground/15" />
+            </div>
+            <div className="flex-1 rounded bg-background p-1 flex flex-col gap-1">
+              <div className="h-2 w-full rounded bg-foreground/15" />
+              <div className="h-2 w-full rounded bg-foreground/10" />
+              <div className="h-2 w-full rounded bg-foreground/10" />
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between w-full">
+          <div>
+            <div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <span>{t('interface_layout.mountain_view')}</span>
+              <span className="text-[9px] font-medium text-primary uppercase tracking-wider px-1 py-0.2 rounded bg-primary/10">Material</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Unified top bar, floating canvas & clean rhythm</p>
+          </div>
+          {value === 'mountain-view' && (
+            <div className="w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-2xs">
+              <Check className="w-2.5 h-2.5" />
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+}
+
 export function LayoutSettings() {
   const t = useTranslations('settings.appearance');
   const tEmail = useTranslations('settings.email_behavior');
@@ -181,6 +299,11 @@ export function LayoutSettings() {
             { value: 'default', label: t('interface_layout.default') },
             { value: 'mountain-view', label: t('interface_layout.mountain_view') },
           ]}
+        />
+        <InterfaceLayoutPreview
+          value={interfaceLayout}
+          onChange={(value) => updateSetting('interfaceLayout', value)}
+          t={t}
         />
       </SettingItem>
       )}

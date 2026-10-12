@@ -39,6 +39,7 @@ export function ReadingSettings() {
     hoverActionsCorner,
     hideInlineImageAttachments,
     attachmentImagePreviewsEnabled,
+    trackerBlockerEnabled,
     messageSpacing,
     plainTextFont,
     updateSetting,
@@ -305,6 +306,13 @@ export function ReadingSettings() {
         <ToggleSwitch
           checked={attachmentImagePreviewsEnabled}
           onChange={(checked) => updateSetting('attachmentImagePreviewsEnabled', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem label={t('tracker_blocker.label')} description={t('tracker_blocker.description')}>
+        <ToggleSwitch
+          checked={trackerBlockerEnabled}
+          onChange={(checked) => updateSetting('trackerBlockerEnabled', checked)}
         />
       </SettingItem>
 

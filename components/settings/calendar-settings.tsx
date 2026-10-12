@@ -45,6 +45,7 @@ export function CalendarSettings() {
     calendarDayEndHour,
     calendarHideNonWorkingDays,
     calendarWorkingDays,
+    speedyMeetings,
     timeFormat,
     firstDayOfWeek,
     updateSetting,
@@ -235,6 +236,16 @@ export function CalendarSettings() {
         <ToggleSwitch
           checked={showBirthdayCalendar}
           onChange={(checked) => updateSetting('showBirthdayCalendar', checked)}
+        />
+      </SettingItem>
+
+      <SettingItem
+        label={t('speedy_meetings')}
+        description={t('speedy_meetings_desc')}
+      >
+        <ToggleSwitch
+          checked={speedyMeetings}
+          onChange={(checked) => updateSetting('speedyMeetings', checked)}
         />
       </SettingItem>
 
