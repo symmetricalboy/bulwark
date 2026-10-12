@@ -12,6 +12,10 @@ import {
   Link as LinkIcon,
   Trash2,
   GoogleIcon,
+  MicrosoftIcon,
+  AppleIcon,
+  NextcloudIcon,
+  AtprotoIcon,
 } from '@/components/icons';
 import { useAuthStore } from '@/stores/auth-store';
 import { useEmailStore } from '@/stores/email-store';
@@ -304,16 +308,41 @@ function ProviderBadge({ account }: { account: AccountEntry }) {
   }
   if (account.did) {
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 shrink-0">
-        <span className="font-bold">@</span>
+      <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 shrink-0">
+        <AtprotoIcon className="w-3 h-3 shrink-0" />
         <span>ATProto Space</span>
       </span>
     );
   }
-  if (email.endsWith('@icloud.com') || email.endsWith('@me.com') || email.endsWith('@mac.com')) {
+  if (
+    email.endsWith('@outlook.com') ||
+    email.endsWith('@hotmail.com') ||
+    email.endsWith('@live.com') ||
+    email.endsWith('@office365.com') ||
+    server.includes('outlook') ||
+    server.includes('office365') ||
+    server.includes('microsoft')
+  ) {
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-muted text-foreground border border-border shrink-0">
+      <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+        <MicrosoftIcon className="w-3 h-3 shrink-0" />
+        <span>Microsoft 365</span>
+      </span>
+    );
+  }
+  if (email.endsWith('@icloud.com') || email.endsWith('@me.com') || email.endsWith('@mac.com') || server.includes('icloud')) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-muted text-foreground border border-border shrink-0">
+        <AppleIcon className="w-3 h-3 shrink-0" />
         <span>iCloud</span>
+      </span>
+    );
+  }
+  if (server.includes('nextcloud') || server.includes('owncloud')) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 shrink-0">
+        <NextcloudIcon className="w-3 h-3 shrink-0" />
+        <span>Nextcloud</span>
       </span>
     );
   }

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Pencil, Trash2, ExternalLink, PanelRight, GripVertical, Lock } from "@/components/icons";
+import { Plus, Pencil, Trash2, ExternalLink, PanelRight, GripVertical, Lock, Check } from "@/components/icons";
 import { iconForName } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -227,6 +227,82 @@ function ManagedAppsSection() {
   );
 }
 
+interface CuratedDirectoryApp {
+  id: string;
+  name: string;
+  url: string;
+  icon: string;
+  description: string;
+  category: 'ATProto' | 'Sovereign' | 'Productivity';
+  openMode: 'tab' | 'inline';
+}
+
+const CURATED_APPS: CuratedDirectoryApp[] = [
+  {
+    id: 'bsky',
+    name: 'Bluesky',
+    url: 'https://bsky.app',
+    icon: 'tabler:brand-bluesky',
+    description: 'The social network built on the AT Protocol',
+    category: 'ATProto',
+    openMode: 'inline',
+  },
+  {
+    id: 'whtwnd',
+    name: 'WhiteWind',
+    url: 'https://whtwnd.com',
+    icon: 'tabler:file-text',
+    description: 'Long-form blogging and publication on ATProto',
+    category: 'ATProto',
+    openMode: 'inline',
+  },
+  {
+    id: 'smokesignal',
+    name: 'Smoke Signal',
+    url: 'https://smokesignal.events',
+    icon: 'tabler:calendar-event',
+    description: 'Events, calendar coordination, and RSVP on ATProto',
+    category: 'ATProto',
+    openMode: 'inline',
+  },
+  {
+    id: 'frontpage',
+    name: 'Frontpage',
+    url: 'https://frontpage.fyi',
+    icon: 'tabler:compass',
+    description: 'Community-driven link aggregator and discussions',
+    category: 'ATProto',
+    openMode: 'inline',
+  },
+  {
+    id: 'comail-build',
+    name: 'Comail Build',
+    url: 'https://build.comail.at',
+    icon: 'tabler:cpu',
+    description: 'Domain email relay, programmatic routing & webhooks',
+    category: 'Sovereign',
+    openMode: 'tab',
+  },
+  {
+    id: 'google-docs',
+    name: 'Google Docs',
+    url: 'https://docs.google.com',
+    icon: 'tabler:file-description',
+    description: 'Online document processing and real-time collaboration',
+    category: 'Productivity',
+    openMode: 'tab',
+  },
+  {
+    id: 'office-online',
+    name: 'Office 365',
+    url: 'https://office.live.com',
+    icon: 'tabler:layout-grid',
+    description: 'Word, Excel, PowerPoint, and OneDrive cloud suite',
+    category: 'Productivity',
+    openMode: 'tab',
+  },
+];
+
 export function SidebarAppsSettings() {
   const t = useTranslations("settings.sidebar_apps");
   const tApps = useTranslations("sidebar_apps");
@@ -386,6 +462,79 @@ export function SidebarAppsSettings() {
               {tApps("add_new")}
             </Button>
           )}
+        </div>
+      </SettingsSection>
+
+      {/* ATProto Atmosphere & Connected Services Directory */}
+      <SettingsSection title={t("directory_title")} description={t("directory_description")}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {CURATED_APPS.map((item) => {
+            const isAdded = sidebarApps.some((a) => a.url === item.url);
+            const IconComp = iconForName(item.icon);
+            return (
+              <div
+                key={item.id}
+                className="p-3.5 rounded-xl border border-border/70 bg-card hover:border-border transition-all flex flex-col justify-between gap-3 shadow-2xs"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-primary/15">
+                    {IconComp ? <IconComp className="w-5 h-5" /> : null}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground truncate">{item.name}</span>
+                      <span className={cn(
+                        "text-[10px] font-medium px-1.5 py-0.2 rounded-full",
+                        item.category === 'ATProto'
+                          ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20"
+                          : item.category === 'Sovereign'
+                          ? "bg-primary/10 text-primary border border-primary/20"
+                          : "bg-muted text-muted-foreground border border-border"
+                      )}>
+                        {item.category}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                  <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[150px]">
+                    {new URL(item.url).hostname}
+                  </span>
+                  {isAdded ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{t("pinned")}</span>
+                    </span>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const id = `app-${generateUUID()}`;
+                        addSidebarApp({
+                          id,
+                          name: item.name,
+                          url: item.url,
+                          icon: item.icon,
+                          openMode: item.openMode,
+                          showOnMobile: false,
+                        });
+                      }}
+                      className="h-7 px-2.5 text-xs gap-1 shadow-2xs"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>{t("pin_app")}</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </SettingsSection>
 

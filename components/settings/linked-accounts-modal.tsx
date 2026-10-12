@@ -15,7 +15,17 @@ import {
   AlertCircle,
   Link as LinkIcon,
   GoogleIcon,
+  MicrosoftIcon,
+  AppleIcon,
+  NextcloudIcon,
+  Download,
 } from '@/components/icons';
+import {
+  MicrosoftProviderView,
+  AppleProviderView,
+  NextcloudProviderView,
+  DataImportersView,
+} from './external-provider-views';
 import type { LinkedGoogleAccountPublic, GoogleAccountAppToggles } from '@/lib/google/types';
 import type { AccountEntry } from '@/stores/account-store';
 import { cn } from '@/lib/utils';
@@ -36,10 +46,22 @@ interface StatusResponse {
   picture?: string;
 }
 
+type ProviderTab = 'google' | 'microsoft' | 'apple' | 'nextcloud' | 'importers';
+
+const PROVIDER_TABS = [
+  { id: 'google' as const, label: 'Google Workspace', icon: GoogleIcon },
+  { id: 'microsoft' as const, label: 'Microsoft 365', icon: MicrosoftIcon },
+  { id: 'apple' as const, label: 'Apple iCloud', icon: AppleIcon },
+  { id: 'nextcloud' as const, label: 'Nextcloud', icon: NextcloudIcon },
+  { id: 'importers' as const, label: 'Data Importers', icon: Download },
+];
+
 export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAccountsModalProps) {
   const t = useTranslations('settings.account.linked_accounts');
   const tCommon = useTranslations('common');
   const id = useId();
+
+  const [activeProvider, setActiveProvider] = useState<ProviderTab>('google');
 
   const comailAccountId = comailAccount?.id;
   const comailAccountEmail = comailAccount?.email || comailAccount?.username;
@@ -288,146 +310,192 @@ export function LinkedAccountsModal({ isOpen, onClose, comailAccount }: LinkedAc
             </button>
           </div>
 
+          {/* Provider Tabs */}
+          <div className="px-6 py-2.5 md:px-8 border-b border-border/60 bg-muted/15 flex-shrink-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              {PROVIDER_TABS.map((tab) => {
+                const TabIcon = tab.icon;
+                const isActive = activeProvider === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveProvider(tab.id)}
+                    className={cn(
+                      "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 shrink-0",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-2xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                    )}
+                  >
+                    <TabIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Body */}
           <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1">
-            {!configured && (
-              <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
-                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <div className="text-sm space-y-1">
-                  <p className="font-medium">{t('not_configured')}</p>
-                </div>
-              </div>
-            )}
+            {activeProvider === 'google' && (
+              <>
+                {!configured && (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm space-y-1">
+                      <p className="font-medium">{t('not_configured')}</p>
+                    </div>
+                  </div>
+                )}
 
-            {loading && accounts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-sm gap-2">
-                <RefreshCw className="w-5 h-5 animate-spin" />
-                <span>{tCommon('loading')}...</span>
-              </div>
-            ) : accounts.length === 0 ? (
-              /* Empty state */
-              <div className="flex flex-col items-center text-center py-10 px-4 border border-dashed border-border rounded-xl">
-                <div className="w-12 h-12 rounded-full bg-muted/80 flex items-center justify-center mb-3">
-                  <GoogleIcon className="w-6 h-6" />
-                </div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  {t('empty_title')}
-                </h3>
-                <p className="text-xs text-muted-foreground max-w-sm mt-1.5 mb-5">
-                  {t('empty_description')}
-                </p>
-                <Button
-                  onClick={() => handleConnect()}
-                  disabled={!configured}
-                  className="gap-2"
-                >
-                  <GoogleIcon className="w-4 h-4" />
-                  {t('add_account')}
-                </Button>
-              </div>
-            ) : (
-              /* List of connected external Google accounts */
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Google Accounts ({accounts.length})
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleConnect()}
-                    disabled={!configured}
-                    className="gap-1.5 h-8 text-xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    {t('add_another')}
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {accounts.map((acc) => (
-                    <div
-                      key={acc.id}
-                      className={cn(
-                        'border border-border rounded-xl overflow-hidden bg-card transition-shadow',
-                        removingId === acc.id && 'opacity-50 pointer-events-none'
-                      )}
+                {loading && accounts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground text-sm gap-2">
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span>{tCommon('loading')}...</span>
+                  </div>
+                ) : accounts.length === 0 ? (
+                  /* Empty state */
+                  <div className="flex flex-col items-center text-center py-10 px-4 border border-dashed border-border rounded-xl">
+                    <div className="w-12 h-12 rounded-full bg-muted/80 flex items-center justify-center mb-3">
+                      <GoogleIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {t('empty_title')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground max-w-sm mt-1.5 mb-5">
+                      {t('empty_description')}
+                    </p>
+                    <Button
+                      onClick={() => handleConnect()}
+                      disabled={!configured}
+                      className="gap-2"
                     >
-                      {/* Account Card Header */}
-                      <div className="p-5 md:px-6 md:py-5 bg-muted/30 border-b border-border flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          <Avatar
-                            src={acc.picture}
-                            name={acc.name || acc.email}
-                            email={acc.email}
-                            size="md"
-                            className="w-11 h-11 text-sm flex-shrink-0"
-                            disableFavicon
-                          />
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-base font-semibold text-foreground truncate">
-                                {acc.name || toUnicodeEmail(acc.email)}
-                              </p>
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
-                                <GoogleIcon className="w-3 h-3" />
-                                Google
-                              </span>
+                      <GoogleIcon className="w-4 h-4" />
+                      {t('add_account')}
+                    </Button>
+                  </div>
+                ) : (
+                  /* List of connected external Google accounts */
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Google Accounts ({accounts.length})
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleConnect()}
+                        disabled={!configured}
+                        className="gap-1.5 h-8 text-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        {t('add_another')}
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {accounts.map((acc) => (
+                        <div
+                          key={acc.id}
+                          className={cn(
+                            'border border-border rounded-xl overflow-hidden bg-card transition-shadow',
+                            removingId === acc.id && 'opacity-50 pointer-events-none'
+                          )}
+                        >
+                          {/* Account Card Header */}
+                          <div className="p-5 md:px-6 md:py-5 bg-muted/30 border-b border-border flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <Avatar
+                                src={acc.picture}
+                                name={acc.name || acc.email}
+                                email={acc.email}
+                                size="md"
+                                className="w-11 h-11 text-sm flex-shrink-0"
+                                disableFavicon
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-base font-semibold text-foreground truncate">
+                                    {acc.name || toUnicodeEmail(acc.email)}
+                                  </p>
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
+                                    <GoogleIcon className="w-3 h-3" />
+                                    Google
+                                  </span>
+                                </div>
+                                <p className="text-xs md:text-sm text-muted-foreground truncate font-mono mt-0.5">
+                                  {toUnicodeEmail(acc.email)}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-xs md:text-sm text-muted-foreground truncate font-mono mt-0.5">
-                              {toUnicodeEmail(acc.email)}
-                            </p>
+
+                            {/* Reconnect & Remove buttons */}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleConnect(acc.email)}
+                                className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground"
+                                title={t('reconnect')}
+                              >
+                                <RefreshCw className="w-3.5 h-3.5 me-1.5" />
+                                {t('reconnect')}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setAccountToRemove(acc)}
+                                className="h-9 px-3 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                title={t('remove')}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 me-1.5 text-destructive" />
+                                <span className="text-destructive">{t('remove')}</span>
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* App Population Toggles */}
+                          <div className="p-5 md:p-6 space-y-4">
+                            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('apps_heading')}
+                            </div>
+
+                            <GoogleAccountServicesConfig
+                              accountEmail={acc.email}
+                              values={acc.enabledApps || {}}
+                              disabled={Boolean(
+                                togglingMap[`${acc.id}-calendar`] ||
+                                togglingMap[`${acc.id}-tasks`] ||
+                                togglingMap[`${acc.id}-drive`] ||
+                                togglingMap[`${acc.id}-contacts`] ||
+                                togglingMap[`${acc.id}-gmail`]
+                              )}
+                              onChange={(updates) => handleUpdateAppSetting(acc, updates)}
+                            />
                           </div>
                         </div>
-
-                        {/* Reconnect & Remove buttons */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleConnect(acc.email)}
-                            className="h-9 px-3 text-xs text-muted-foreground hover:text-foreground"
-                            title={t('reconnect')}
-                          >
-                            <RefreshCw className="w-3.5 h-3.5 me-1.5" />
-                            {t('reconnect')}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setAccountToRemove(acc)}
-                            className="h-9 px-3 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title={t('remove')}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 me-1.5 text-destructive" />
-                            <span className="text-destructive">{t('remove')}</span>
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* App Population Toggles */}
-                      <div className="p-5 md:p-6 space-y-4">
-                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          {t('apps_heading')}
-                        </div>
-
-                        <GoogleAccountServicesConfig
-                          accountEmail={acc.email}
-                          values={acc.enabledApps || {}}
-                          disabled={Boolean(
-                            togglingMap[`${acc.id}-calendar`] ||
-                            togglingMap[`${acc.id}-tasks`] ||
-                            togglingMap[`${acc.id}-drive`] ||
-                            togglingMap[`${acc.id}-contacts`] ||
-                            togglingMap[`${acc.id}-gmail`]
-                          )}
-                          onChange={(updates) => handleUpdateAppSetting(acc, updates)}
-                        />
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeProvider === 'microsoft' && (
+              <MicrosoftProviderView comailAccountId={comailAccountId} />
+            )}
+
+            {activeProvider === 'apple' && (
+              <AppleProviderView comailAccountId={comailAccountId} />
+            )}
+
+            {activeProvider === 'nextcloud' && (
+              <NextcloudProviderView comailAccountId={comailAccountId} />
+            )}
+
+            {activeProvider === 'importers' && (
+              <DataImportersView onClose={onClose} />
             )}
           </div>
 

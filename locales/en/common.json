@@ -1884,6 +1884,13 @@
           "tasks_desc": "Manage to-dos and task lists",
           "contacts": "Contacts",
           "contacts_desc": "Manage contacts and address books"
+        },
+        "providers": {
+          "google": "Google Workspace",
+          "microsoft": "Microsoft 365",
+          "apple": "Apple iCloud",
+          "nextcloud": "Nextcloud",
+          "importers": "Data Importers"
         }
       }
     },
@@ -2284,7 +2291,11 @@
       "managed_title": "Provided by your administrator",
       "managed_description": "These apps are set up for everyone and cannot be changed.",
       "manage_title": "Custom Apps",
-      "manage_description": "Add, edit, or remove custom apps from your sidebar"
+      "manage_description": "Add, edit, or remove custom apps from your sidebar",
+      "directory_title": "App Directory & Atmosphere",
+      "directory_description": "Discover and quickly pin 1-click sovereign apps, ATProto services, and cloud tools directly to your sidebar",
+      "pin_app": "Pin to Sidebar",
+      "pinned": "Pinned"
     },
     "contacts": {
       "title": "Contacts",
