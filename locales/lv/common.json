@@ -159,7 +159,17 @@
     "unified_all_mail": "Visas vēstules",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "Uzdevumi"
+    "tasks": "Uzdevumi",
+    "labels": "Etiķetes",
+    "create_label": "Izveidot jaunu etiķeti",
+    "mv_tasks": "Uzdevumi",
+    "mv_side_panel": "Sānu panelis",
+    "mv_open_full": "Atvērt pilnā skatā",
+    "mv_previous_day": "Iepriekšējā diena",
+    "mv_next_day": "Nākamā diena",
+    "mv_add_another_account": "Pievienot citu kontu",
+    "mv_manage_account": "Pārvaldīt kontu",
+    "mv_storage_used": "Izmantoti {percent}% no {total}"
   },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",
@@ -614,7 +624,8 @@
       "copy": "Kopēt kodu {code}",
       "copied": "Kods nokopēts",
       "copy_failed": "Neizdevās nokopēt kodu"
-    }
+    },
+    "mv_position": "{index} no {total}"
   },
   "email_composer": {
     "minimize": "Minimizēt",
@@ -818,7 +829,8 @@
     "use_template": "Veidne",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Atvērt atbildi atsevišķā logā"
   },
   "confirm_dialog": {
     "confirm": "Apstiprināt",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Rakstīšanas no labās uz kreiso atbalsts",
         "description": "Pievieno redaktora rīkjoslai virziena pogu, ar kuru rindkopas var iestatīt no kreisās uz labo vai no labās uz kreiso"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Vēl nav kārtulu",
       "new_mail_only": "Tikai jaunām ziņām",
       "running": "Izpilda “{name}” mapē {folder}…"
-    }
+    },
+    "find_emails_from": "Atrast e-pastus no {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Atzīmēt mapi kā lasītu",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Personas",
     "suggestions_from": "Meklēt e-pastus no {address}",
     "suggestions_to": "Meklēt e-pastus adresātam {address}",
-    "suggestions_remove_recent": "Noņemt no nesenajiem meklējumiem"
+    "suggestions_remove_recent": "Noņemt no nesenajiem meklējumiem",
+    "has_words": "Satur vārdus",
+    "size": "Izmērs",
+    "date_within": "Datums",
+    "search_in": "Meklēt",
+    "has_attachment_check": "Ar pielikumu",
+    "search": "Meklēt"
   },
   "welcome": {
     "title": "Laipni lūdzam jūsu pastkastē",

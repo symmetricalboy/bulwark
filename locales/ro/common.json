@@ -159,7 +159,17 @@
     "unified_all_mail": "Toată poșta",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "Sarcini"
+    "tasks": "Sarcini",
+    "labels": "Etichete",
+    "create_label": "Creează o etichetă nouă",
+    "mv_tasks": "Sarcini",
+    "mv_side_panel": "Panou lateral",
+    "mv_open_full": "Deschide în vizualizare completă",
+    "mv_previous_day": "Ziua anterioară",
+    "mv_next_day": "Ziua următoare",
+    "mv_add_another_account": "Adaugă alt cont",
+    "mv_manage_account": "Gestionează contul",
+    "mv_storage_used": "{percent}% din {total} folosit"
   },
   "protocol_handlers": {
     "title": "Aplicații implicite",
@@ -614,7 +624,8 @@
       "copy": "Copiază codul {code}",
       "copied": "Cod copiat",
       "copy_failed": "Codul nu a putut fi copiat"
-    }
+    },
+    "mv_position": "{index} din {total}"
   },
   "email_composer": {
     "minimize": "Minimizează",
@@ -818,7 +829,8 @@
     "use_template": "Șablon",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Deschide răspunsul într-o fereastră"
   },
   "confirm_dialog": {
     "confirm": "Confirmare",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "Suport pentru editare de la dreapta la stânga",
         "description": "Adaugă un buton de direcție în bara de instrumente a editorului, cu care paragrafele pot fi setate de la stânga la dreapta sau de la dreapta la stânga"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Nicio regulă încă",
       "new_mail_only": "Doar pentru mesajele noi",
       "running": "Se rulează „{name}” în {folder}…"
-    }
+    },
+    "find_emails_from": "Găsește e-mailurile de la {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcați folderul ca citit",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "Persoane",
     "suggestions_from": "Caută e-mailuri de la {address}",
     "suggestions_to": "Caută e-mailuri către {address}",
-    "suggestions_remove_recent": "Elimină din căutările recente"
+    "suggestions_remove_recent": "Elimină din căutările recente",
+    "has_words": "Conține cuvintele",
+    "size": "Dimensiune",
+    "date_within": "Dată",
+    "search_in": "Caută în",
+    "has_attachment_check": "Are atașament",
+    "search": "Caută"
   },
   "welcome": {
     "title": "Bine ați venit în căsuța dvs. poștală",

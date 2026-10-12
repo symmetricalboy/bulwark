@@ -159,7 +159,17 @@
     "unified_all_mail": "모든 메일",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "할 일"
+    "tasks": "할 일",
+    "labels": "라벨",
+    "create_label": "새 라벨 만들기",
+    "mv_tasks": "할 일",
+    "mv_side_panel": "측면 패널",
+    "mv_open_full": "전체 보기로 열기",
+    "mv_previous_day": "이전 날",
+    "mv_next_day": "다음 날",
+    "mv_add_another_account": "다른 계정 추가",
+    "mv_manage_account": "계정 관리",
+    "mv_storage_used": "{total} 중 {percent}% 사용"
   },
   "protocol_handlers": {
     "title": "기본 앱",
@@ -614,7 +624,8 @@
       "copy": "코드 {code} 복사",
       "copied": "코드를 복사했습니다",
       "copy_failed": "코드를 복사할 수 없습니다"
-    }
+    },
+    "mv_position": "{index} / {total}"
   },
   "email_composer": {
     "minimize": "최소화",
@@ -818,7 +829,8 @@
     "use_template": "템플릿",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "답장을 별도 창에서 열기"
   },
   "confirm_dialog": {
     "confirm": "확인",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "오른쪽에서 왼쪽 편집 지원",
         "description": "편집기 도구 모음에 방향 버튼을 추가하여 단락을 왼쪽에서 오른쪽 또는 오른쪽에서 왼쪽으로 설정할 수 있습니다"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "아직 규칙이 없습니다",
       "new_mail_only": "새 메시지에만 적용",
       "running": "{folder}에서 \"{name}\" 실행 중…"
-    }
+    },
+    "find_emails_from": "{name}님이 보낸 이메일 찾기"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "폴더를 읽음으로 표시",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "사람",
     "suggestions_from": "{address}에서 온 메일 검색",
     "suggestions_to": "{address}에게 보낸 메일 검색",
-    "suggestions_remove_recent": "최근 검색에서 삭제"
+    "suggestions_remove_recent": "최근 검색에서 삭제",
+    "has_words": "포함하는 단어",
+    "size": "크기",
+    "date_within": "날짜",
+    "search_in": "검색 위치",
+    "has_attachment_check": "첨부파일 있음",
+    "search": "검색"
   },
   "welcome": {
     "title": "웹메일에 오신 것을 환영해요!",

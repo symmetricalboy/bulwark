@@ -159,7 +159,17 @@
     "unified_all_mail": "Tout le courrier",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "Tâches"
+    "tasks": "Tâches",
+    "labels": "Libellés",
+    "create_label": "Créer un libellé",
+    "mv_tasks": "Tâches",
+    "mv_side_panel": "Panneau latéral",
+    "mv_open_full": "Ouvrir en plein écran",
+    "mv_previous_day": "Jour précédent",
+    "mv_next_day": "Jour suivant",
+    "mv_add_another_account": "Ajouter un autre compte",
+    "mv_manage_account": "Gérer votre compte",
+    "mv_storage_used": "{percent} % de {total} utilisés"
   },
   "protocol_handlers": {
     "title": "Applications par défaut",
@@ -614,7 +624,8 @@
       "copy": "Copier le code {code}",
       "copied": "Code copié",
       "copy_failed": "Impossible de copier le code"
-    }
+    },
+    "mv_position": "{index} sur {total}"
   },
   "email_composer": {
     "minimize": "Réduire",
@@ -818,7 +829,8 @@
     "use_template": "Modèle",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Ouvrir la réponse dans une fenêtre"
   },
   "confirm_dialog": {
     "confirm": "Confirmer",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Prise en charge de la saisie de droite à gauche",
         "description": "Ajoute un bouton de direction à la barre d'outils de l'éditeur pour mettre les paragraphes de gauche à droite ou de droite à gauche"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Aucune règle pour l'instant",
       "new_mail_only": "Uniquement pour les nouveaux messages",
       "running": "Exécution de « {name} » sur {folder}…"
-    }
+    },
+    "find_emails_from": "Rechercher les e-mails de {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marquer le dossier comme lu",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Personnes",
     "suggestions_from": "Rechercher les e-mails de {address}",
     "suggestions_to": "Rechercher les e-mails à {address}",
-    "suggestions_remove_recent": "Retirer des recherches récentes"
+    "suggestions_remove_recent": "Retirer des recherches récentes",
+    "has_words": "Contient les mots",
+    "size": "Taille",
+    "date_within": "Date",
+    "search_in": "Rechercher dans",
+    "has_attachment_check": "Contient une pièce jointe",
+    "search": "Rechercher"
   },
   "welcome": {
     "title": "Bienvenue dans votre boite mail",

@@ -159,7 +159,17 @@
     "unified_all_mail": "すべてのメール",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "タスク"
+    "tasks": "タスク",
+    "labels": "ラベル",
+    "create_label": "新しいラベルを作成",
+    "mv_tasks": "タスク",
+    "mv_side_panel": "サイドパネル",
+    "mv_open_full": "全画面で開く",
+    "mv_previous_day": "前日",
+    "mv_next_day": "翌日",
+    "mv_add_another_account": "別のアカウントを追加",
+    "mv_manage_account": "アカウントを管理",
+    "mv_storage_used": "{total} のうち {percent}% を使用中"
   },
   "protocol_handlers": {
     "title": "既定のアプリ",
@@ -614,7 +624,8 @@
       "copy": "コード {code} をコピー",
       "copied": "コードをコピーしました",
       "copy_failed": "コードをコピーできませんでした"
-    }
+    },
+    "mv_position": "{index} / {total}"
   },
   "email_composer": {
     "minimize": "最小化",
@@ -818,7 +829,8 @@
     "use_template": "テンプレート",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "返信を別ウィンドウで開く"
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "右から左への編集サポート",
         "description": "エディターのツールバーに文字方向ボタンを追加し、段落を左から右または右から左に設定できます"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "ルールはまだありません",
       "new_mail_only": "新着メッセージのみ",
       "running": "{folder} で「{name}」を実行中…"
-    }
+    },
+    "find_emails_from": "{name} からのメールを検索"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "フォルダーを既読にする",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "連絡先",
     "suggestions_from": "{address} からのメールを検索",
     "suggestions_to": "{address} 宛のメールを検索",
-    "suggestions_remove_recent": "最近の検索から削除"
+    "suggestions_remove_recent": "最近の検索から削除",
+    "has_words": "含む",
+    "size": "サイズ",
+    "date_within": "日付",
+    "search_in": "検索対象",
+    "has_attachment_check": "添付ファイルあり",
+    "search": "検索"
   },
   "welcome": {
     "title": "メールボックスへようこそ",

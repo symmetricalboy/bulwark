@@ -78,6 +78,8 @@ function resolveDateLocale<T extends string | undefined>(
  *       today        → time only           ("15:31" or "3:31 PM")
  *       last 7 days  → short weekday+time  ("Fr 15:31", "Fri 3:31 PM")
  *       older        → full locale date    ("28.04.2026", "04/28/2026")
+ *       With `listStyle: 'mountain-view'` the buckets are Gmail's instead:
+ *       today → time, this year → "Oct 10", older → "10/10/25".
  *   - `relative` — legacy en-US relative format ("1h ago", "2d ago").
  *   - `full` — always the full locale date+time.
  *
@@ -97,7 +99,7 @@ function resolveDateLocale<T extends string | undefined>(
 export function formatDate(
   date: Date | string,
   // Settings preview: render as if these were picked, without saving them.
-  overrides?: { dateFormat?: DateFormat; dateLocale?: DateLocale },
+  overrides?: { dateFormat?: DateFormat; dateLocale?: DateLocale; listStyle?: 'mountain-view' },
 ): string {
   const d = typeof date === "string" ? new Date(date) : date;
   // An unparsable receivedAt (e.g. a 5-digit year) makes Intl throw
@@ -167,6 +169,13 @@ export function formatDate(
     dWall.day === nowWall.day;
   if (isSameDay) return timeStr;
 
+  if (overrides?.listStyle === 'mountain-view') {
+    if (dWall.year === nowWall.year) {
+      return d.toLocaleDateString(uiLocale, { timeZone, month: "short", day: "numeric" });
+    }
+    return d.toLocaleDateString(numericLocale, { timeZone, year: "2-digit", month: "numeric", day: "numeric" });
+  }
+
   const daysAgo = Math.floor((now.getTime() - d.getTime()) / 86400000);
   if (daysAgo < 7) {
     // German Intl outputs "Fr." with a trailing dot for `weekday: 'short'`;
@@ -225,6 +234,27 @@ export function formatDateTime(
   }
 
   return d.toLocaleString(effectiveLocale, localeOptions);
+}
+
+/**
+ * How long ago `date` was, in words ("3 minutes ago", "2 days ago"), for the
+ * parenthesis Gmail puts after a message's time. Empty once it is a month
+ * old, where the date alone says enough.
+ */
+export function formatRelativeAgo(date: Date | string, now: Date = new Date()): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (!d || Number.isNaN(d.getTime())) return '';
+  const diff = Math.max(0, now.getTime() - d.getTime());
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (days >= 30) return '';
+  const locale = getEffectiveLocale();
+  const rtf = new Intl.RelativeTimeFormat(locale === 'en' ? 'en-US' : locale, { numeric: 'auto' });
+  if (minutes < 1) return rtf.format(0, 'second');
+  if (minutes < 60) return rtf.format(-minutes, 'minute');
+  if (hours < 24) return rtf.format(-hours, 'hour');
+  return rtf.format(-days, 'day');
 }
 
 // Marketing emails pad the preheader with whitespace, format chars (soft

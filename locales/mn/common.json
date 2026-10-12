@@ -159,7 +159,17 @@
     "unified_all_mail": "Бүх шуудан",
     "remove_account": "Бүртгэл устгах",
     "remove_account_confirm": "Энэ төхөөрөмжөөс {account}-г устгах уу? Та дараа дахин нэмж болно.",
-    "tasks": "Даалгаварууд"
+    "tasks": "Даалгаварууд",
+    "labels": "Шошго",
+    "create_label": "Шинэ шошго үүсгэх",
+    "mv_tasks": "Даалгаврууд",
+    "mv_side_panel": "Хажуугийн самбар",
+    "mv_open_full": "Бүтэн харагдацаар нээх",
+    "mv_previous_day": "Өмнөх өдөр",
+    "mv_next_day": "Дараах өдөр",
+    "mv_add_another_account": "Өөр бүртгэл нэмэх",
+    "mv_manage_account": "Бүртгэлээ удирдах",
+    "mv_storage_used": "{total}-с {percent}% ашигласан"
   },
   "protocol_handlers": {
     "title": "Өгөгдмөл програмууд",
@@ -614,7 +624,8 @@
       "copy": "{code} кодыг хуулах",
       "copied": "Код хуулагдлаа",
       "copy_failed": "Кодыг хуулж чадсангүй"
-    }
+    },
+    "mv_position": "{total}-с {index}"
   },
   "email_composer": {
     "minimize": "Багасгах",
@@ -818,7 +829,8 @@
     "use_template": "Загвар",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Хариуг тусдаа цонхонд нээх"
   },
   "confirm_dialog": {
     "confirm": "Баталгаажуулах",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "Баруунаас зүүн тийш засварлах дэмжлэг",
         "description": "Хөгжмийн зохиолчийн хэрэгслийн самбарт чиглэлийн товчлуур нэмснээр та догол мөрүүдийг зүүнээс баруун тийш эсвэл баруунаас зүүн тийш тохируулах боломжтой"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Одоогоор дүрэм алга",
       "new_mail_only": "Зөвхөн шинэ мессежүүдэд",
       "running": "{folder} дээр \"{name}\"-г ажиллуулж байна…"
-    }
+    },
+    "find_emails_from": "{name}-с ирсэн имэйлүүдийг хайх"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Хавтсыг уншсан гэж тэмдэглэх",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "Хүмүүс",
     "suggestions_from": "{address}-аас ирсэн захидал хайх",
     "suggestions_to": "{address} руу илгээсэн захидал хайх",
-    "suggestions_remove_recent": "Сүүлийн хайлтуудаас хасах"
+    "suggestions_remove_recent": "Сүүлийн хайлтуудаас хасах",
+    "has_words": "Агуулсан үгс",
+    "size": "Хэмжээ",
+    "date_within": "Огноо",
+    "search_in": "Хайх газар",
+    "has_attachment_check": "Хавсралттай",
+    "search": "Хайх"
   },
   "welcome": {
     "title": "Таны шуудангийн хайрцагт тавтай морил",

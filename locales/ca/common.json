@@ -159,7 +159,17 @@
     "unified_all_mail": "Tot el correu",
     "remove_account": "Elimina el compte",
     "remove_account_confirm": "Voleu eliminar {account} d'aquest dispositiu? El podreu tornar a afegir més endavant.",
-    "tasks": "Tasques"
+    "tasks": "Tasques",
+    "labels": "Etiquetes",
+    "create_label": "Crea una etiqueta nova",
+    "mv_tasks": "Tasques",
+    "mv_side_panel": "Tauler lateral",
+    "mv_open_full": "Obre a pantalla completa",
+    "mv_previous_day": "Dia anterior",
+    "mv_next_day": "Dia següent",
+    "mv_add_another_account": "Afegeix un altre compte",
+    "mv_manage_account": "Gestiona el teu compte",
+    "mv_storage_used": "{percent}% de {total} utilitzat"
   },
   "protocol_handlers": {
     "title": "Aplicacions predeterminades",
@@ -614,7 +624,8 @@
       "copy": "Copia el codi {code}",
       "copied": "Codi copiat",
       "copy_failed": "No s'ha pogut copiar el codi"
-    }
+    },
+    "mv_position": "{index} de {total}"
   },
   "email_composer": {
     "minimize": "Minimitza",
@@ -818,7 +829,8 @@
     "use_template": "Plantilla",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Obre la resposta en una finestra"
   },
   "confirm_dialog": {
     "confirm": "Confirma",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "Compatibilitat amb edició de dreta a esquerra",
         "description": "Afegeix un botó de direcció a la barra d'eines del redactor perquè pugueu establir els paràgrafs d'esquerra a dreta o de dreta a esquerra"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Encara no hi ha regles",
       "new_mail_only": "Només per a missatges nous",
       "running": "S'està executant «{name}» a {folder}…"
-    }
+    },
+    "find_emails_from": "Cerca correus de {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marca la carpeta com a llegida",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "Persones",
     "suggestions_from": "Cerca correu de {address}",
     "suggestions_to": "Cerca correu per a {address}",
-    "suggestions_remove_recent": "Elimina de les cerques recents"
+    "suggestions_remove_recent": "Elimina de les cerques recents",
+    "has_words": "Conté les paraules",
+    "size": "Mida",
+    "date_within": "Data",
+    "search_in": "Cerca a",
+    "has_attachment_check": "Té fitxers adjunts",
+    "search": "Cerca"
   },
   "welcome": {
     "title": "Us donem la benvinguda a la bústia",

@@ -159,7 +159,17 @@
     "unified_all_mail": "Al post",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "Opgaver"
+    "tasks": "Opgaver",
+    "labels": "Etiketter",
+    "create_label": "Opret ny etiket",
+    "mv_tasks": "Opgaver",
+    "mv_side_panel": "Sidepanel",
+    "mv_open_full": "Åbn i fuld visning",
+    "mv_previous_day": "Forrige dag",
+    "mv_next_day": "Næste dag",
+    "mv_add_another_account": "Tilføj en anden konto",
+    "mv_manage_account": "Administrer din konto",
+    "mv_storage_used": "{percent}% af {total} brugt"
   },
   "protocol_handlers": {
     "title": "Standardapps",
@@ -614,7 +624,8 @@
       "copy": "Kopiér kode {code}",
       "copied": "Kode kopieret",
       "copy_failed": "Koden kunne ikke kopieres"
-    }
+    },
+    "mv_position": "{index} af {total}"
   },
   "email_composer": {
     "minimize": "Minimer",
@@ -818,7 +829,8 @@
     "use_template": "Skabelon",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Åbn svaret i et vindue"
   },
   "confirm_dialog": {
     "confirm": "Bekræft",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "Understøttelse af højre-mod-venstre-redigering",
         "description": "Tilføjer en retningsknap til værktøjslinjen i editoren, så afsnit kan sættes venstre-mod-højre eller højre-mod-venstre"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Ingen regler endnu",
       "new_mail_only": "Kun for nye beskeder",
       "running": "Kører „{name}“ på {folder}…"
-    }
+    },
+    "find_emails_from": "Find e-mails fra {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Markér mappe som læst",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "Personer",
     "suggestions_from": "Søg efter mails fra {address}",
     "suggestions_to": "Søg efter mails til {address}",
-    "suggestions_remove_recent": "Fjern fra seneste søgninger"
+    "suggestions_remove_recent": "Fjern fra seneste søgninger",
+    "has_words": "Indeholder ordene",
+    "size": "Størrelse",
+    "date_within": "Dato",
+    "search_in": "Søg i",
+    "has_attachment_check": "Har vedhæftet fil",
+    "search": "Søg"
   },
   "welcome": {
     "title": "Velkommen til din postkasse",

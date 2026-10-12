@@ -159,7 +159,17 @@
     "unified_all_mail": "Уся пошта",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "завдання"
+    "tasks": "завдання",
+    "labels": "Мітки",
+    "create_label": "Створити мітку",
+    "mv_tasks": "Завдання",
+    "mv_side_panel": "Бічна панель",
+    "mv_open_full": "Відкрити повністю",
+    "mv_previous_day": "Попередній день",
+    "mv_next_day": "Наступний день",
+    "mv_add_another_account": "Додати інший обліковий запис",
+    "mv_manage_account": "Керувати обліковим записом",
+    "mv_storage_used": "Використано {percent}% з {total}"
   },
   "protocol_handlers": {
     "title": "Програми за замовчуванням",
@@ -614,7 +624,8 @@
       "copy": "Скопіювати код {code}",
       "copied": "Код скопійовано",
       "copy_failed": "Не вдалося скопіювати код"
-    }
+    },
+    "mv_position": "{index} з {total}"
   },
   "email_composer": {
     "minimize": "Згорнути",
@@ -818,7 +829,8 @@
     "use_template": "Шаблон",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Відкрити відповідь в окремому вікні"
   },
   "confirm_dialog": {
     "confirm": "Підтвердити",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Підтримка редагування справа наліво",
         "description": "Додає кнопку напрямку тексту на панель інструментів редактора, що дозволяє задавати абзацам напрямок зліва направо або справа наліво"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Правил поки немає",
       "new_mail_only": "Лише для нових листів",
       "running": "Виконується «{name}» у теці {folder}…"
-    }
+    },
+    "find_emails_from": "Знайти листи від {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Позначити папку як прочитану",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Люди",
     "suggestions_from": "Шукати листи від {address}",
     "suggestions_to": "Шукати листи для {address}",
-    "suggestions_remove_recent": "Видалити з останніх пошуків"
+    "suggestions_remove_recent": "Видалити з останніх пошуків",
+    "has_words": "Містить слова",
+    "size": "Розмір",
+    "date_within": "Дата",
+    "search_in": "Шукати в",
+    "has_attachment_check": "Є вкладення",
+    "search": "Шукати"
   },
   "welcome": {
     "title": "Ласкаво просимо до вашої поштової скриньки",

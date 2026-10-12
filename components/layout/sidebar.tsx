@@ -32,7 +32,8 @@ import {
   Loader2,
   AlertTriangle,
   NotebookPen,
-  PenSquare,
+  Pencil,
+  Plus,
   CalendarClock,
   BellOff,
   Mails,
@@ -213,14 +214,33 @@ function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean
 function SidebarRowCounts({
   unread,
   total,
+  role,
   onUnreadClick,
 }: {
   unread?: number;
   total?: number;
+  role?: string | null;
   isSelected: boolean;
   onUnreadClick?: () => void;
 }) {
   const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
+  const mountainView = useSettingsStore(s => s.interfaceLayout === 'mountain-view');
+  // Mountain View counts one thing per row: what is unread, or for Drafts,
+  // how many there are, since a draft is never unread.
+  if (mountainView) {
+    const count = role === 'drafts' ? (total ?? 0) : (unread ?? 0);
+    if (count === 0) return null;
+    return (
+      <span
+        className={cn("ms-2 flex-shrink-0 text-xs tabular-nums", role === 'drafts' ? "text-muted-foreground" : "font-bold text-foreground")}
+        data-testid="folder-counts"
+        data-unread={unread ?? 0}
+        data-total={role === 'drafts' ? count : 0}
+      >
+        {count.toLocaleString()}
+      </span>
+    );
+  }
   const unreadCount = unread ?? 0;
   const totalCount = showFolderTotalCount ? (total ?? 0) : 0;
 
@@ -339,6 +359,7 @@ function SidebarRow({
       data-mailbox-id={testMailboxId ?? undefined}
       data-shared={testShared ? 'true' : undefined}
       data-selected={isSelected ? 'true' : undefined}
+      data-has-unread={(unread ?? 0) > 0 && testRole !== 'drafts' ? '' : undefined}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
         "group w-full flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
@@ -399,6 +420,7 @@ function SidebarRow({
             <SidebarRowCounts
               unread={unread}
               total={total}
+              role={testRole}
               isSelected={isSelected}
               onUnreadClick={onUnreadClick}
             />
@@ -926,7 +948,8 @@ export function Sidebar({
   const hideAccountSwitcher = useSettingsStore(s => s.hideAccountSwitcher) || isEmbedded;
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
-  const colorfulSidebarIcons = useSettingsStore(s => s.colorfulSidebarIcons);
+  // Mountain View draws its navigation icons in the text colour.
+  const colorfulSidebarIcons = useSettingsStore(s => s.colorfulSidebarIcons) && !mvShell;
   const tagCounts = useEmailStore(s => s.tagCounts);
   const accounts = useAccountStore(s => s.accounts);
   const connectedAccounts = accounts.filter(a => a.isConnected);
@@ -1049,6 +1072,11 @@ export function Sidebar({
     node.role === 'inbox' || node.role === 'sent' || node.role === 'drafts';
   const primaryTree = mvFlat ? ownTree.filter(isPrimaryFolder) : ownTree;
   const secondaryTree = mvFlat ? ownTree.filter((node) => !isPrimaryFolder(node)) : [];
+  // Of those, the system folders (archive, spam, trash...) go behind "More",
+  // and the folders the user made are listed with the tags under "Labels",
+  // which is what they are to someone coming from Gmail.
+  const moreTree = secondaryTree.filter((node) => !!node.role);
+  const labelTree = secondaryTree.filter((node) => !node.role);
   // Everything under "More" is hidden together, so one flag covers the extra
   // folders, the shared accounts and the labels.
   const showSecondary = !mvFlat || moreExpanded;
@@ -1111,7 +1139,7 @@ export function Sidebar({
     return (
       <SidebarRow
         key={key}
-        icon={<CalendarClock className="w-4 h-4 flex-shrink-0 text-sky-600 dark:text-sky-400" />}
+        icon={<CalendarClock className={cn("w-4 h-4 flex-shrink-0", mvShell ? "text-foreground/80" : "text-sky-600 dark:text-sky-400")} />}
         label={t('scheduled')}
         depth={account?.depth ?? 0}
         isSelected={!selectedKeyword && isScheduledSelected}
@@ -1260,7 +1288,9 @@ export function Sidebar({
       data-mv-rail-peek={hoverExpanded ? "" : undefined}
       className={cn(
         "relative flex flex-col h-full border-e transition-all duration-300 overflow-hidden",
-        "bg-secondary border-border",
+        // Mountain View's navigation sits on the canvas, with no rule between
+        // it and the content card.
+        mvShell ? "bg-[var(--mv-canvas)] border-transparent" : "bg-secondary border-border",
         "max-lg:w-full",
         // Mountain View's collapsed column is 72px (--mv-rail-w), wide enough
         // for its round compose button; the default layout's rail is 48px.
@@ -1314,13 +1344,13 @@ export function Sidebar({
             data-mv-compose=""
             data-tour="compose-button"
             className={cn(
-              "flex items-center bg-primary text-primary-foreground shadow-sm hover:shadow-md transition-shadow",
+              "flex items-center bg-[var(--mv-compose-bg)] text-[var(--mv-compose-fg)] hover:shadow-md transition-shadow",
               isCollapsed ? "w-14 justify-center" : "gap-3 ps-4 pe-6"
             )}
             title={t("compose_hint")}
             aria-label={t("compose")}
           >
-            <PenSquare className="w-5 h-5 flex-shrink-0" />
+            <Pencil className="w-6 h-6 flex-shrink-0" />
             {!isCollapsed && <span className="text-sm font-medium">{t("compose")}</span>}
           </button>
         </div>
@@ -1515,7 +1545,7 @@ export function Sidebar({
                         isCollapsed={false}
                       />
                     )}
-                    {mvFlat && moreExpanded && secondaryTree.map((node) => (
+                    {mvFlat && moreExpanded && moreTree.map((node) => (
                       <MailboxTreeItem
                         key={node.id}
                         node={node}
@@ -1535,7 +1565,6 @@ export function Sidebar({
             )}
           </div>
         )}
-
         {googleMail.hasGmailAccounts && (
           <GoogleMailSidebarSection
             accountsData={googleMail.accountsData}
@@ -1545,6 +1574,39 @@ export function Sidebar({
             }}
             isCollapsed={isCollapsed}
           />
+        )}
+
+        {mvFlat && !useMultiAccount && (
+          <div data-mv-labels="">
+            <div className="flex items-center justify-between ps-[26px] pe-3 pt-4 pb-1">
+              <span className="text-base font-medium text-foreground">{t("labels")}</span>
+              {onCreateFolder && (
+                <button
+                  type="button"
+                  onClick={() => onCreateFolder()}
+                  className="grid place-items-center w-8 h-8 rounded-full text-foreground hover:bg-[var(--mv-nav-hover)] transition-colors"
+                  title={t("create_label")}
+                  aria-label={t("create_label")}
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            {labelTree.map((node) => (
+              <MailboxTreeItem
+                key={node.id}
+                node={node}
+                selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                expandedFolders={expandedFolders}
+                onMailboxSelect={onMailboxSelect}
+                onToggleExpand={handleToggleExpand}
+                isCollapsed={isCollapsed}
+                onUnreadFilterClick={onUnreadFilterClick}
+                colorful={colorfulSidebarIcons}
+                onContextMenu={handleMailboxContextMenu}
+              />
+            ))}
+          </div>
         )}
 
         {!useMultiAccount && showSecondary && sharedAccounts.length > 0 && (
@@ -1606,17 +1668,20 @@ export function Sidebar({
           </div>
         )}
 
-        {showSecondary && emailKeywords.length > 0 && (
+        {(showSecondary || mvFlat) && emailKeywords.length > 0 && (
           <div data-tour="keyword-tags">
-            <SidebarSectionHeader
-              label={t("tags")}
-              expanded={tagsExpanded}
-              onToggle={toggleTags}
-              onSettings={openKeywordSettings}
-              settingsTitle={t('settings')}
-              isCollapsed={isCollapsed}
-            />
-            {((tagsExpanded && !isCollapsed) || isCollapsed) && (
+            {/* Under Mountain View the tags continue the "Labels" list. */}
+            {!mvFlat && (
+              <SidebarSectionHeader
+                label={t("tags")}
+                expanded={tagsExpanded}
+                onToggle={toggleTags}
+                onSettings={openKeywordSettings}
+                settingsTitle={t('settings')}
+                isCollapsed={isCollapsed}
+              />
+            )}
+            {((tagsExpanded && !isCollapsed) || isCollapsed || mvFlat) && (
               <>
                 {visibleTagTree.map((node) => (
                   <TagItem

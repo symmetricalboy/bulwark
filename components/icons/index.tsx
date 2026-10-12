@@ -91,6 +91,7 @@ import {
   IconClipboardCopy,
   IconClock,
   IconClockHour3,
+  IconCloud,
   IconCode,
   IconColorSwatch,
   IconColumns3,
@@ -300,6 +301,7 @@ import {
   ClipboardCopy as LucideClipboardCopy,
   Clock as LucideClock,
   Clock3 as LucideClock3,
+  Cloud as LucideCloud,
   Code as LucideCode,
   Columns3 as LucideColumns3,
   Copy as LucideCopy,
@@ -632,6 +634,7 @@ export const Clipboard = createDynamicIcon(IconClipboard, LucideClipboard, 'cont
 export const ClipboardCopy = createDynamicIcon(IconClipboardCopy, LucideClipboardCopy, 'content_copy', 'ClipboardCopy', false);
 export const Clock = createDynamicIcon(IconClock, LucideClock, 'schedule', 'Clock', false);
 export const Clock3 = createDynamicIcon(IconClockHour3, LucideClock3, 'schedule', 'Clock3', false);
+export const Cloud = createDynamicIcon(IconCloud, LucideCloud, 'cloud', 'Cloud', false);
 export const Code = createDynamicIcon(IconCode, LucideCode, 'code', 'Code', false);
 export const Columns3 = createDynamicIcon(IconColumns3, LucideColumns3, 'view_column', 'Columns3', false);
 export const Copy = createDynamicIcon(IconCopy, LucideCopy, 'content_copy', 'Copy', false);

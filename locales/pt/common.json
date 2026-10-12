@@ -159,7 +159,17 @@
     "unified_all_mail": "Todo o correio",
     "remove_account": "Remover conta",
     "remove_account_confirm": "Remover {account} desse dispositivo? Você pode adicioná-la de volta depois.",
-    "tasks": "Tarefas"
+    "tasks": "Tarefas",
+    "labels": "Etiquetas",
+    "create_label": "Criar etiqueta",
+    "mv_tasks": "Tarefas",
+    "mv_side_panel": "Painel lateral",
+    "mv_open_full": "Abrir em vista completa",
+    "mv_previous_day": "Dia anterior",
+    "mv_next_day": "Dia seguinte",
+    "mv_add_another_account": "Adicionar outra conta",
+    "mv_manage_account": "Gerir a sua conta",
+    "mv_storage_used": "{percent}% de {total} utilizado"
   },
   "protocol_handlers": {
     "title": "Aplicativos padrão",
@@ -614,7 +624,8 @@
       "copy": "Copiar código {code}",
       "copied": "Código copiado",
       "copy_failed": "Não foi possível copiar o código"
-    }
+    },
+    "mv_position": "{index} de {total}"
   },
   "email_composer": {
     "minimize": "Minimizar",
@@ -818,7 +829,8 @@
     "use_template": "Modelo",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Abrir a resposta numa janela"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Suporte à edição da direita para a esquerda",
         "description": "Adiciona um botão de direção à barra de ferramentas do editor para definir parágrafos da esquerda para a direita ou da direita para a esquerda"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Ainda não há regras",
       "new_mail_only": "Apenas para mensagens novas",
       "running": "A executar \"{name}\" em {folder}…"
-    }
+    },
+    "find_emails_from": "Encontrar e-mails de {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Marcar pasta como lida",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Pessoas",
     "suggestions_from": "Pesquisar e-mails de {address}",
     "suggestions_to": "Pesquisar e-mails para {address}",
-    "suggestions_remove_recent": "Remover das pesquisas recentes"
+    "suggestions_remove_recent": "Remover das pesquisas recentes",
+    "has_words": "Contém as palavras",
+    "size": "Tamanho",
+    "date_within": "Data",
+    "search_in": "Pesquisar em",
+    "has_attachment_check": "Com anexo",
+    "search": "Pesquisar"
   },
   "welcome": {
     "title": "Bem-vindo à sua caixa de entrada",

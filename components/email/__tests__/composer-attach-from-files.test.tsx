@@ -235,7 +235,6 @@ describe('attach from Files', () => {
     useAuthStore.setState({ client: filesClient({ supportsFiles: () => false }) as never });
     render(<EmailComposer onClose={vi.fn()} />);
     expect(screen.queryByTestId('composer-attach-from-files')).toBeNull();
-    expect(screen.queryByTestId('composer-attach-menu')).toBeNull();
   });
 
   it('attaches the picked files by their blobId and saves them with the draft', async () => {

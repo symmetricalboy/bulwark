@@ -144,7 +144,7 @@ describe('Conversation Grouping Settings and Integration', () => {
   });
 
   describe('ThreadListItem in Combined vs Nested mode', () => {
-    it('hides expand toggle and invokes onOpenConversation on row click in combined mode', () => {
+    it('hides expand toggle and selects email on row click in combined mode', () => {
       useSettingsStore.setState({ conversationGrouping: 'combined' });
 
       const e1 = makeEmail({ id: 'e1', threadId: 't1', receivedAt: '2024-01-15T10:00:00Z' });
@@ -169,10 +169,10 @@ describe('Conversation Grouping Settings and Integration', () => {
       // In combined mode, chevron toggle button is hidden
       expect(container.querySelector('[data-expand-toggle="true"]')).toBeNull();
 
-      // Clicking email row triggers onOpenConversation with thread
+      // Clicking email row triggers onEmailSelect with latest email to open conversation in viewer
       fireEvent.click(screen.getByText('Test Subject'));
 
-      expect(onOpenConversation).toHaveBeenCalledWith(thread);
+      expect(onEmailSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'e2' }));
     });
 
     it('shows expand toggle and handles expansion in nested mode', () => {

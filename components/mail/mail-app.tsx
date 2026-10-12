@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Sidebar } from "@/components/layout/sidebar";
 import { EmailList } from "@/components/email/email-list";
-import { MvComposeWindow } from "@/components/email/mv-compose-window";
+import { MvComposeInline, MvComposeWindow } from "@/components/email/mv-compose-window";
 import { MessageListTabs } from "@/components/email/message-list-tabs";
 import dynamic from "next/dynamic";
 import type { ComposerDraftData } from "@/components/email/email-composer";
@@ -59,7 +59,7 @@ import { debug } from "@/lib/debug";
 import { playNotificationSound } from "@/lib/notification-sound";
 import { cn, getMailboxPath } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
-import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor, getThreadParticipants } from "@/lib/thread-utils";
+import { KEYWORD_PREFIX, KEYWORD_PREFIX_LEGACY, groupEmailsByThread, threadKeyFor } from "@/lib/thread-utils";
 import { resolveThreadRoute } from "@/lib/thread-routing";
 import {
   ErrorBoundary,
@@ -82,6 +82,8 @@ import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
 import { NavigationRail } from "@/components/layout/navigation-rail";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
+import { MvSearchForm } from "@/components/search/mv-search-form";
+import { MvSidePanel } from "@/components/layout/mv-side-panel";
 import { MvListToolbar } from "@/components/email/mv-list-toolbar";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
@@ -202,6 +204,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const dragStartWidth = useRef(0);
   // Mobile conversation view state
   const [conversationThread, setConversationThread] = useState<ThreadGroup | null>(null);
+  // Mountain View writes replies in place under the conversation until the
+  // user pops one out into the docked window.
+  const [mvReplyPoppedOut, setMvReplyPoppedOut] = useState(false);
+  useEffect(() => {
+    if (!showComposer) setMvReplyPoppedOut(false);
+  }, [showComposer]);
+  const handleMvPopOut = useCallback(() => setMvReplyPoppedOut(true), []);
+  // Mountain View: the open message's whole conversation, light properties only.
+  const [mvConversation, setMvConversation] = useState<Email[] | null>(null);
   const [conversationEmails, setConversationEmails] = useState<Email[]>([]);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [rateLimitSecondsLeft, setRateLimitSecondsLeft] = useState<number | null>(null);
@@ -3551,6 +3562,67 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
+  // Mountain View and Combined conversation mode read a message inside its conversation,
+  // as Gmail does: load the rest of the thread (list properties only) whenever another opens.
+  const isConversationCombined = conversationGrouping === 'combined' || (mvShell && conversationGrouping !== 'separate' && conversationGrouping !== 'nested');
+  const shouldLoadMvConversation = isConversationCombined && !cursorOnly;
+  const mvConversationThreadId = shouldLoadMvConversation ? (selectedEmail?.threadId ?? null) : null;
+  const mvConversationRef = shouldLoadMvConversation ? selectedEmail : null;
+  useEffect(() => {
+    if (!mvConversationThreadId || !client || !mvConversationRef) {
+      setMvConversation(null);
+      return;
+    }
+    let cancelled = false;
+    const ref = mvConversationRef;
+
+    if (ref.id.startsWith('google:')) {
+      const matching = activeEmails
+        .filter((e) => e.threadId && e.threadId === ref.threadId)
+        .sort((a, b) => a.receivedAt.localeCompare(b.receivedAt));
+      if (matching.length >= 2) {
+        setMvConversation(matching);
+      } else {
+        setMvConversation(null);
+      }
+      return;
+    }
+
+    const route = resolveThreadRoute({ isUnifiedView, ref, mailboxes: viewMailboxes, selectedMailbox });
+    const threadClient = route.clientAccountId
+      ? (useAuthStore.getState().getClientForAccount(route.clientAccountId) ?? client)
+      : client;
+    (async () => {
+      try {
+        const thread = await threadClient.getThread(mvConversationThreadId, route.accountId);
+        const ids = thread?.emailIds ?? [];
+        if (ids.length < 2) {
+          if (!cancelled) setMvConversation(null);
+          return;
+        }
+        const emails = await threadClient.getSomeEmails(ids, route.accountId);
+        if (cancelled) return;
+        for (const e of emails) {
+          // Carry the open message's source stamps, so opening one of these
+          // in a merged view reaches the right account.
+          e.accountId = ref.accountId;
+          e.accountLabel = ref.accountLabel;
+          e.sourceClientAccountId = ref.sourceClientAccountId;
+          e.sourceAccountId = ref.sourceAccountId;
+        }
+        setMvConversation(
+          emails
+            .filter((e) => e.id === ref.id || !e.keywords?.$draft)
+            .sort((a, b) => a.receivedAt.localeCompare(b.receivedAt)),
+        );
+      } catch {
+        if (!cancelled) setMvConversation(null);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the open message, not on every list refresh
+  }, [mvConversationThreadId, mvConversationRef?.id, client]);
+
   // Show loading state while checking auth
   if (!initialCheckDone || authLoading || (!isAuthenticated || !client)) {
     return (
@@ -3574,9 +3646,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       })();
   const isFocusedMailLayout = mailLayout === 'focus';
   const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile && !isTablet;
-  // Under Mountain View on desktop the composer floats over the list in a
-  // docked window instead of taking the reading pane.
-  const floatingComposer = mvShell && showComposer && !isEmbedded;
+  // Under Mountain View or Combined mode on desktop the composer can write replies in place.
+  const mvInlineReply = (mvShell || isConversationCombined) && showComposer && !isEmbedded && !mvReplyPoppedOut
+    && (pendingDraft?.mode ?? composerMode) !== 'compose' && Boolean(selectedEmail);
+  const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
     || Boolean(selectedEmail && !(mvShell && cursorOnly));
   const shouldCollapseListPane = (isTablet && !tabletListVisible && !readingPaneEmpty) || (!isMobile && isFocusedMailLayout && hasViewerContent);
@@ -3595,32 +3668,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setShowComposer(false);
     }
 
-    if (conversationGrouping !== 'combined' && conversationThread) {
+    if (conversationThread) {
       setConversationThread(null);
       setConversationEmails([]);
-    }
-
-    if (conversationGrouping === 'combined') {
-      const threadKey = threadKeyFor(email as Email);
-      const matchingThread = activeEmails.filter(e => threadKeyFor(e) === threadKey);
-      if (matchingThread.length > 0) {
-        const sorted = [...matchingThread].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
-        void handleOpenConversation({
-          threadId: sorted[0].threadId || sorted[0].id,
-          threadKey,
-          emails: sorted,
-          latestEmail: sorted[0],
-          participantNames: getThreadParticipants(sorted),
-          hasUnread: sorted.some(e => !e.keywords?.$seen),
-          hasStarred: sorted.some(e => e.keywords?.$flagged),
-          hasPinned: sorted.some(e => e.keywords?.['$pinned']),
-          hasAttachment: sorted.some(e => e.hasAttachment),
-          hasAnswered: sorted.some(e => e.keywords?.$answered),
-          hasForwarded: sorted.some(e => e.keywords?.$forwarded),
-          emailCount: sorted.length,
-        });
-        return;
-      }
     }
 
     // Find the list-level email for metadata (accountId, scheduled flags, etc.)
@@ -3829,6 +3879,39 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     </button>
   );
 
+  // The folder the advanced search runs in. Scopes the search only - it does
+  // not navigate the mail list. `rerun` re-queries straight away when a search
+  // is running; Mountain View's form waits for its Search button instead.
+  const renderSearchFolderSelect = (className: string, rerun: boolean) => (
+    <select
+      value={searchMailboxId}
+      onChange={(e) => {
+        setSearchMailboxId(e.target.value);
+        // Only re-query when a search is actually running;
+        // otherwise just remember the scope for the next one.
+        if (rerun && (searchQuery.trim() || !isFilterEmpty(searchFilters))) handleAdvancedSearch();
+      }}
+      className={className}
+    >
+      <option value="">{t("advanced_search.all_folders_except_spam_trash")}</option>
+      <option value={SEARCH_SCOPE_ALL_FOLDERS}>{t("advanced_search.all_folders")}</option>
+      {searchScopeFolders.own.map((mb) => (
+        <option key={mb.id} value={mb.id}>
+          {"\u00A0".repeat(mb.depth * 3)}{mb.name}
+        </option>
+      ))}
+      {searchScopeFolders.shared.map((group) => (
+        <optgroup key={group.ownerId} label={group.label}>
+          {group.mailboxes.map((mb) => (
+            <option key={mb.id} value={mb.id}>
+              {"\u00A0".repeat(mb.depth * 3)}{mb.name}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  );
+
   // The composer, rendered in the reading pane - or, under Mountain View on
   // desktop, in a window docked over the list (see MvComposeWindow).
   const composerNode = (
@@ -3917,7 +4000,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   return (
     <DragDropProvider>
-      <div ref={appRootRef} className={cn("flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)]", isEmbedded ? "h-full" : "h-dvh")}>
+      <div ref={appRootRef} className={cn("flex flex-col overflow-hidden pt-[env(safe-area-inset-top)]", mvShell ? "bg-[var(--mv-canvas)]" : "bg-background", isEmbedded ? "h-full" : "h-dvh")}>
         <AppTopBannerSlot />
         {refreshIndicator}
         {isRateLimited && rateLimitSecondsLeft !== null && (
@@ -4011,6 +4094,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           } : undefined}
           className={cn(
             "flex-shrink-0 h-full z-50",
+            // The z-index is for the phone drawer. On a desktop under Mountain
+            // View it only has to lift the hover peek over the list: at 40 the
+            // compose window, drawn later at the same level, stays on top.
+            mvShell && "lg:z-40",
             !isResizing && "transition-[width] duration-300",
             isEmbedded
               ? (isMobile || isTablet
@@ -4085,8 +4172,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           </ErrorBoundary>
         </div>
 
-        {/* Sidebar resize handle (desktop only, hidden when collapsed) */}
-        {!isMobile && !isTablet && !sidebarCollapsed && !inlineApp && !fullscreenReading && (
+        {/* Sidebar resize handle (desktop only, hidden when collapsed, and
+            absent under Mountain View, whose navigation has a fixed width) */}
+        {!isMobile && !isTablet && !sidebarCollapsed && !inlineApp && !fullscreenReading && !mvShell && (
           <ResizeHandle
             value={sidebarWidth}
             valueMin={180}
@@ -4098,9 +4186,12 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             onDoubleClick={resetSidebarWidth}
           />
         )}
-
-        {/* Main Content Area */}
-        <div className={cn("flex flex-col flex-1 min-w-0 h-full", inlineApp && "hidden")}>
+        {/* Main Content Area. Under Mountain View it is the rounded card
+            inset from the canvas. */}
+        <div
+          data-mv-card={mvShell ? "" : undefined}
+          className={cn("flex flex-col flex-1 min-w-0", mvShell ? "mb-4 me-4" : "h-full", inlineApp && "hidden")}
+        >
           <main className={cn("relative flex flex-1 min-h-0", isHorizontalMailLayout && "md:flex-col")}>
           <h1 className="sr-only">{currentMailboxName}</h1>
           {/* Email List - full width on mobile, fixed width/height on tablet/desktop */}
@@ -4182,12 +4273,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               {mvShell ? (
                 <MvListToolbar
                   loadedCount={activeEmails.length}
-                  totalCount={mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails}
+                  // A search's results are not the folder: count what came back.
+                  totalCount={searchQuery || !isFilterEmpty(searchFilters) ? undefined : mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails}
                   onRefresh={handleManualRefresh}
                   isRefreshing={isManualRefreshing}
                   onMarkFolderRead={selectedMailbox ? () => handleMarkFolderRead(selectedMailbox) : undefined}
                   onMarkAllFoldersRead={handleMarkAllFoldersRead}
                   onEmptyFolder={selectedMailbox ? () => void handleEmptyFolderFromContextMenu(selectedMailbox) : undefined}
+                  onCreateFolder={() => handleCreateFolderFromContextMenu()}
                   disabled={isScheduledView}
                 />
               ) : (
@@ -4284,6 +4377,18 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                   search field there rather than from the list header. */}
               {isAdvancedSearchOpen && (
                 <FilterPanelHost anchor={mvShell ? filterAnchor : null}>
+                  {mvShell ? (
+                    <MvSearchForm
+                      filters={searchFilters}
+                      onChange={setSearchFilters}
+                      onSearch={() => { handleAdvancedSearch(); toggleAdvancedSearch(); }}
+                      onClear={() => { clearSearchFilters(); if (client) advancedSearch(client); }}
+                      folderSelect={!isUnifiedView ? renderSearchFolderSelect(
+                        "w-full h-8 bg-transparent border-0 border-b border-border px-0 text-sm text-foreground focus:outline-none focus:border-b-2 focus:border-primary",
+                        false,
+                      ) : undefined}
+                    />
+                  ) : (<>
                   {/* Quick toggle filters + clear */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -4384,33 +4489,10 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       {!isUnifiedView && (
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">{t("advanced_search.folder")}</label>
-                          <select
-                            value={searchMailboxId}
-                            onChange={(e) => {
-                              setSearchMailboxId(e.target.value);
-                              // Only re-query when a search is actually running;
-                              // otherwise just remember the scope for the next one.
-                              if (searchQuery.trim() || !isFilterEmpty(searchFilters)) handleAdvancedSearch();
-                            }}
-                            className="w-full h-8 text-sm rounded-md border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
-                          >
-                            <option value="">{t("advanced_search.all_folders_except_spam_trash")}</option>
-                            <option value={SEARCH_SCOPE_ALL_FOLDERS}>{t("advanced_search.all_folders")}</option>
-                            {searchScopeFolders.own.map((mb) => (
-                              <option key={mb.id} value={mb.id}>
-                                {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                              </option>
-                            ))}
-                            {searchScopeFolders.shared.map((group) => (
-                              <optgroup key={group.ownerId} label={group.label}>
-                                {group.mailboxes.map((mb) => (
-                                  <option key={mb.id} value={mb.id}>
-                                    {"\u00A0".repeat(mb.depth * 3)}{mb.name}
-                                  </option>
-                                ))}
-                              </optgroup>
-                            ))}
-                          </select>
+                          {renderSearchFolderSelect(
+                            "w-full h-8 text-sm rounded-md border border-input bg-background px-3 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                            true,
+                          )}
                         </div>
                       )}
 
@@ -4464,6 +4546,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       </div>
                     </div>
                   )}
+                  </>)}
                 </FilterPanelHost>
               )}
             </div>
@@ -4491,6 +4574,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
             <ErrorBoundary fallback={EmailListErrorFallback}>
               <EmailList
+                onFindFromSender={mvShell ? (sender) => void handleSelectContactSuggestion(sender, 'from') : undefined}
                 hideBatchToolbar={mvShell}
                 emails={activeEmails}
                 selectedEmailId={selectedEmail?.id}
@@ -4664,7 +4748,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             {/* Inline Composer - shown in viewer pane.
                 In Pro/embedded mode the composer is hoisted into its own
                 Pro tab (see the effect below), so we never render it inline. */}
-            {(showComposer && !isEmbedded && !floatingComposer) ? composerNode : (
+            {(showComposer && !isEmbedded && !floatingComposer && !mvInlineReply) ? composerNode : (
             <>
             {/* Pending draft banner */}
             {pendingDraft && (
@@ -4699,8 +4783,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 />
               </button>
             )}
-            {/* Conversation View - shown when thread is selected */}
-            {conversationThread ? (
+            {/* Mobile Conversation View - shown when thread is selected on mobile */}
+            {isMobile && conversationThread ? (
               <ThreadConversationView
                 thread={conversationThread}
                 emails={conversationEmails}
@@ -4759,6 +4843,14 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     onBack={handleMobileBack}
                     onNavigateNext={handleNavigateNext}
                     onNavigatePrev={handleNavigatePrev}
+                    mvPosition={mvShell && selectedEmailIndex >= 0 ? {
+                      index: selectedEmailIndex + 1,
+                      total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? 0),
+                    } : undefined}
+                    mvFolderName={mvShell && !isScheduledView && !isUnifiedView ? currentMailboxName : undefined}
+                    mvConversation={(mvShell || isConversationCombined) ? mvConversation ?? undefined : undefined}
+                    onOpenConversationEmail={(mvShell || isConversationCombined) ? (e) => void handleEmailSelect(e) : undefined}
+                    mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
                     isFullscreen={fullscreenReading}
                     onShowShortcuts={() => setShowShortcutsModal(true)}
@@ -4812,6 +4904,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             />
           )}
         </div>
+        {/* Mountain View: Gmail's side panel - calendar, tasks and contacts
+            next to the mail, with their icons down the right edge. */}
+        {mvShell && !inlineApp && !fullscreenReading && <MvSidePanel />}
         </div>
 
         {/* Keyboard Shortcuts Modal */}

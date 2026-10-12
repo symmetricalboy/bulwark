@@ -159,7 +159,17 @@
     "unified_all_mail": "全部郵件",
     "remove_account": "移除帳號",
     "remove_account_confirm": "要從這部裝置移除 {account} 嗎？您稍後仍可重新新增。",
-    "tasks": "任務"
+    "tasks": "任務",
+    "labels": "標籤",
+    "create_label": "建立新標籤",
+    "mv_tasks": "工作",
+    "mv_side_panel": "側邊面板",
+    "mv_open_full": "以完整檢視開啟",
+    "mv_previous_day": "前一天",
+    "mv_next_day": "後一天",
+    "mv_add_another_account": "新增其他帳戶",
+    "mv_manage_account": "管理您的帳戶",
+    "mv_storage_used": "已使用 {total} 中的 {percent}%"
   },
   "protocol_handlers": {
     "title": "預設應用程式",
@@ -614,7 +624,8 @@
       "copy": "複製驗證碼 {code}",
       "copied": "驗證碼已複製",
       "copy_failed": "無法複製驗證碼"
-    }
+    },
+    "mv_position": "第 {index} 封，共 {total} 封"
   },
   "email_composer": {
     "minimize": "最小化",
@@ -818,7 +829,8 @@
     "use_template": "範本",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "在獨立視窗中開啟回覆"
   },
   "confirm_dialog": {
     "confirm": "確認",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "支援從右至左編輯",
         "description": "在編輯器工具列中新增方向按鈕，可將段落設定為從左到右或從右到左"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "尚無規則",
       "new_mail_only": "僅限新郵件",
       "running": "正在 {folder} 中執行「{name}」…"
-    }
+    },
+    "find_emails_from": "尋找來自 {name} 的郵件"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "將信件匣標示為已讀",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "聯絡人",
     "suggestions_from": "搜尋來自 {address} 的郵件",
     "suggestions_to": "搜尋寄給 {address} 的郵件",
-    "suggestions_remove_recent": "從最近搜尋中移除"
+    "suggestions_remove_recent": "從最近搜尋中移除",
+    "has_words": "包含字詞",
+    "size": "大小",
+    "date_within": "日期",
+    "search_in": "搜尋範圍",
+    "has_attachment_check": "包含附件",
+    "search": "搜尋"
   },
   "welcome": {
     "title": "歡迎使用您的信件匣",

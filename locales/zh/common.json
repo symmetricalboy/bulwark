@@ -159,7 +159,17 @@
     "unified_all_mail": "全部邮件",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "任务"
+    "tasks": "任务",
+    "labels": "标签",
+    "create_label": "新建标签",
+    "mv_tasks": "任务",
+    "mv_side_panel": "侧边栏",
+    "mv_open_full": "在完整视图中打开",
+    "mv_previous_day": "前一天",
+    "mv_next_day": "后一天",
+    "mv_add_another_account": "添加其他账户",
+    "mv_manage_account": "管理您的账户",
+    "mv_storage_used": "已使用 {total} 中的 {percent}%"
   },
   "protocol_handlers": {
     "title": "默认应用",
@@ -614,7 +624,8 @@
       "copy": "复制验证码 {code}",
       "copied": "验证码已复制",
       "copy_failed": "无法复制验证码"
-    }
+    },
+    "mv_position": "第 {index} 封，共 {total} 封"
   },
   "email_composer": {
     "minimize": "最小化",
@@ -818,7 +829,8 @@
     "use_template": "模板",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "在单独窗口中打开回复"
   },
   "confirm_dialog": {
     "confirm": "确认",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "从右到左编辑支持",
         "description": "在编辑器工具栏中添加方向按钮，可将段落设置为从左到右或从右到左"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "暂无规则",
       "new_mail_only": "仅限新邮件",
       "running": "正在 {folder} 中运行“{name}”…"
-    }
+    },
+    "find_emails_from": "查找来自 {name} 的邮件"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "将文件夹标记为已读",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "联系人",
     "suggestions_from": "搜索来自 {address} 的邮件",
     "suggestions_to": "搜索发给 {address} 的邮件",
-    "suggestions_remove_recent": "从最近搜索中移除"
+    "suggestions_remove_recent": "从最近搜索中移除",
+    "has_words": "包含字词",
+    "size": "大小",
+    "date_within": "日期",
+    "search_in": "搜索范围",
+    "has_attachment_check": "包含附件",
+    "search": "搜索"
   },
   "welcome": {
     "title": "欢迎使用邮箱",

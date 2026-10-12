@@ -159,7 +159,17 @@
     "unified_all_unread": "همه خوانده‌نشده‌ها",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "وظایف"
+    "tasks": "وظایف",
+    "labels": "برچسب‌ها",
+    "create_label": "ایجاد برچسب جدید",
+    "mv_tasks": "وظایف",
+    "mv_side_panel": "پنل کناری",
+    "mv_open_full": "باز کردن در نمای کامل",
+    "mv_previous_day": "روز قبل",
+    "mv_next_day": "روز بعد",
+    "mv_add_another_account": "افزودن حساب دیگر",
+    "mv_manage_account": "مدیریت حساب",
+    "mv_storage_used": "{percent}٪ از {total} استفاده شده"
   },
   "protocol_handlers": {
     "title": "برنامه‌های پیش‌فرض",
@@ -614,7 +624,8 @@
       "copy": "کپی کد {code}",
       "copied": "کد کپی شد",
       "copy_failed": "کپی کد ممکن نشد"
-    }
+    },
+    "mv_position": "{index} از {total}"
   },
   "email_composer": {
     "minimize": "کوچک کردن",
@@ -818,7 +829,8 @@
     "use_template": "قالب",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "باز کردن پاسخ در پنجره جدا"
   },
   "confirm_dialog": {
     "confirm": "تأیید",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "پشتیبانی از ویرایش راست‌به‌چپ",
         "description": "دکمه جهت متن را به نوار ابزار ویرایشگر اضافه می‌کند تا بتوانید پاراگراف‌ها را چپ‌به‌راست یا راست‌به‌چپ تنظیم کنید"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "هنوز قانونی وجود ندارد",
       "new_mail_only": "فقط برای پیام‌های جدید",
       "running": "در حال اجرای «{name}» روی {folder}…"
-    }
+    },
+    "find_emails_from": "یافتن ایمیل‌های {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "علامت‌گذاری پوشه خوانده شده",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "افراد",
     "suggestions_from": "جستجوی ایمیل‌های از {address}",
     "suggestions_to": "جستجوی ایمیل‌های به {address}",
-    "suggestions_remove_recent": "حذف از جستجوهای اخیر"
+    "suggestions_remove_recent": "حذف از جستجوهای اخیر",
+    "has_words": "شامل کلمات",
+    "size": "اندازه",
+    "date_within": "تاریخ",
+    "search_in": "جستجو در",
+    "has_attachment_check": "دارای پیوست",
+    "search": "جستجو"
   },
   "welcome": {
     "title": "به صندوق پستی خود خوش آمدید",

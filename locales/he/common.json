@@ -158,7 +158,17 @@
     "unified_all_mail": "הכל דוא״ל",
     "remove_account": "הסרת חשבון",
     "remove_account_confirm": "להסיר את {account} מהמכשיר הזה? ניתן להוסיף אותו שוב מאוחר יותר.",
-    "tasks": "משימות"
+    "tasks": "משימות",
+    "labels": "תוויות",
+    "create_label": "יצירת תווית חדשה",
+    "mv_tasks": "משימות",
+    "mv_side_panel": "חלונית צד",
+    "mv_open_full": "פתיחה בתצוגה מלאה",
+    "mv_previous_day": "היום הקודם",
+    "mv_next_day": "היום הבא",
+    "mv_add_another_account": "הוספת חשבון נוסף",
+    "mv_manage_account": "ניהול החשבון",
+    "mv_storage_used": "נוצלו {percent}% מתוך {total}"
   },
   "sidebar_apps": {
     "modal_title": "אפליקציות בסרגל הצד",
@@ -579,7 +589,8 @@
       "copy": "העתקת הקוד {code}",
       "copied": "הקוד הועתק",
       "copy_failed": "לא ניתן להעתיק את הקוד"
-    }
+    },
+    "mv_position": "{index} מתוך {total}"
   },
   "email_composer": {
     "minimize": "מזעור",
@@ -783,7 +794,8 @@
     "require_tls_off": "דרישת מסירה מוצפנת (TLS)",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "פתיחת התשובה בחלון נפרד"
   },
   "confirm_dialog": {
     "confirm": "אשר",
@@ -1622,6 +1634,16 @@
       "rtl_editing": {
         "label": "תמיכה בעריכה מימין לשמאל",
         "description": "מוסיף כפתור כיווניות לסרגל הכלים של העורך כדי להגדיר פסקאות משמאל לימין או מימין לשמאל"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1770,7 +1792,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2621,7 +2659,8 @@
       "none": "אין עדיין כללים",
       "new_mail_only": "רק להודעות חדשות",
       "running": "מריץ את „{name}“ על {folder}…"
-    }
+    },
+    "find_emails_from": "חיפוש הודעות מ{name}"
   },
   "shortcuts": {
     "title": "קיצורי מקלדת",
@@ -3638,7 +3677,13 @@
     "suggestions_people": "אנשים",
     "suggestions_from": "חיפוש הודעות מאת {address}",
     "suggestions_to": "חיפוש הודעות אל {address}",
-    "suggestions_remove_recent": "הסרה מהחיפושים האחרונים"
+    "suggestions_remove_recent": "הסרה מהחיפושים האחרונים",
+    "has_words": "מכיל את המילים",
+    "size": "גודל",
+    "date_within": "תאריך",
+    "search_in": "חיפוש ב",
+    "has_attachment_check": "יש קובץ מצורף",
+    "search": "חיפוש"
   },
   "welcome": {
     "title": "ברוך הבא לתיבת הדואר שלך",

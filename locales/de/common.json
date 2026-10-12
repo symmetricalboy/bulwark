@@ -159,7 +159,17 @@
     "unified_all_mail": "Alle Mails",
     "remove_account": "Konto entfernen",
     "remove_account_confirm": "{account} von diesem Gerät entfernen? Sie können das Konto später wieder hinzufügen.",
-    "tasks": "Aufgaben"
+    "tasks": "Aufgaben",
+    "labels": "Labels",
+    "create_label": "Neues Label erstellen",
+    "mv_tasks": "Aufgaben",
+    "mv_side_panel": "Seitenleiste",
+    "mv_open_full": "In voller Ansicht öffnen",
+    "mv_previous_day": "Vorheriger Tag",
+    "mv_next_day": "Nächster Tag",
+    "mv_add_another_account": "Weiteres Konto hinzufügen",
+    "mv_manage_account": "Konto verwalten",
+    "mv_storage_used": "{percent} % von {total} belegt"
   },
   "protocol_handlers": {
     "title": "Standard-Apps",
@@ -614,7 +624,8 @@
       "copy": "Code {code} kopieren",
       "copied": "Code kopiert",
       "copy_failed": "Code konnte nicht kopiert werden"
-    }
+    },
+    "mv_position": "{index} von {total}"
   },
   "email_composer": {
     "minimize": "Minimieren",
@@ -818,7 +829,8 @@
     "use_template": "Vorlage",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Antwort in eigenem Fenster öffnen"
   },
   "confirm_dialog": {
     "confirm": "Bestätigen",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Unterstützung für Rechts-nach-links-Bearbeitung",
         "description": "Fügt der Editor-Symbolleiste eine Schreibrichtungs-Schaltfläche hinzu, mit der Absätze auf links-nach-rechts oder rechts-nach-links gestellt werden können"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Noch keine Regeln",
       "new_mail_only": "Nur für neue Nachrichten",
       "running": "„{name}“ wird auf {folder} angewendet…"
-    }
+    },
+    "find_emails_from": "E-Mails von {name} finden"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Ordner als gelesen markieren",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Personen",
     "suggestions_from": "E-Mails von {address} suchen",
     "suggestions_to": "E-Mails an {address} suchen",
-    "suggestions_remove_recent": "Aus den letzten Suchen entfernen"
+    "suggestions_remove_recent": "Aus den letzten Suchen entfernen",
+    "has_words": "Enthält die Wörter",
+    "size": "Größe",
+    "date_within": "Datum",
+    "search_in": "Suchen in",
+    "has_attachment_check": "Mit Anhang",
+    "search": "Suchen"
   },
   "welcome": {
     "title": "Willkommen in Ihrem Postfach",

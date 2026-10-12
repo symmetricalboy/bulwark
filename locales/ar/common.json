@@ -159,7 +159,17 @@
     "unified_all_mail": "كل البريد",
     "remove_account": "إزالة الحساب",
     "remove_account_confirm": "هل تريد إزالة {account} من هذا الجهاز؟ يمكنك إضافته مرة أخرى لاحقًا.",
-    "tasks": "المهام"
+    "tasks": "المهام",
+    "labels": "التصنيفات",
+    "create_label": "إنشاء تصنيف جديد",
+    "mv_tasks": "المهام",
+    "mv_side_panel": "اللوحة الجانبية",
+    "mv_open_full": "فتح في عرض كامل",
+    "mv_previous_day": "اليوم السابق",
+    "mv_next_day": "اليوم التالي",
+    "mv_add_another_account": "إضافة حساب آخر",
+    "mv_manage_account": "إدارة حسابك",
+    "mv_storage_used": "تم استخدام {percent}% من {total}"
   },
   "protocol_handlers": {
     "title": "التطبيقات الافتراضية",
@@ -614,7 +624,8 @@
       "copy": "نسخ الرمز {code}",
       "copied": "تم نسخ الرمز",
       "copy_failed": "تعذّر نسخ الرمز"
-    }
+    },
+    "mv_position": "{index} من {total}"
   },
   "email_composer": {
     "minimize": "تصغير",
@@ -818,7 +829,8 @@
     "use_template": "قالب",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "فتح الرد في نافذة منفصلة"
   },
   "confirm_dialog": {
     "confirm": "تأكيد",
@@ -1660,6 +1672,16 @@
       "rtl_editing": {
         "label": "دعم الكتابة من اليمين إلى اليسار",
         "description": "يضيف زر اتجاه إلى شريط أدوات المحرر حتى تتمكن من ضبط الفقرات من اليسار لليمين أو من اليمين لليسار"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1808,7 +1830,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "لا توجد قواعد بعد",
       "new_mail_only": "للرسائل الجديدة فقط",
       "running": "جارٍ تشغيل «{name}» على {folder}…"
-    }
+    },
+    "find_emails_from": "البحث عن رسائل من {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "تمييز المجلد كمقروء",
@@ -3757,7 +3796,13 @@
     "suggestions_people": "الأشخاص",
     "suggestions_from": "البحث في البريد من {address}",
     "suggestions_to": "البحث في البريد إلى {address}",
-    "suggestions_remove_recent": "إزالة من عمليات البحث الأخيرة"
+    "suggestions_remove_recent": "إزالة من عمليات البحث الأخيرة",
+    "has_words": "يحتوي على الكلمات",
+    "size": "الحجم",
+    "date_within": "التاريخ",
+    "search_in": "البحث في",
+    "has_attachment_check": "يحتوي على مرفق",
+    "search": "بحث"
   },
   "welcome": {
     "title": "مرحبًا بك في صندوق بريدك",

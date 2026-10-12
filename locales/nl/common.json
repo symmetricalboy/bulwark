@@ -159,7 +159,17 @@
     "unified_all_mail": "Alle e-mail",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "Taken"
+    "tasks": "Taken",
+    "labels": "Labels",
+    "create_label": "Nieuw label maken",
+    "mv_tasks": "Taken",
+    "mv_side_panel": "Zijpaneel",
+    "mv_open_full": "Openen in volledige weergave",
+    "mv_previous_day": "Vorige dag",
+    "mv_next_day": "Volgende dag",
+    "mv_add_another_account": "Nog een account toevoegen",
+    "mv_manage_account": "Account beheren",
+    "mv_storage_used": "{percent}% van {total} gebruikt"
   },
   "protocol_handlers": {
     "title": "Standaardapps",
@@ -614,7 +624,8 @@
       "copy": "Code {code} kopiëren",
       "copied": "Code gekopieerd",
       "copy_failed": "Kan de code niet kopiëren"
-    }
+    },
+    "mv_position": "{index} van {total}"
   },
   "email_composer": {
     "minimize": "Minimaliseren",
@@ -818,7 +829,8 @@
     "use_template": "Sjabloon",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Antwoord in een apart venster openen"
   },
   "confirm_dialog": {
     "confirm": "Bevestigen",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Ondersteuning voor rechts-naar-links bewerken",
         "description": "Voegt een richtingsknop toe aan de werkbalk van de editor waarmee alinea's links-naar-rechts of rechts-naar-links kunnen worden ingesteld"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Nog geen regels",
       "new_mail_only": "Alleen voor nieuwe berichten",
       "running": "\"{name}\" wordt uitgevoerd op {folder}…"
-    }
+    },
+    "find_emails_from": "E-mails van {name} zoeken"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Map markeren als gelezen",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Personen",
     "suggestions_from": "E-mails van {address} zoeken",
     "suggestions_to": "E-mails aan {address} zoeken",
-    "suggestions_remove_recent": "Verwijderen uit recente zoekopdrachten"
+    "suggestions_remove_recent": "Verwijderen uit recente zoekopdrachten",
+    "has_words": "Bevat de woorden",
+    "size": "Grootte",
+    "date_within": "Datum",
+    "search_in": "Zoeken in",
+    "has_attachment_check": "Met bijlage",
+    "search": "Zoeken"
   },
   "welcome": {
     "title": "Welkom bij uw mailbox",

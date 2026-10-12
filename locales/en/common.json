@@ -159,7 +159,17 @@
     "unified_all_mail": "All mail",
     "remove_account": "Remove account",
     "remove_account_confirm": "Remove {account} from this device? You can add it back later.",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "labels": "Labels",
+    "create_label": "Create new label",
+    "mv_tasks": "Tasks",
+    "mv_side_panel": "Side panel",
+    "mv_open_full": "Open in full view",
+    "mv_previous_day": "Previous day",
+    "mv_next_day": "Next day",
+    "mv_add_another_account": "Add another account",
+    "mv_manage_account": "Manage your account",
+    "mv_storage_used": "{percent}% of {total} used"
   },
   "protocol_handlers": {
     "title": "Default apps",
@@ -614,7 +624,8 @@
       "copy": "Copy code {code}",
       "copied": "Code copied",
       "copy_failed": "Could not copy the code"
-    }
+    },
+    "mv_position": "{index} of {total}"
   },
   "email_composer": {
     "minimize": "Minimize",
@@ -818,7 +829,8 @@
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive",
-    "use_template": "Template"
+    "use_template": "Template",
+    "pop_out": "Pop out reply"
   },
   "confirm_dialog": {
     "confirm": "Confirm",
@@ -1494,16 +1506,6 @@
         "label": "Disable Conversation Grouping",
         "description": "Show emails as individual messages instead of grouped by conversation"
       },
-      "conversation_grouping": {
-        "label": "Conversation Grouping",
-        "description": "Choose how related messages in a conversation are organized and displayed",
-        "separate": "Separate",
-        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
-        "nested": "Nested",
-        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
-        "combined": "Combined",
-        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
-      },
       "plain_text_mode": {
         "label": "Plain Text Only",
         "description": "Disable the rich text editor and send all emails as plain text only, including replies and forwards"
@@ -1670,6 +1672,16 @@
       "rtl_editing": {
         "label": "Right-to-left editing support",
         "description": "Adds a direction button to the composer toolbar so you can set paragraphs left-to-right or right-to-left"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -2681,7 +2693,8 @@
       "none": "No rules yet",
       "new_mail_only": "Only for new messages",
       "running": "Running \"{name}\" on {folder}…"
-    }
+    },
+    "find_emails_from": "Find emails from {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Mark folder as read",
@@ -3783,7 +3796,13 @@
     "suggestions_people": "People",
     "suggestions_from": "Search mail from {address}",
     "suggestions_to": "Search mail to {address}",
-    "suggestions_remove_recent": "Remove from recent searches"
+    "suggestions_remove_recent": "Remove from recent searches",
+    "has_words": "Has the words",
+    "size": "Size",
+    "date_within": "Date",
+    "search_in": "Search in",
+    "has_attachment_check": "Has attachment",
+    "search": "Search"
   },
   "welcome": {
     "title": "Welcome to your mailbox",

@@ -159,7 +159,17 @@
     "unified_all_mail": "Veškerá pošta",
     "remove_account": "Odebrat účet",
     "remove_account_confirm": "Odebrat účet {account} z tohoto zařízení? Později ho můžete znovu přidat.",
-    "tasks": "Úkoly"
+    "tasks": "Úkoly",
+    "labels": "Štítky",
+    "create_label": "Vytvořit nový štítek",
+    "mv_tasks": "Úkoly",
+    "mv_side_panel": "Boční panel",
+    "mv_open_full": "Otevřít v plném zobrazení",
+    "mv_previous_day": "Předchozí den",
+    "mv_next_day": "Následující den",
+    "mv_add_another_account": "Přidat další účet",
+    "mv_manage_account": "Spravovat účet",
+    "mv_storage_used": "Využito {percent} % z {total}"
   },
   "protocol_handlers": {
     "title": "Výchozí aplikace",
@@ -614,7 +624,8 @@
       "copy": "Kopírovat kód {code}",
       "copied": "Kód zkopírován",
       "copy_failed": "Kód se nepodařilo zkopírovat"
-    }
+    },
+    "mv_position": "{index} z {total}"
   },
   "email_composer": {
     "minimize": "Minimalizovat",
@@ -818,7 +829,8 @@
     "use_template": "Šablona",
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
-    "download_error": "Failed to download file from Google Drive"
+    "download_error": "Failed to download file from Google Drive",
+    "pop_out": "Otevřít odpověď v okně"
   },
   "confirm_dialog": {
     "confirm": "Potvrdit",
@@ -1657,6 +1669,16 @@
       "rtl_editing": {
         "label": "Podpora psaní zprava doleva",
         "description": "Přidá do panelu nástrojů editoru tlačítko směru textu, kterým lze odstavce nastavit zleva doprava nebo zprava doleva"
+      },
+      "conversation_grouping": {
+        "label": "Conversation Grouping",
+        "description": "Choose how related messages in a conversation are organized and displayed",
+        "separate": "Separate",
+        "separate_desc": "Show emails as individual messages instead of grouped by conversation",
+        "nested": "Nested",
+        "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
+        "combined": "Combined",
+        "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
       }
     },
     "composer": {
@@ -1805,7 +1827,23 @@
           "drive": "Drive",
           "drive_desc": "Browse, view, and attach Google Drive files",
           "contacts": "Contacts",
-          "contacts_desc": "Sync Google Contacts into your address book"
+          "contacts_desc": "Sync Google Contacts into your address book",
+          "gmail": "Gmail",
+          "gmail_desc": "Display your Gmail messages in the Mail app"
+        },
+        "onboarding": {
+          "title": "Set Up Google Account",
+          "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
+          "save_and_continue": "Save & Continue",
+          "skip": "Keep Disabled"
+        },
+        "mode": {
+          "dont_use": "Don't Use",
+          "dont_use_desc": "Do not pull in any data for this app",
+          "show_separately": "Show Separately",
+          "show_separately_desc": "Display in a separate section with this account's email",
+          "synchronize": "Synchronize",
+          "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
         }
       },
       "account_age_label": "Account Age",
@@ -2655,7 +2693,8 @@
       "none": "Zatím žádná pravidla",
       "new_mail_only": "Pouze pro nové zprávy",
       "running": "Spouštění „{name}“ ve složce {folder}…"
-    }
+    },
+    "find_emails_from": "Najít e-maily od {name}"
   },
   "mailbox_context_menu": {
     "mark_folder_read": "Označit složku jako přečtenou",
@@ -3714,7 +3753,13 @@
     "suggestions_people": "Lidé",
     "suggestions_from": "Hledat e-maily od {address}",
     "suggestions_to": "Hledat e-maily pro {address}",
-    "suggestions_remove_recent": "Odebrat z nedávných hledání"
+    "suggestions_remove_recent": "Odebrat z nedávných hledání",
+    "has_words": "Obsahuje slova",
+    "size": "Velikost",
+    "date_within": "Datum",
+    "search_in": "Hledat v",
+    "has_attachment_check": "Má přílohu",
+    "search": "Hledat"
   },
   "welcome": {
     "title": "Vítejte ve své poštovní schránce",

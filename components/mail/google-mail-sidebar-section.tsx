@@ -31,7 +31,7 @@ export function GoogleMailSidebarSection({
   onMailboxSelect,
   isCollapsed = false,
 }: GoogleMailSidebarSectionProps) {
-  const t = useTranslations('mail');
+  const tCommon = useTranslations('common');
   const [collapsedAccounts, setCollapsedAccounts] = useState<Record<string, boolean>>({});
 
   if (accountsData.length === 0) return null;
@@ -102,7 +102,7 @@ export function GoogleMailSidebarSection({
               <div className="mt-0.5 space-y-0.5">
                 {mailboxes.length === 0 ? (
                   <div className="px-6 py-1 text-xs text-muted-foreground italic">
-                    {!isCollapsed && (t('loading_mailboxes') || 'Loading folders...')}
+                    {!isCollapsed && tCommon('loading')}
                   </div>
                 ) : (
                   mailboxes.map((mb) => {
