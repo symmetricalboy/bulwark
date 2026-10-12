@@ -35,6 +35,8 @@ import {
   Bug,
   SwatchBook,
   Download,
+  ExternalLink,
+  Mail,
   X,
   type AppIcon,
 } from '@/components/icons';
@@ -110,7 +112,14 @@ import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 
 type Tab = SettingsSearchTab;
 
-type TabGroup = 'general' | 'appearance' | 'mail' | 'privacy' | 'apps' | 'advanced';
+export type SettingsHubId =
+  | 'account'
+  | 'appearance'
+  | 'mail'
+  | 'organization'
+  | 'apps'
+  | 'notifications'
+  | 'advanced';
 
 // A plugin that exposes a `settings-section` slot gets its own first-class
 // Settings entry, keyed `plugin:<id>`, so its UI (e.g. S/MIME key import) is
@@ -118,11 +127,18 @@ type TabGroup = 'general' | 'appearance' | 'mail' | 'privacy' | 'apps' | 'advanc
 type PluginTabId = `plugin:${string}`;
 type SettingsTabId = Tab | PluginTabId;
 
-interface TabDef {
+export interface SubTabDef {
   id: SettingsTabId;
   label: string;
   icon: AppIcon;
-  group: TabGroup;
+}
+
+export interface HubDef {
+  id: SettingsHubId;
+  label: string;
+  subtitle: string;
+  icon: AppIcon;
+  subTabs: SubTabDef[];
 }
 
 const tabIcons: Record<Tab, AppIcon> = {
@@ -154,12 +170,53 @@ const tabIcons: Record<Tab, AppIcon> = {
   debug: Bug,
 };
 
-const tabGroupOrder: TabGroup[] = ['general', 'appearance', 'mail', 'privacy', 'apps', 'advanced'];
+const TAB_TO_HUB: Record<Tab, SettingsHubId> = {
+  account: 'account',
+  security: 'account',
+  byomc: 'account',
+  language: 'account',
+
+  appearance: 'appearance',
+  layout: 'appearance',
+  themes: 'appearance',
+
+  reading: 'mail',
+  composing: 'mail',
+  identities: 'mail',
+  vacation: 'mail',
+  downloads: 'mail',
+
+  keywords: 'organization',
+  folders: 'organization',
+  filters: 'organization',
+  templates: 'organization',
+
+  calendar: 'apps',
+  contacts: 'apps',
+  files: 'apps',
+  sidebar_apps: 'apps',
+
+  notifications: 'notifications',
+
+  about_data: 'advanced',
+  content_senders: 'advanced',
+  protocol_handlers: 'advanced',
+  plugins: 'advanced',
+  debug: 'advanced',
+};
+
+export function getHubForTab(tabId: SettingsTabId): SettingsHubId {
+  if (tabId.startsWith('plugin:')) return 'apps';
+  return TAB_TO_HUB[tabId as Tab] ?? 'appearance';
+}
 
 // Map legacy tab IDs to current ones; runs once on read of localStorage.
 const LEGACY_TAB_MAP: Record<string, Tab> = {
   email: 'reading',
   advanced: 'about_data',
+  mail: 'reading',
+  organization: 'keywords',
+  apps: 'calendar',
 };
 
 function readPersistedTab(): SettingsTabId {
@@ -549,96 +606,191 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     }
   }, [activeTab]);
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
   const supportsVacation = client?.supportsVacationResponse() ?? false;
   const supportsCalendar = client?.supportsCalendars() ?? false;
   const supportsSieve = client?.supportsSieve() ?? false;
   const supportsFiles = client?.supportsFiles() ?? false;
   const supportsContacts = client?.supportsContacts() ?? false;
 
-  const tabs: TabDef[] = [
-    // General
-    { id: 'account', label: t('tabs.account'), icon: tabIcons.account, group: 'general' },
-    { id: 'language', label: t('tabs.language'), icon: tabIcons.language, group: 'general' },
-    { id: 'notifications', label: t('tabs.notifications'), icon: tabIcons.notifications, group: 'general' },
-    // The handler URLs point at /protocol/*, server routes the static Lite export does not ship.
-    ...(IS_LITE ? [] : [{ id: 'protocol_handlers' as Tab, label: t('tabs.protocol_handlers'), icon: tabIcons.protocol_handlers, group: 'general' as TabGroup }]),
-
-    // Appearance
-    { id: 'appearance', label: t('tabs.appearance'), icon: tabIcons.appearance, group: 'appearance' },
-    { id: 'layout', label: t('tabs.layout'), icon: tabIcons.layout, group: 'appearance' },
-    ...(isFeatureEnabled('themesEnabled') ? [{ id: 'themes' as Tab, label: t('tabs.themes'), icon: tabIcons.themes, group: 'appearance' as TabGroup }] : []),
-
-    // Mail
-    { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading, group: 'mail' },
-    { id: 'composing', label: t('tabs.composing'), icon: tabIcons.composing, group: 'mail' },
-    { id: 'downloads', label: t('tabs.downloads'), icon: tabIcons.downloads, group: 'mail' },
-    { id: 'identities', label: t('tabs.identities'), icon: tabIcons.identities, group: 'mail' },
-    ...(supportsVacation ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation, group: 'mail' as TabGroup }] : []),
-    ...(supportsSieve ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters, group: 'mail' as TabGroup }] : []),
-    ...(isFeatureEnabled('templatesEnabled') ? [{ id: 'templates' as Tab, label: t('tabs.templates'), icon: tabIcons.templates, group: 'mail' as TabGroup }] : []),
-    { id: 'folders', label: t('tabs.folders'), icon: tabIcons.folders, group: 'mail' },
-    ...(isFeatureEnabled('customKeywordsEnabled') ? [{ id: 'keywords' as Tab, label: t('tabs.keywords'), icon: tabIcons.keywords, group: 'mail' as TabGroup }] : []),
-    ...(byomcEnabled ? [{ id: 'byomc' as Tab, label: t('tabs.byomc'), icon: tabIcons.byomc, group: 'mail' as TabGroup }] : []),
-
-    // Privacy & Security
-    ...(stalwartFeaturesEnabled && passwordSecurityEnabled ? [{ id: 'security' as Tab, label: t('tabs.security'), icon: tabIcons.security, group: 'privacy' as TabGroup }] : []),
-    { id: 'content_senders', label: t('tabs.content_senders'), icon: tabIcons.content_senders, group: 'privacy' },
-
-    // Apps
-    ...(calendarConfigEnabled && supportsCalendar && isFeatureEnabled('calendarEnabled') ? [{ id: 'calendar' as Tab, label: t('tabs.calendar'), icon: tabIcons.calendar, group: 'apps' as TabGroup }] : []),
-    ...(contactsConfigEnabled && supportsContacts && isFeatureEnabled('contactsEnabled') ? [{ id: 'contacts' as Tab, label: t('tabs.contacts'), icon: tabIcons.contacts, group: 'apps' as TabGroup }] : []),
-    ...(filesConfigEnabled && supportsFiles && isFeatureEnabled('filesEnabled') ? [{ id: 'files' as Tab, label: t('tabs.files'), icon: tabIcons.files, group: 'apps' as TabGroup }] : []),
-    ...(appsConfigEnabled && isFeatureEnabled('sidebarAppsEnabled') ? [{ id: 'sidebar_apps' as Tab, label: t('tabs.sidebar_apps'), icon: tabIcons.sidebar_apps, group: 'apps' as TabGroup }] : []),
-    // Plugin-contributed settings pages: one entry per active plugin that
-    // offers a `settings-section` slot (e.g. S/MIME key & certificate manager).
-    ...pluginSettingsOffers.map((offer): TabDef => ({
-      id: `plugin:${offer.pluginId}` as PluginTabId,
-      label: getActivePlugin(offer.pluginId)?.plugin.name ?? offer.pluginId,
-      icon: Puzzle,
-      group: 'apps',
-    })),
-
-    // Advanced
-    { id: 'about_data', label: t('tabs.about_data'), icon: tabIcons.about_data, group: 'advanced' },
-    ...(isFeatureEnabled('pluginsEnabled') ? [{ id: 'plugins' as Tab, label: 'Plugins', icon: tabIcons.plugins, group: 'advanced' as TabGroup }] : []),
-    ...(isFeatureEnabled('debugModeEnabled') ? [{ id: 'debug' as Tab, label: t('tabs.debug'), icon: tabIcons.debug, group: 'advanced' as TabGroup }] : []),
-  ];
+  const hubs: HubDef[] = useMemo(() => [
+    {
+      id: 'account',
+      label: t('hubs.account'),
+      subtitle: t('hubs.account_subtitle'),
+      icon: User,
+      subTabs: [
+        { id: 'account', label: t('tabs.account'), icon: tabIcons.account },
+        ...(stalwartFeaturesEnabled && passwordSecurityEnabled
+          ? [{ id: 'security' as Tab, label: t('tabs.security'), icon: tabIcons.security }]
+          : []),
+        ...(byomcEnabled ? [{ id: 'byomc' as Tab, label: t('tabs.byomc'), icon: tabIcons.byomc }] : []),
+        { id: 'language', label: t('tabs.language'), icon: tabIcons.language },
+      ],
+    },
+    {
+      id: 'appearance',
+      label: t('hubs.appearance'),
+      subtitle: t('hubs.appearance_subtitle'),
+      icon: Palette,
+      subTabs: [
+        { id: 'appearance', label: t('tabs.appearance'), icon: tabIcons.appearance },
+        { id: 'layout', label: t('tabs.layout'), icon: tabIcons.layout },
+        ...(isFeatureEnabled('themesEnabled')
+          ? [{ id: 'themes' as Tab, label: t('tabs.themes'), icon: tabIcons.themes }]
+          : []),
+      ],
+    },
+    {
+      id: 'mail',
+      label: t('hubs.mail'),
+      subtitle: t('hubs.mail_subtitle'),
+      icon: Mail,
+      subTabs: [
+        { id: 'reading', label: t('tabs.reading'), icon: tabIcons.reading },
+        { id: 'composing', label: t('tabs.composing'), icon: tabIcons.composing },
+        { id: 'identities', label: t('tabs.identities'), icon: tabIcons.identities },
+        ...(supportsVacation
+          ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation }]
+          : []),
+        { id: 'downloads', label: t('tabs.downloads'), icon: tabIcons.downloads },
+      ],
+    },
+    {
+      id: 'organization',
+      label: t('hubs.organization'),
+      subtitle: t('hubs.organization_subtitle'),
+      icon: Tags,
+      subTabs: [
+        ...(isFeatureEnabled('customKeywordsEnabled')
+          ? [{ id: 'keywords' as Tab, label: t('tabs.keywords'), icon: tabIcons.keywords }]
+          : []),
+        { id: 'folders', label: t('tabs.folders'), icon: tabIcons.folders },
+        ...(supportsSieve
+          ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters }]
+          : []),
+        ...(isFeatureEnabled('templatesEnabled')
+          ? [{ id: 'templates' as Tab, label: t('tabs.templates'), icon: tabIcons.templates }]
+          : []),
+      ],
+    },
+    {
+      id: 'apps',
+      label: t('hubs.apps'),
+      subtitle: t('hubs.apps_subtitle'),
+      icon: LayoutGrid,
+      subTabs: [
+        ...(calendarConfigEnabled && supportsCalendar && isFeatureEnabled('calendarEnabled')
+          ? [{ id: 'calendar' as Tab, label: t('tabs.calendar'), icon: tabIcons.calendar }]
+          : []),
+        ...(contactsConfigEnabled && supportsContacts && isFeatureEnabled('contactsEnabled')
+          ? [{ id: 'contacts' as Tab, label: t('tabs.contacts'), icon: tabIcons.contacts }]
+          : []),
+        ...(filesConfigEnabled && supportsFiles && isFeatureEnabled('filesEnabled')
+          ? [{ id: 'files' as Tab, label: t('tabs.files'), icon: tabIcons.files }]
+          : []),
+        ...(appsConfigEnabled && isFeatureEnabled('sidebarAppsEnabled')
+          ? [{ id: 'sidebar_apps' as Tab, label: t('tabs.sidebar_apps'), icon: tabIcons.sidebar_apps }]
+          : []),
+        ...pluginSettingsOffers.map((offer): SubTabDef => ({
+          id: `plugin:${offer.pluginId}` as PluginTabId,
+          label: getActivePlugin(offer.pluginId)?.plugin.name ?? offer.pluginId,
+          icon: Puzzle,
+        })),
+      ],
+    },
+    {
+      id: 'notifications',
+      label: t('hubs.notifications'),
+      subtitle: t('hubs.notifications_subtitle'),
+      icon: Bell,
+      subTabs: [
+        { id: 'notifications', label: t('tabs.notifications'), icon: tabIcons.notifications },
+      ],
+    },
+    {
+      id: 'advanced',
+      label: t('hubs.advanced'),
+      subtitle: t('hubs.advanced_subtitle'),
+      icon: SettingsIcon,
+      subTabs: [
+        { id: 'about_data', label: t('tabs.about_data'), icon: tabIcons.about_data },
+        { id: 'content_senders', label: t('tabs.content_senders'), icon: tabIcons.content_senders },
+        ...(IS_LITE
+          ? []
+          : [{ id: 'protocol_handlers' as Tab, label: t('tabs.protocol_handlers'), icon: tabIcons.protocol_handlers }]),
+        ...(isFeatureEnabled('pluginsEnabled')
+          ? [{ id: 'plugins' as Tab, label: 'Plugins', icon: tabIcons.plugins }]
+          : []),
+        ...(isFeatureEnabled('debugModeEnabled')
+          ? [{ id: 'debug' as Tab, label: t('tabs.debug'), icon: tabIcons.debug }]
+          : []),
+      ],
+    },
+  ], [
+    t,
+    stalwartFeaturesEnabled,
+    passwordSecurityEnabled,
+    byomcEnabled,
+    isFeatureEnabled,
+    supportsVacation,
+    supportsSieve,
+    calendarConfigEnabled,
+    supportsCalendar,
+    contactsConfigEnabled,
+    supportsContacts,
+    filesConfigEnabled,
+    supportsFiles,
+    appsConfigEnabled,
+    pluginSettingsOffers,
+  ]);
 
   // In scoped (shared-account) mode, restrict to the account-relevant tabs the
   // account actually advertises. Folders is intentionally excluded (mailbox CRUD
   // is hardwired to the active account). Gated on both the per-account
   // capability and the session-level support/feature flags.
-  const scopedTabIds: Tab[] = managedAccount
-    ? ([
-        managedAccount.capabilities.sieve && supportsSieve ? 'filters' : null,
-        managedAccount.capabilities.mail && supportsVacation ? 'vacation' : null,
-        managedAccount.capabilities.calendars && calendarConfigEnabled && supportsCalendar && isFeatureEnabled('calendarEnabled') ? 'calendar' : null,
-        managedAccount.capabilities.contacts && contactsConfigEnabled && supportsContacts && isFeatureEnabled('contactsEnabled') ? 'contacts' : null,
-      ].filter(Boolean) as Tab[])
-    : [];
-  const visibleTabs = managedAccountId
-    ? tabs.filter((tab) => scopedTabIds.includes(tab.id as Tab))
-    : tabs;
+  const scopedTabIds: Tab[] = useMemo(() => {
+    if (!managedAccount) return [];
+    return [
+      managedAccount.capabilities.sieve && supportsSieve ? 'filters' : null,
+      managedAccount.capabilities.mail && supportsVacation ? 'vacation' : null,
+      managedAccount.capabilities.calendars && calendarConfigEnabled && supportsCalendar && isFeatureEnabled('calendarEnabled') ? 'calendar' : null,
+      managedAccount.capabilities.contacts && contactsConfigEnabled && supportsContacts && isFeatureEnabled('contactsEnabled') ? 'contacts' : null,
+    ].filter(Boolean) as Tab[];
+  }, [
+    managedAccount,
+    supportsSieve,
+    supportsVacation,
+    calendarConfigEnabled,
+    supportsCalendar,
+    isFeatureEnabled,
+    contactsConfigEnabled,
+    supportsContacts,
+  ]);
 
-  // Group tabs by category
-  const groupedTabs = tabGroupOrder
-    .map((group) => ({
-      group,
-      label: t(`tab_groups.${group}`),
-      items: visibleTabs.filter((tab) => tab.group === group),
-    }))
-    .filter((g) => g.items.length > 0);
+  const visibleHubs = useMemo(() => {
+    return hubs
+      .map((hub) => ({
+        ...hub,
+        subTabs: managedAccountId
+          ? hub.subTabs.filter((sub) => scopedTabIds.includes(sub.id as Tab))
+          : hub.subTabs,
+      }))
+      .filter((hub) => hub.subTabs.length > 0);
+  }, [hubs, managedAccountId, scopedTabIds]);
+
+  const allVisibleSubTabs = useMemo(() => {
+    return visibleHubs.flatMap((h) => h.subTabs);
+  }, [visibleHubs]);
 
   const trimmedQuery = searchQuery.trim().toLowerCase();
-  const matchesQuery = (tab: TabDef) => {
-    if (!trimmedQuery) return true;
-    if (tab.label.toLowerCase().includes(trimmedQuery)) return true;
-    return tabSearchHaystacks[tab.id as Tab]?.includes(trimmedQuery) ?? false;
-  };
+
+  const searchMatchingSubTabs = useMemo(() => {
+    if (!trimmedQuery) return [];
+    return allVisibleSubTabs.filter((sub) => {
+      if (sub.label.toLowerCase().includes(trimmedQuery)) return true;
+      return tabSearchHaystacks[sub.id as Tab]?.includes(trimmedQuery) ?? false;
+    });
+  }, [trimmedQuery, allVisibleSubTabs, tabSearchHaystacks]);
 
   const subResultsForTab = (tabId: SettingsTabId): SubResult[] => {
     if (!trimmedQuery) return [];
@@ -651,19 +803,13 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       .slice(0, 6);
   };
 
-  const filteredGroupedTabs = trimmedQuery
-    ? groupedTabs
-        .map((g) => ({ ...g, items: g.items.filter(matchesQuery) }))
-        .filter((g) => g.items.length > 0)
-    : groupedTabs;
-
-  // If active tab is not in the visible list (e.g., feature disabled, or scoped
-  // mode hides it), fall back. In scoped mode fall back to the first scoped tab;
-  // otherwise the usual 'appearance' default.
-  const isActiveVisible = visibleTabs.some((tab) => tab.id === activeTab);
-  const effectiveActiveTab: SettingsTabId = isActiveVisible
+  const isTabVisible = allVisibleSubTabs.some((sub) => sub.id === activeTab);
+  const effectiveActiveTab: SettingsTabId = isTabVisible
     ? activeTab
-    : (managedAccountId ? (visibleTabs[0]?.id ?? 'appearance') : 'appearance');
+    : (allVisibleSubTabs[0]?.id ?? 'appearance');
+
+  const activeHubId = getHubForTab(effectiveActiveTab);
+  const currentHub = visibleHubs.find((h) => h.id === activeHubId) ?? visibleHubs[0];
 
   const handleTabSelect = (tabId: SettingsTabId) => {
     setActiveTab(tabId);
@@ -673,74 +819,159 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     }
   };
 
+  const handleHubSelect = (hub: HubDef) => {
+    const isCurrentInHub = hub.subTabs.some((s) => s.id === effectiveActiveTab);
+    const targetTabId = isCurrentInHub ? effectiveActiveTab : (hub.subTabs[0]?.id ?? 'appearance');
+    handleTabSelect(targetTabId);
+  };
+
   const handleSubResultSelect = (tabId: SettingsTabId, sub: SubResult) => {
     handleTabSelect(tabId);
     setPendingHighlight({ tab: tabId, label: sub.label, pluginId: sub.pluginId });
   };
 
-  const activeTabLabel = visibleTabs.find((tab) => tab.id === effectiveActiveTab)?.label ?? '';
+  const activeTabLabel = allVisibleSubTabs.find((tab) => tab.id === effectiveActiveTab)?.label ?? '';
 
-  const renderTabContent = () => (
-    <>
-      {managedAccountId && managedAccount && (
-        <button
-          type="button"
-          onClick={() => {
-            clearManagedAccount();
-            handleTabSelect('account');
-          }}
-          className="flex items-center gap-2 w-full mb-4 px-3 py-2 rounded-md border border-border bg-muted/40 hover:bg-muted text-start transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <span className="text-sm text-muted-foreground">{t('scoped.back')}</span>
-          <span className="ms-auto text-sm font-medium truncate">
-            {t('scoped.managing', { name: managedAccount.name })}
-          </span>
-        </button>
-      )}
-      {effectiveActiveTab === 'account' && <AccountSettings />}
-      {effectiveActiveTab === 'language' && <LanguageSettings />}
-      {effectiveActiveTab === 'notifications' && <NotificationSettings />}
-      {effectiveActiveTab === 'appearance' && <AppearanceSettings />}
-      {effectiveActiveTab === 'layout' && <LayoutSettings />}
-      {effectiveActiveTab === 'reading' && <ReadingSettings />}
-      {effectiveActiveTab === 'composing' && <ComposingSettings />}
-      {effectiveActiveTab === 'downloads' && <DownloadsSettings />}
-      {effectiveActiveTab === 'identities' && <IdentitySettings />}
-      {effectiveActiveTab === 'vacation' && <VacationSettings />}
-      {effectiveActiveTab === 'filters' && <FilterSettings />}
-      {effectiveActiveTab === 'templates' && <TemplateSettings />}
-      {effectiveActiveTab === 'folders' && <FolderSettings />}
-      {effectiveActiveTab === 'keywords' && <KeywordSettings />}
-      {effectiveActiveTab === 'byomc' && <ByomcSettings />}
-      {effectiveActiveTab === 'security' && <AccountSecuritySettings />}
-      {effectiveActiveTab === 'content_senders' && <ContentSendersSettings />}
-      {effectiveActiveTab === 'calendar' && (
-        managedAccountId
-          ? <CalendarManagementSettings />
-          : <><CalendarSettings /><div className="mt-8"><CalendarManagementSettings /></div></>
-      )}
-      {effectiveActiveTab === 'contacts' && (
-        managedAccountId
-          ? <AddressBookManagementSettings />
-          : <><ContactsSettings /><div className="mt-8"><AddressBookManagementSettings /></div></>
-      )}
-      {effectiveActiveTab === 'files' && <FilesSettingsComponent />}
-      {effectiveActiveTab === 'protocol_handlers' && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
-      {effectiveActiveTab === 'sidebar_apps' && <SidebarAppsSettings />}
-      {effectiveActiveTab === 'about_data' && <AboutDataSettings />}
-      {effectiveActiveTab === 'themes' && <ThemesSettings />}
-      {effectiveActiveTab === 'plugins' && <PluginsSettings />}
-      {effectiveActiveTab === 'debug' && <DebugSettings />}
-      {effectiveActiveTab.startsWith('plugin:') && (
-        <PluginIframeSlot
-          key={effectiveActiveTab}
-          pluginId={effectiveActiveTab.slice('plugin:'.length)}
-          slot="settings-section"
-        />
-      )}
-    </>
-  );
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const renderTabContent = () => {
+    const CurrentHubIcon = currentHub?.icon ?? SettingsIcon;
+
+    return (
+      <>
+        {managedAccountId && managedAccount && (
+          <button
+            type="button"
+            onClick={() => {
+              clearManagedAccount();
+              handleTabSelect('account');
+            }}
+            className="flex items-center gap-2 w-full mb-4 px-3 py-2 rounded-md border border-border bg-muted/40 hover:bg-muted text-start transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-sm text-muted-foreground">{t('scoped.back')}</span>
+            <span className="ms-auto text-sm font-medium truncate">
+              {t('scoped.managing', { name: managedAccount.name })}
+            </span>
+          </button>
+        )}
+
+        {/* Hub Header */}
+        <div className="mb-5 pb-1">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-sm border border-primary/15">
+              <CurrentHubIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">{currentHub?.label}</h1>
+              <p className="text-xs text-muted-foreground">{currentHub?.subtitle}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Sub-tabs horizontal segmented bar */}
+        {currentHub && currentHub.subTabs.length > 1 && (
+          <div className="mb-6 pb-2 border-b border-border/50">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+              {currentHub.subTabs.map((subTab) => {
+                const SubIcon = subTab.icon;
+                const isActive = effectiveActiveTab === subTab.id;
+                return (
+                  <button
+                    key={subTab.id}
+                    data-testid={`settings-tab-${subTab.id}`}
+                    type="button"
+                    onClick={() => handleTabSelect(subTab.id)}
+                    className={cn(
+                      "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shrink-0",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                    )}
+                  >
+                    <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{subTab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Content Container */}
+        <div className="transition-opacity duration-200 animate-in fade-in-50">
+          {(effectiveActiveTab === 'about_data' || effectiveActiveTab === 'debug') && (
+            <div className="mb-6 p-4 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/10 via-background to-muted/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-sm text-foreground">{t('comail_build.banner_title')}</h3>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary uppercase tracking-wider">
+                    {t('comail_build.badge')}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                  {t('comail_build.banner_description')}
+                </p>
+              </div>
+              <a
+                href="https://build.comail.at"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 shrink-0 shadow-sm"
+              >
+                <span>{t('comail_build.button')}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          )}
+
+          {effectiveActiveTab === 'account' && <AccountSettings />}
+          {effectiveActiveTab === 'language' && <LanguageSettings />}
+          {effectiveActiveTab === 'notifications' && <NotificationSettings />}
+          {effectiveActiveTab === 'appearance' && <AppearanceSettings />}
+          {effectiveActiveTab === 'layout' && <LayoutSettings />}
+          {effectiveActiveTab === 'reading' && <ReadingSettings />}
+          {effectiveActiveTab === 'composing' && <ComposingSettings />}
+          {effectiveActiveTab === 'downloads' && <DownloadsSettings />}
+          {effectiveActiveTab === 'identities' && <IdentitySettings />}
+          {effectiveActiveTab === 'vacation' && <VacationSettings />}
+          {effectiveActiveTab === 'filters' && <FilterSettings />}
+          {effectiveActiveTab === 'templates' && <TemplateSettings />}
+          {effectiveActiveTab === 'folders' && <FolderSettings />}
+          {effectiveActiveTab === 'keywords' && <KeywordSettings />}
+          {effectiveActiveTab === 'byomc' && <ByomcSettings />}
+          {effectiveActiveTab === 'security' && <AccountSecuritySettings />}
+          {effectiveActiveTab === 'content_senders' && <ContentSendersSettings />}
+          {effectiveActiveTab === 'calendar' && (
+            managedAccountId
+              ? <CalendarManagementSettings />
+              : <><CalendarSettings /><div className="mt-8"><CalendarManagementSettings /></div></>
+          )}
+          {effectiveActiveTab === 'contacts' && (
+            managedAccountId
+              ? <AddressBookManagementSettings />
+              : <><ContactsSettings /><div className="mt-8"><AddressBookManagementSettings /></div></>
+          )}
+          {effectiveActiveTab === 'files' && <FilesSettingsComponent />}
+          {effectiveActiveTab === 'protocol_handlers' && <ProtocolHandlerSettings supportsCalendar={supportsCalendar} />}
+          {effectiveActiveTab === 'sidebar_apps' && <SidebarAppsSettings />}
+          {effectiveActiveTab === 'about_data' && <AboutDataSettings />}
+          {effectiveActiveTab === 'themes' && <ThemesSettings />}
+          {effectiveActiveTab === 'plugins' && <PluginsSettings />}
+          {effectiveActiveTab === 'debug' && <DebugSettings />}
+          {effectiveActiveTab.startsWith('plugin:') && (
+            <PluginIframeSlot
+              key={effectiveActiveTab}
+              pluginId={effectiveActiveTab.slice('plugin:'.length)}
+              slot="settings-section"
+            />
+          )}
+        </div>
+      </>
+    );
+  };
 
   // Mobile layout
   if (!isDesktop) {
@@ -821,49 +1052,110 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
             </div>
           </div>
           <div className="py-2">
-            {filteredGroupedTabs.length === 0 && (
-              <div className="px-5 py-6 text-sm text-muted-foreground text-center">
-                {t('search_no_results')}
-              </div>
-            )}
-            {filteredGroupedTabs.map((group, groupIndex) => (
-              <div key={group.group}>
-                {groupIndex > 0 && <div className="mx-5 my-2 border-t border-border" />}
-                <div className="px-5 pt-3 pb-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {group.label}
-                  </span>
-                </div>
-                {group.items.map((tab) => {
-                  const Icon = tab.icon;
-                  const subs = subResultsForTab(tab.id);
-                  return (
-                    <div key={tab.id}>
-                      <button
-                        data-testid={`settings-tab-${tab.id}`}
-                        onClick={() => handleTabSelect(tab.id)}
-                        className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-foreground hover:bg-muted transition-colors duration-150"
-                      >
-                        <span className="flex items-center gap-3">
-                          <Icon className="w-4 h-4 text-muted-foreground" />
-                          {tab.label}
-                        </span>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                      {subs.map((sub) => (
+            {trimmedQuery ? (
+              <div>
+                {searchMatchingSubTabs.length === 0 ? (
+                  <div className="px-5 py-6 text-sm text-muted-foreground text-center">
+                    {t('search_no_results')}
+                  </div>
+                ) : (
+                  searchMatchingSubTabs.map((subTab) => {
+                    const Icon = subTab.icon;
+                    const subs = subResultsForTab(subTab.id);
+                    return (
+                      <div key={subTab.id}>
                         <button
-                          key={`${tab.id}:${sub.label}`}
-                          onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full flex items-center ps-12 pe-5 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
+                          data-testid={`settings-tab-${subTab.id}`}
+                          onClick={() => handleTabSelect(subTab.id)}
+                          className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-foreground hover:bg-muted transition-colors duration-150"
                         >
-                          <span className="truncate">{sub.label}</span>
+                          <span className="flex items-center gap-3">
+                            <Icon className="w-4 h-4 text-muted-foreground" />
+                            {subTab.label}
+                          </span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </button>
-                      ))}
-                    </div>
+                        {subs.map((sub) => (
+                          <button
+                            key={`${subTab.id}:${sub.label}`}
+                            onClick={() => handleSubResultSelect(subTab.id, sub)}
+                            className="w-full flex items-center ps-12 pe-5 py-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150 text-start"
+                          >
+                            <span className="truncate">{sub.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1.5 px-3">
+                {visibleHubs.map((hub) => {
+                  const HubIcon = hub.icon;
+                  const isActive = activeHubId === hub.id;
+                  return (
+                    <button
+                      key={hub.id}
+                      data-testid={`settings-hub-${hub.id}`}
+                      onClick={() => handleHubSelect(hub)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-3 rounded-xl transition-all duration-150 text-start group",
+                        isActive
+                          ? "bg-primary/10 border border-primary/25 text-foreground shadow-xs"
+                          : "hover:bg-muted text-foreground/90 border border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors shadow-2xs",
+                            isActive
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground group-hover:bg-background group-hover:text-foreground"
+                          )}
+                        >
+                          <HubIcon className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm truncate">{hub.label}</span>
+                            {hub.subTabs.length > 1 && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
+                                {hub.subTabs.length}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{hub.subtitle}</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 ms-2" />
+                    </button>
                   );
                 })}
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* Comail Build promotion card on mobile */}
+          <div className="px-4 py-2">
+            <a
+              href="https://build.comail.at"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-background to-muted/40 hover:border-primary/40 transition-all duration-150 group shadow-xs"
+            >
+              <div className="min-w-0 pr-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-xs text-foreground">{t('comail_build.title')}</span>
+                  <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-primary/20 text-primary uppercase">
+                    {t('comail_build.badge')}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate mt-0.5">{t('comail_build.subtitle')}</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+            </a>
           </div>
 
           <div className="border-t border-border px-5 py-3">
@@ -970,56 +1262,147 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
               )}
             </div>
           </div>
-          <div className="px-2 space-y-0.5">
-            {filteredGroupedTabs.length === 0 && (
-              <div className="px-3 py-6 text-sm text-muted-foreground text-center">
-                {t('search_no_results')}
+          <div className="px-2 space-y-1">
+            {trimmedQuery ? (
+              <div className="space-y-0.5">
+                {searchMatchingSubTabs.length === 0 ? (
+                  <div className="px-3 py-6 text-sm text-muted-foreground text-center">
+                    {t('search_no_results')}
+                  </div>
+                ) : (
+                  searchMatchingSubTabs.map((subTab) => {
+                    const Icon = subTab.icon;
+                    const subs = subResultsForTab(subTab.id);
+                    return (
+                      <div key={subTab.id}>
+                        <button
+                          data-testid={`settings-tab-${subTab.id}`}
+                          onClick={() => handleTabSelect(subTab.id)}
+                          className={cn(
+                            'w-full text-start px-3 py-2 rounded-lg text-sm transition-colors duration-150 flex items-center gap-2.5',
+                            effectiveActiveTab === subTab.id
+                              ? 'bg-accent text-accent-foreground font-medium'
+                              : 'hover:bg-muted text-foreground'
+                          )}
+                        >
+                          <Icon className={cn(
+                            'w-4 h-4 shrink-0',
+                            effectiveActiveTab === subTab.id ? 'text-accent-foreground' : 'text-muted-foreground'
+                          )} />
+                          <span className="truncate">{subTab.label}</span>
+                        </button>
+                        {subs.map((sub) => (
+                          <button
+                            key={`${subTab.id}:${sub.label}`}
+                            onClick={() => handleSubResultSelect(subTab.id, sub)}
+                            className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                          >
+                            <span className="truncate block">{sub.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })
+                )}
               </div>
-            )}
-            {filteredGroupedTabs.map((group, groupIndex) => (
-              <div key={group.group}>
-                {groupIndex > 0 && <div className="mx-1 my-2 border-t border-border" />}
-                <div className="px-3 pt-2.5 pb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {group.label}
-                  </span>
-                </div>
-                {group.items.map((tab) => {
-                  const Icon = tab.icon;
-                  const subs = subResultsForTab(tab.id);
+            ) : (
+              <div className="space-y-1">
+                {visibleHubs.map((hub) => {
+                  const HubIcon = hub.icon;
+                  const isCurrentHub = activeHubId === hub.id;
                   return (
-                    <div key={tab.id}>
+                    <div key={hub.id} className="space-y-0.5">
                       <button
-                        data-testid={`settings-tab-${tab.id}`}
-                        onClick={() => handleTabSelect(tab.id)}
+                        data-testid={`settings-hub-${hub.id}`}
+                        onClick={() => handleHubSelect(hub)}
                         className={cn(
-                          'w-full text-start px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
-                          effectiveActiveTab === tab.id
-                            ? 'bg-accent text-accent-foreground font-medium'
-                            : 'hover:bg-muted text-foreground'
+                          "w-full text-start px-2.5 py-2 rounded-xl text-sm transition-all duration-150 flex items-center justify-between group",
+                          isCurrentHub
+                            ? "bg-primary/10 text-primary font-semibold shadow-2xs"
+                            : "hover:bg-muted/80 text-foreground/85 hover:text-foreground"
                         )}
                       >
-                        <Icon className={cn(
-                          'w-4 h-4 shrink-0',
-                          effectiveActiveTab === tab.id ? 'text-accent-foreground' : 'text-muted-foreground'
-                        )} />
-                        {tab.label}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className={cn(
+                              "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                              isCurrentHub
+                                ? "bg-primary text-primary-foreground shadow-2xs"
+                                : "bg-muted text-muted-foreground group-hover:bg-background group-hover:text-foreground"
+                            )}
+                          >
+                            <HubIcon className="w-4 h-4" />
+                          </div>
+                          <span className="text-xs font-semibold tracking-tight truncate">{hub.label}</span>
+                        </div>
+                        {hub.subTabs.length > 1 && (
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0",
+                              isCurrentHub
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {hub.subTabs.length}
+                          </span>
+                        )}
                       </button>
-                      {subs.map((sub) => (
-                        <button
-                          key={`${tab.id}:${sub.label}`}
-                          onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
-                        >
-                          <span className="truncate block">{sub.label}</span>
-                        </button>
-                      ))}
+
+                      {isCurrentHub && (
+                        <div className="ms-4 ps-2.5 my-1 space-y-0.5 border-s border-border/70 animate-in fade-in-50 duration-150">
+                          {hub.subTabs.map((subTab) => {
+                            const SubIcon = subTab.icon;
+                            const isSubActive = effectiveActiveTab === subTab.id;
+                            return (
+                              <button
+                                key={subTab.id}
+                                data-testid={`settings-tab-${subTab.id}`}
+                                onClick={() => handleTabSelect(subTab.id)}
+                                className={cn(
+                                  "w-full text-start px-2 py-1.5 rounded-lg text-xs transition-colors duration-150 flex items-center gap-2",
+                                  isSubActive
+                                    ? "bg-accent text-accent-foreground font-semibold shadow-2xs"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                                )}
+                              >
+                                <SubIcon className={cn(
+                                  "w-3.5 h-3.5 shrink-0",
+                                  isSubActive ? "text-accent-foreground" : "text-muted-foreground"
+                                )} />
+                                <span className="truncate">{subTab.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            ))}
+            )}
           </div>
+        </div>
+
+        {/* Comail Build card footer */}
+        <div className="p-3 border-t border-border mt-auto shrink-0">
+          <a
+            href="https://build.comail.at"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between p-2.5 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-background to-muted/40 hover:border-primary/40 transition-all duration-150 group shadow-2xs"
+          >
+            <div className="min-w-0 pr-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-xs text-foreground truncate">{t('comail_build.title')}</span>
+                <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-primary/20 text-primary uppercase">
+                  {t('comail_build.badge')}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate mt-0.5">{t('comail_build.subtitle')}</p>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+          </a>
         </div>
       </div>
 
