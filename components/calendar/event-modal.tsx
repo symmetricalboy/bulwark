@@ -26,6 +26,8 @@ import {
 } from "@/lib/calendar-participants";
 import { canUserRsvp, getEventEditability, canCreateEventsIn } from "@/lib/calendar-editability";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
+import { VideoMeetingCreatorButtons } from "@/components/video-meeting/video-meeting-creator-buttons";
+import { VideoMeetingActionCard } from "@/components/video-meeting/video-meeting-action-card";
 import { useSettingsStore } from "@/stores/settings-store";
 import { generateUUID } from "@/lib/utils";
 import { buildDuplicateEventData } from "@/lib/calendar-duplicate";
@@ -992,14 +994,9 @@ export function EventModal({
               </div>
             )}
 
-            {/* Virtual Location */}
+            {/* Virtual Location / Video Meeting */}
             {virtualLoc && (
-              <div className="flex items-start gap-2.5">
-                <Video className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <a href={virtualLoc} target="_blank" rel="noreferrer" className="text-sm text-primary hover:underline truncate" title={virtualLoc}>
-                  {(() => { try { return new URL(virtualLoc).hostname; } catch { return virtualLoc; } })()}
-                </a>
-              </div>
+              <VideoMeetingActionCard url={virtualLoc} />
             )}
 
             {/* Participants */}
@@ -1163,6 +1160,12 @@ export function EventModal({
               onChange={(e) => setVirtualLocation(e.target.value)}
               placeholder="https://meet.example.com/..."
               maxLength={2000}
+            />
+            <VideoMeetingCreatorButtons
+              currentUrl={virtualLocation}
+              eventTitle={title}
+              onSelectUrl={(url) => setVirtualLocation(url)}
+              onClearUrl={() => setVirtualLocation("")}
             />
             <PluginSlot
               name="calendar-event-actions"

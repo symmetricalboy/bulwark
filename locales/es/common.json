@@ -830,7 +830,12 @@
     "attach_from_google_drive": "Attach from Google Drive",
     "downloading_from_drive": "Fetching files from Google Drive...",
     "download_error": "Failed to download file from Google Drive",
-    "pop_out": "Abrir la respuesta en una ventana"
+    "pop_out": "Abrir la respuesta en una ventana",
+    "video_meeting_menu": "Video Meeting",
+    "video_meeting_jitsi": "Instant Jitsi Meet",
+    "video_meeting_google": "Google Meet",
+    "video_meeting_teams": "Microsoft Teams",
+    "video_meeting_zoom": "Zoom Meeting"
   },
   "confirm_dialog": {
     "confirm": "Confirmar",
@@ -1679,6 +1684,10 @@
         "nested_desc": "Group messages by conversation and expand replies hierarchically in the message list",
         "combined": "Combined",
         "combined_desc": "Show only one entry per conversation with message count; opening it shows a scrolling flow of grouped messages"
+      },
+      "tracker_blocker": {
+        "label": "Block email tracking pixels",
+        "description": "Prevent senders from tracking when, where, and how often you open their emails by stripping 1x1 transparent spy pixels and beacons"
       }
     },
     "composer": {
@@ -1844,6 +1853,13 @@
           "show_separately_desc": "Display in a separate section with this account's email",
           "synchronize": "Synchronize",
           "synchronize_desc": "Merge into default Comail data with continuous bidirectional sync"
+        },
+        "providers": {
+          "google": "Google Workspace",
+          "microsoft": "Microsoft 365",
+          "apple": "Apple iCloud",
+          "nextcloud": "Nextcloud",
+          "importers": "Data Importers"
         }
       },
       "account_age_label": "Account Age",
@@ -2249,7 +2265,11 @@
       "managed_title": "Proporcionadas por tu administrador",
       "managed_description": "Estas aplicaciones están configuradas para todos y no se pueden cambiar.",
       "manage_title": "Apps personalizadas",
-      "manage_description": "Agregar, editar o eliminar apps personalizadas de la barra lateral"
+      "manage_description": "Agregar, editar o eliminar apps personalizadas de la barra lateral",
+      "directory_title": "App Directory & Atmosphere",
+      "directory_description": "Discover and quickly pin 1-click sovereign apps, ATProto services, and cloud tools directly to your sidebar",
+      "pin_app": "Pin to Sidebar",
+      "pinned": "Pinned"
     },
     "contacts": {
       "title": "Contactos",
@@ -2632,6 +2652,30 @@
         "minted_dialog_done": "Done",
         "minted_value_label": "New app password"
       }
+    },
+    "hubs": {
+      "account": "Account & Services",
+      "account_subtitle": "Profile, security, connected accounts & BYOMC",
+      "appearance": "Appearance & Shell",
+      "appearance_subtitle": "Themes, geometry, density & typography",
+      "mail": "Mailbox & Messages",
+      "mail_subtitle": "Reading, composing, identities & vacation",
+      "organization": "Organization & Rules",
+      "organization_subtitle": "Tags, folders, sieve filters & templates",
+      "apps": "Workspace Apps",
+      "apps_subtitle": "Calendar, contacts, files & sidebar dock",
+      "notifications": "Notifications & Sounds",
+      "notifications_subtitle": "Push relays, sounds & calendar alerts",
+      "advanced": "Cloud & Developer",
+      "advanced_subtitle": "Cloud sync, privacy, protocols & diagnostics"
+    },
+    "comail_build": {
+      "badge": "BUILD",
+      "title": "Comail Build",
+      "subtitle": "Relays, webhooks & custom domain routing",
+      "banner_title": "Build with Comail Relay",
+      "banner_description": "Route incoming and outgoing email across your custom domains directly into webhooks, custom tools, and external applications.",
+      "button": "Open build.comail.at"
     }
   },
   "errors": {
@@ -3468,7 +3512,9 @@
       "organizer_identity_desc": "La dirección de calendario usada como organizador al invitar a personas a eventos.",
       "organizer_identity_failed": "No se pudo cambiar la dirección del organizador",
       "show_birthday_calendar": "Calendario de cumpleaños",
-      "show_birthday_calendar_desc": "Mostrar un calendario virtual con los cumpleaños de tus contactos"
+      "show_birthday_calendar_desc": "Mostrar un calendario virtual con los cumpleaños de tus contactos",
+      "speedy_meetings": "Speedy meetings",
+      "speedy_meetings_desc": "End 30-minute meetings 5 minutes early, and longer meetings 10 minutes early to allow breaks between calls"
     },
     "days": {
       "monday": "Lunes",

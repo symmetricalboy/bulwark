@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { LinkifiedText } from "@/components/ui/linkified-text";
 import {
-  X, Clock, MapPin, Video, Users, Repeat, Bell, AlignLeft,
+  X, Clock, MapPin, Users, Repeat, Bell, AlignLeft,
   Pencil, Trash2, Copy, Send, Check, MoreVertical, Calendar as CalendarIcon,
 } from "@/components/icons";
 import { format, isSameDay } from "date-fns";
@@ -24,6 +24,7 @@ import { canUserRsvp, getEventEditability, type EditabilityContext } from "@/lib
 import { useFormatEventDate } from "@/hooks/use-format-event-date";
 import { useContactNameResolver } from "@/hooks/use-contact-name-resolver";
 import { findMeetingLink, locationAction, mapsUrl, primaryLocationName } from "@/lib/event-links";
+import { VideoMeetingActionCard } from "@/components/video-meeting/video-meeting-action-card";
 
 interface EventDetailPopoverProps {
   event: CalendarEvent;
@@ -509,24 +510,7 @@ export function EventDetailPopover({
 
         {/* Virtual Location / Meeting Link */}
         {virtualLocation && (
-          <div className="flex items-start gap-2.5">
-            <Video className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <a
-              href={virtualLocation}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-primary hover:underline truncate"
-              title={virtualLocation}
-            >
-              {(() => {
-                try {
-                  return new URL(virtualLocation).hostname;
-                } catch {
-                  return virtualLocation;
-                }
-              })()}
-            </a>
-          </div>
+          <VideoMeetingActionCard url={virtualLocation} compact />
         )}
 
         {/* Participants */}

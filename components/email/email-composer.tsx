@@ -34,7 +34,21 @@ import {
   ReplyAll,
   Reply,
   Forward,
+  Video,
+  GoogleMeetIcon,
+  TeamsIcon,
+  ZoomIcon,
+  JitsiIcon,
 } from "@/components/icons";
+import {
+  generateJitsiMeetingUrl,
+  getGoogleMeetNewUrl,
+  getTeamsNewUrl,
+  getZoomNewUrl,
+  buildMeetingHtmlSnippet,
+  buildMeetingPlainTextSnippet,
+  type VideoMeetingProviderId,
+} from "@/lib/video-meetings";
 import { ComposerToolbarMenu, ComposerToolbarMenuItem, ComposerToolbarMenuCheckItem } from "@/components/email/composer-toolbar-menu";
 import { cn, formatFileSize, formatDateTime, generateUUID } from "@/lib/utils";
 import { schedulePresets } from "@/lib/schedule-presets";
@@ -1419,6 +1433,60 @@ export function EmailComposer({
     // signature effects above for the same rationale).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plainTextMode, body, signatureIdentity?.htmlSignature, signatureIdentity?.textSignature, signatureSeparatorEnabled]);
+
+  const insertVideoMeeting = useCallback(
+    (providerId: VideoMeetingProviderId) => {
+      let url = "";
+      let providerName = "";
+
+      switch (providerId) {
+        case "jitsi":
+          url = generateJitsiMeetingUrl(subject);
+          providerName = "Instant Jitsi Meet";
+          break;
+        case "google-meet":
+          url = getGoogleMeetNewUrl();
+          providerName = "Google Meet";
+          break;
+        case "teams":
+          url = getTeamsNewUrl();
+          providerName = "Microsoft Teams";
+          break;
+        case "zoom":
+          url = getZoomNewUrl();
+          providerName = "Zoom";
+          break;
+      }
+
+      if (!url) return;
+
+      if (plainTextMode) {
+        const snippet = buildMeetingPlainTextSnippet({ url, title: subject, providerName });
+        const textarea = bodyRef.current;
+        if (textarea) {
+          const start = textarea.selectionStart ?? textarea.value.length;
+          const end = textarea.selectionEnd ?? start;
+          setBody((prev) => prev.slice(0, start) + snippet + prev.slice(end));
+          requestAnimationFrame(() => {
+            const caret = start + snippet.length;
+            textarea.focus();
+            textarea.setSelectionRange(caret, caret);
+          });
+        } else {
+          setBody((prev) => prev + snippet);
+        }
+      } else if (editorRef.current) {
+        const htmlSnippet = buildMeetingHtmlSnippet({ url, title: subject, providerName });
+        editorRef.current.chain().focus().insertContent(htmlSnippet).run();
+      } else {
+        const htmlSnippet = buildMeetingHtmlSnippet({ url, title: subject, providerName });
+        setBody((prev) => prev + htmlSnippet);
+      }
+
+      toast.success(`${providerName} invitation inserted`);
+    },
+    [subject, plainTextMode]
+  );
 
   // Move a chip from one recipient field to another. `toIndex`, when given,
   // inserts at that position in the destination (drag-and-drop reordering,
@@ -3739,6 +3807,54 @@ export function EmailComposer({
                 </>}
               </ComposerToolbarMenu>
             )}
+            <ComposerToolbarMenu
+              icon={Video}
+              label={t('video_meeting_menu')}
+              testId="composer-video-meeting-menu"
+            >
+              {(close) => <>
+                <ComposerToolbarMenuItem
+                  icon={JitsiIcon}
+                  onSelect={() => {
+                    close();
+                    insertVideoMeeting("jitsi");
+                  }}
+                  testId="composer-add-jitsi-meeting"
+                >
+                  {t('video_meeting_jitsi')}
+                </ComposerToolbarMenuItem>
+                <ComposerToolbarMenuItem
+                  icon={GoogleMeetIcon}
+                  onSelect={() => {
+                    close();
+                    insertVideoMeeting("google-meet");
+                  }}
+                  testId="composer-add-google-meet"
+                >
+                  {t('video_meeting_google')}
+                </ComposerToolbarMenuItem>
+                <ComposerToolbarMenuItem
+                  icon={TeamsIcon}
+                  onSelect={() => {
+                    close();
+                    insertVideoMeeting("teams");
+                  }}
+                  testId="composer-add-teams-meeting"
+                >
+                  {t('video_meeting_teams')}
+                </ComposerToolbarMenuItem>
+                <ComposerToolbarMenuItem
+                  icon={ZoomIcon}
+                  onSelect={() => {
+                    close();
+                    insertVideoMeeting("zoom");
+                  }}
+                  testId="composer-add-zoom-meeting"
+                >
+                  {t('video_meeting_zoom')}
+                </ComposerToolbarMenuItem>
+              </>}
+            </ComposerToolbarMenu>
             {/* Sign/encrypt controls are contributed by crypto plugins via the
                 composer-toolbar slot (rendered below). */}
             <ComposerToolbarMenu

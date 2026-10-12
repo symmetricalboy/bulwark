@@ -21,7 +21,7 @@ export { GoogleCalendarIcon } from './google-calendar-icon';
 export { GoogleTasksIcon } from './google-tasks-icon';
 export { GoogleContactsIcon } from './google-contacts-icon';
 export { GmailIcon } from './gmail-icon';
-export { MicrosoftIcon, AppleIcon, NextcloudIcon, AtprotoIcon, DropboxIcon } from './provider-icons';
+export { MicrosoftIcon, AppleIcon, NextcloudIcon, AtprotoIcon, DropboxIcon, GoogleMeetIcon, TeamsIcon, ZoomIcon, JitsiIcon } from './provider-icons';
 
 
 // Tabler Icons

@@ -47,3 +47,48 @@ export function DropboxIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
+export function GoogleMeetIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("w-4 h-4 shrink-0", className)} viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="5" width="11" height="14" rx="2" fill="#00AC47" />
+      <path d="M14 9.5l6-4.5v14l-6-4.5V9.5z" fill="#00832D" />
+      <path d="M14 5H5.5A2.5 2.5 0 003 7.5V11h11V5z" fill="#EA4335" />
+      <path d="M14 5l6 4.5-2.5 2-3.5-2.5V5z" fill="#FFBA00" />
+      <path d="M3 11h11v5.5H3V11z" fill="#2684FC" />
+    </svg>
+  );
+}
+
+export function TeamsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("w-4 h-4 shrink-0", className)} viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="4" width="14" height="16" rx="2.5" fill="#5059C9" />
+      <path d="M16 8.5l6-3.5v14l-6-3.5V8.5z" fill="#7B83EB" />
+      <path d="M6.5 8h5v2h-1.5v6H8v-6H6.5V8z" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+export function ZoomIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("w-4 h-4 shrink-0", className)} viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="5" fill="#2D8CFF" />
+      <rect x="4.5" y="7.5" width="10.5" height="9" rx="1.5" fill="#FFFFFF" />
+      <path d="M15 10.2l4-2.7v9l-4-2.7v-3.6z" fill="#FFFFFF" />
+    </svg>
+  );
+}
+
+export function JitsiIcon({ className }: { className?: string }) {
+  return (
+    <svg className={cn("w-4 h-4 shrink-0", className)} viewBox="0 0 24 24" fill="none">
+      <rect width="24" height="24" rx="5" fill="#17A8F5" />
+      <path
+        d="M12 4.5C9.5 4.5 7.5 6.5 7.5 9c0 1.6.8 3 2 3.8v4.2c0 .8.7 1.5 1.5 1.5h2c.8 0 1.5-.7 1.5-1.5v-4.2c1.2-.8 2-2.2 2-3.8 0-2.5-2-4.5-4.5-4.5zm0 2.5a2 2 0 110 4 2 2 0 010-4z"
+        fill="#FFFFFF"
+      />
+    </svg>
+  );
+}
+
