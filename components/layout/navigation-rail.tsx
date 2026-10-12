@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Mail, Calendar, BookUser, HardDrive, Settings, Keyboard, Plus, Shield, LogOut, Check, Search, Wrench, CheckSquare } from "@/components/icons";
+import { Mail, Calendar, BookUser, HardDrive, Settings, Keyboard, Plus, Shield, LogOut, Search, Wrench, CheckSquare } from "@/components/icons";
 import { AccountSwitcher } from "./account-switcher";
 import { iconForName } from "@/components/icons";
 import { useBuildersMembership } from "@/hooks/use-builders-membership";
@@ -228,6 +228,8 @@ export function NavigationRail({
   const client = useAuthStore((s) => s.client);
   const supportsFiles = client?.supportsFiles() ?? false;
   const supportsContacts = client?.supportsContacts() ?? false;
+  const effectiveSupportsCalendar = supportsCalendar || (client?.supportsCalendars() ?? false);
+  const hasClient = client !== null;
   const showRailAccountList = useSettingsStore((s) => s.showRailAccountList);
   const mountainView = useSettingsStore((s) => s.interfaceLayout === 'mountain-view');
   // Per-server policy gates (Rules of Hooks: call the selectors
@@ -321,11 +323,11 @@ export function NavigationRail({
 
   const rawNavItems: NavItem[] = useMemo(() => [
     { id: "mail", icon: Mail, labelKey: "mail", href: "/", badge: inboxUnread },
-    { id: "contacts", icon: BookUser, labelKey: "contacts", href: "/contacts", hidden: !supportsContacts || !contactsEnabled },
-    { id: "calendar", icon: Calendar, labelKey: "calendar", href: "/calendar", hidden: !supportsCalendar || !calendarEnabled },
+    { id: "contacts", icon: BookUser, labelKey: "contacts", href: "/contacts", hidden: !contactsEnabled || (hasClient && !supportsContacts) },
+    { id: "calendar", icon: Calendar, labelKey: "calendar", href: "/calendar", hidden: !calendarEnabled || (hasClient && !effectiveSupportsCalendar) },
     { id: "tasks", icon: CheckSquare, labelKey: "tasks", href: "/tasks" },
-    { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: !supportsFiles || !filesEnabled },
-  ], [inboxUnread, supportsContacts, contactsEnabled, supportsCalendar, calendarEnabled, supportsFiles, filesEnabled]);
+    { id: "files", icon: HardDrive, labelKey: "files", href: "/files", hidden: !filesEnabled || (hasClient && !supportsFiles) },
+  ], [inboxUnread, contactsEnabled, hasClient, supportsContacts, calendarEnabled, effectiveSupportsCalendar, supportsFiles, filesEnabled]);
 
   const orderedNavItems = useMemo(() => {
     const order = resolveNavOrder(sidebarNavOrder);

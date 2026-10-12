@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookUser,
   Calendar,
+  CheckSquare,
   Grid3x3,
   HardDrive,
   HelpCircle,
@@ -100,7 +101,9 @@ export function MvTopBar({
   const toggleSidebarCollapsed = useUIStore((s) => s.toggleSidebarCollapsed);
 
   const client = useAuthStore((s) => s.client);
+  const hasClient = client !== null;
   const { supportsCalendar } = useCalendarStore();
+  const effectiveSupportsCalendar = supportsCalendar || (client?.supportsCalendars() ?? false);
   const calendarEnabled = usePolicyStore((s) => s.isFeatureEnabled("calendarEnabled"));
   const contactsEnabled = usePolicyStore((s) => s.isFeatureEnabled("contactsEnabled"));
   const filesEnabled = usePolicyStore((s) => s.isFeatureEnabled("filesEnabled"));
@@ -140,13 +143,14 @@ export function MvTopBar({
 
   const apps: Array<{ id: string; icon: AppIconType; label: string; href: string }> = [
     { id: "mail", icon: Mail, label: t("mail"), href: "/" },
-    ...(supportsCalendar && calendarEnabled
+    ...((effectiveSupportsCalendar || !hasClient) && calendarEnabled
       ? [{ id: "calendar", icon: Calendar, label: t("calendar"), href: "/calendar" }]
       : []),
-    ...((client?.supportsContacts() ?? false) && contactsEnabled
+    ...(((client?.supportsContacts() ?? false) || !hasClient) && contactsEnabled
       ? [{ id: "contacts", icon: BookUser, label: t("contacts"), href: "/contacts" }]
       : []),
-    ...((client?.supportsFiles() ?? false) && filesEnabled
+    { id: "tasks", icon: CheckSquare, label: t("tasks"), href: "/tasks" },
+    ...(((client?.supportsFiles() ?? false) || !hasClient) && filesEnabled
       ? [{ id: "files", icon: HardDrive, label: t("files"), href: "/files" }]
       : []),
     { id: "settings", icon: Settings, label: t("settings"), href: "/settings" },

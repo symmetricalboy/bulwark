@@ -9,9 +9,6 @@ import {
   CheckCircle2,
   Menu,
   X,
-  Calendar as CalendarIcon,
-  Star,
-  ListTodo,
   ChevronDown,
   ChevronRight,
   Trash2,
@@ -29,7 +26,7 @@ import { AppTopBannerSlot } from '@/components/plugins/app-top-banner-slot';
 import { useSidebarApps } from '@/hooks/use-sidebar-apps';
 import { useIsEmbedded } from '@/hooks/use-is-embedded';
 import { useIsMobile } from '@/hooks/use-media-query';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useEmailStore } from '@/stores/email-store';
 import { useDocumentTitle } from '@/hooks/use-document-title';
@@ -46,7 +43,6 @@ export function TasksApp({ linkSegments = [] }: TasksAppProps) {
   const selectedTaskId = useTasksAppStore((s) => s.selectedTaskId);
   const filter = useTasksAppStore((s) => s.filter);
   const sortBy = useTasksAppStore((s) => s.sortBy);
-  const isSyncing = useTasksAppStore((s) => s.isSyncing);
 
   const initialize = useTasksAppStore((s) => s.initialize);
   const setActiveListId = useTasksAppStore((s) => s.setActiveListId);
@@ -58,7 +54,8 @@ export function TasksApp({ linkSegments = [] }: TasksAppProps) {
   const isMobile = useIsMobile();
   const isEmbedded = useIsEmbedded();
   const { showAppsModal, inlineApp, loadedApps, handleManageApps, handleInlineApp, closeInlineApp, closeAppsModal } = useSidebarApps();
-  const logout = useAuthStore((s) => s.logout);
+  const { isAuthenticated, logout, checkAuth, isLoading: authLoading } = useAuthStore();
+  const [initialCheckDone, setInitialCheckDone] = useState(() => useAuthStore.getState().isAuthenticated && !!useAuthStore.getState().client);
   const { quota, isPushConnected } = useEmailStore();
   const tSidebar = useTranslations('sidebar');
   useDocumentTitle(tSidebar('tasks'));
@@ -76,7 +73,30 @@ export function TasksApp({ linkSegments = [] }: TasksAppProps) {
   const [expandedSubtaskMap, setExpandedSubtaskMap] = useState<Record<string, boolean>>({});
   const [completedExpanded, setCompletedExpanded] = useState(false);
 
-  const activeAccountId = useAccountStore((s) => s.activeAccountId);
+  const authActiveAccountId = useAuthStore((s) => s.activeAccountId);
+  const accountActiveAccountId = useAccountStore((s) => s.activeAccountId);
+  const activeAccountId = authActiveAccountId || accountActiveAccountId;
+
+  // Check auth on mount – skip when already authenticated so that navigating
+  // between routes doesn't retrigger checkAuth's transient `{ client: null,
+  // isLoading: true }` reset.
+  useEffect(() => {
+    const state = useAuthStore.getState();
+    if (state.isAuthenticated && state.client) {
+      setInitialCheckDone(true);
+      return;
+    }
+    checkAuth().finally(() => {
+      setInitialCheckDone(true);
+    });
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (initialCheckDone && !authLoading && !isAuthenticated) {
+      saveRedirectAfterLogin();
+      redirectToLogin();
+    }
+  }, [initialCheckDone, authLoading, isAuthenticated]);
 
   useEffect(() => {
     void initialize(activeAccountId || undefined);
