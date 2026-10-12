@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Grænsefladelayout",
         "description": "Hvor søgning, navigation og værktøjslinjer er placeret",
-        "default": "Standard",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

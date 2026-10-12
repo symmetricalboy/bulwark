@@ -1100,7 +1100,7 @@
       "interface_layout": {
         "label": "פריסת הממשק",
         "description": "היכן ממוקמים החיפוש, הניווט וסרגלי הכלים",
-        "default": "ברירת מחדל",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

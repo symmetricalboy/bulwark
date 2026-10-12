@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Интерфейсийн байрлал",
         "description": "Хайлт, навигаци, хэрэгслийн мөр хаана байрлах",
-        "default": "Үндсэн",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

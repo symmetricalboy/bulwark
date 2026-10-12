@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "介面版面配置",
         "description": "搜尋、導覽與工具列的位置",
-        "default": "預設",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

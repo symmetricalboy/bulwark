@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Disposició de la interfície",
         "description": "On se situen la cerca, la navegació i les barres d'eines",
-        "default": "Predeterminat",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

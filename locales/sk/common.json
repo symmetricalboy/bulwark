@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Rozloženie rozhrania",
         "description": "Kde sa nachádza hľadanie, navigácia a panely nástrojov",
-        "default": "Predvolené",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

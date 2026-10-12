@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "인터페이스 레이아웃",
         "description": "검색, 탐색, 도구 모음의 위치",
-        "default": "기본",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

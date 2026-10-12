@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Layout dell'interfaccia",
         "description": "Dove si trovano ricerca, navigazione e barre degli strumenti",
-        "default": "Predefinito",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

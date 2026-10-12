@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Układ interfejsu",
         "description": "Gdzie znajdują się wyszukiwarka, nawigacja i paski narzędzi",
-        "default": "Domyślny",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

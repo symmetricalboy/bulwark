@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Saskarnes izkārtojums",
         "description": "Kur atrodas meklēšana, navigācija un rīkjoslas",
-        "default": "Noklusējuma",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

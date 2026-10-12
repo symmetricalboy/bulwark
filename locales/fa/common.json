@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "چیدمان رابط",
         "description": "جای جست‌وجو، ناوبری و نوارهای ابزار",
-        "default": "پیش‌فرض",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

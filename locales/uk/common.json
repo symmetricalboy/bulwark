@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Макет інтерфейсу",
         "description": "Де розташовані пошук, навігація та панелі інструментів",
-        "default": "За замовчуванням",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

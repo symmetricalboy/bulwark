@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Felület elrendezése",
         "description": "Hol helyezkedik el a keresés, a navigáció és az eszköztárak",
-        "default": "Alapértelmezett",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "インターフェースのレイアウト",
         "description": "検索・ナビゲーション・ツールバーの配置",
-        "default": "デフォルト",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

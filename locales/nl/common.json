@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Interface-indeling",
         "description": "Waar zoeken, navigatie en werkbalken staan",
-        "default": "Standaard",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Arayüz düzeni",
         "description": "Arama, gezinme ve araç çubuklarının konumu",
-        "default": "Varsayılan",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

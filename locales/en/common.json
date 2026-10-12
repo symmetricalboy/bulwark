@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Interface layout",
         "description": "Where search, navigation and toolbars sit",
-        "default": "Default",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

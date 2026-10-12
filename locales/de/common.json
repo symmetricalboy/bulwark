@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Oberflächen-Layout",
         "description": "Wo Suche, Navigation und Symbolleisten liegen",
-        "default": "Standard",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

@@ -1138,7 +1138,7 @@
       "interface_layout": {
         "label": "Aspectul interfeței",
         "description": "Unde se află căutarea, navigarea și barele de instrumente",
-        "default": "Implicit",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {

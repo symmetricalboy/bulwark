@@ -1135,7 +1135,7 @@
       "interface_layout": {
         "label": "Rozvržení rozhraní",
         "description": "Kde se nachází hledání, navigace a panely nástrojů",
-        "default": "Výchozí",
+        "default": "Redmond",
         "mountain_view": "Mountain View"
       },
       "animations": {
