@@ -992,7 +992,9 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            {renderTabContent()}
+            <div key={effectiveActiveTab} className="animate-spring-fade-in">
+              {renderTabContent()}
+            </div>
           </div>
 
           {!isEmbedded && (
@@ -1418,7 +1420,48 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
 
       <div ref={attachContentScroll} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6">
-          {renderTabContent()}
+          {currentHub && (
+            <div className="mb-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-2xs">
+                  <currentHub.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">{currentHub.label}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">{currentHub.subtitle}</p>
+                </div>
+              </div>
+
+              {currentHub.subTabs.length > 1 && (
+                <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border/50 overflow-x-auto no-scrollbar">
+                  {currentHub.subTabs.map((subTab) => {
+                    const SubIcon = subTab.icon;
+                    const isSubActive = effectiveActiveTab === subTab.id;
+                    return (
+                      <button
+                        key={subTab.id}
+                        data-testid={`settings-pill-${subTab.id}`}
+                        onClick={() => handleTabSelect(subTab.id)}
+                        className={cn(
+                          "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all transition-spring whitespace-nowrap",
+                          isSubActive
+                            ? "bg-background text-foreground shadow-2xs font-semibold ring-1 ring-border/60"
+                            : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                        )}
+                      >
+                        <SubIcon className={cn("w-3.5 h-3.5 shrink-0", isSubActive ? "text-primary" : "text-muted-foreground")} />
+                        <span>{subTab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div key={effectiveActiveTab} className="animate-spring-fade-in">
+            {renderTabContent()}
+          </div>
         </div>
       </div>
       </>

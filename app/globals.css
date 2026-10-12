@@ -87,6 +87,12 @@
   --list-item-height: 48px;
   --transition-duration: 0.2s;
 
+  /* Kinetic & Spring Motion Tokens */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring-snappy: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-spring-gentle: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-fluid: 240ms;
+
   /* Density spacing variables (defaults = regular) */
   --density-item-py: 12px;
   --density-item-gap: 12px;
@@ -1308,4 +1314,26 @@ button.bg-destructive svg text.material-symbols-outlined,
     width: var(--mv-rail-peek-w);
   }
 }
+
+/* Kinetic Spring Motion Dynamics */
+@keyframes springFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-spring-fade-in {
+  animation: springFadeIn 220ms var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
+}
+
+.transition-spring {
+  transition-timing-function: var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1));
+  transition-duration: var(--duration-fluid, 240ms);
+}
+
 
