@@ -21,6 +21,7 @@ import { useTasksAppStore, type TaskViewFilter, type TaskList } from '@/stores/t
 import { useAccountStore } from '@/stores/account-store';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { AppSidebarHeader } from '@/components/layout/app-layout';
 
 interface TasksSidebarProps {
   className?: string;
@@ -172,16 +173,16 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
             }
           }}
           className={cn(
-            'flex items-center justify-between w-full px-2.5 py-1.5 rounded-md text-xs font-medium text-start transition-colors cursor-pointer',
+            'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium text-start transition-colors duration-150 cursor-pointer',
             isActive
-              ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-              : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+              ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
+              : 'text-foreground/80 hover:bg-muted'
           )}
         >
           <span className="truncate flex-1 pe-2">{l.title}</span>
           <div className="flex items-center gap-1 shrink-0">
             {count > 0 && (
-              <span className="text-[11px] text-muted-foreground font-normal">
+              <span className={cn("text-[11px] tabular-nums font-normal", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
                 {count}
               </span>
             )}
@@ -228,24 +229,15 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
   return (
     <aside
       className={cn(
-        'w-64 flex flex-col h-full bg-sidebar border-e border-sidebar-border text-sidebar-foreground select-none shrink-0',
+        'w-[272px] flex flex-col h-full bg-secondary border-e border-border text-foreground select-none shrink-0',
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-sidebar-border/60">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <CheckSquare className="w-5 h-5 stroke-[2.2]" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-sm font-semibold text-sidebar-foreground truncate tracking-tight">
-            Tasks
-          </h1>
-          <p className="text-[11px] text-muted-foreground truncate" title={subtitle}>
-            {subtitle}
-          </p>
-        </div>
-      </div>
+      <AppSidebarHeader
+        icon={CheckSquare}
+        title="Tasks"
+      />
 
       {/* Navigation & Lists */}
       <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
@@ -255,17 +247,17 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
             type="button"
             onClick={() => handleSelectFilter('all')}
             className={cn(
-              'flex items-center justify-between w-full px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
               filter === 'all' && activeListId
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-                : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
+                : 'text-foreground/80 hover:bg-muted'
             )}
           >
             <div className="flex items-center gap-2.5">
-              <ListTodo className="w-4 h-4 text-muted-foreground" />
+              <ListTodo className="w-4 h-4" />
               <span>All Tasks</span>
             </div>
-            <span className="text-[11px] text-muted-foreground font-normal">
+            <span className={cn("text-[11px] tabular-nums font-normal", filter === 'all' && activeListId ? "text-white/90 font-medium" : "text-muted-foreground")}>
               {tasks.filter((t) => t.status !== 'completed').length}
             </span>
           </button>
@@ -274,10 +266,10 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
             type="button"
             onClick={() => handleSelectFilter('starred')}
             className={cn(
-              'flex items-center justify-between w-full px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
               filter === 'starred'
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-                : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
+                : 'text-foreground/80 hover:bg-muted'
             )}
           >
             <div className="flex items-center gap-2.5">
@@ -285,7 +277,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
               <span>Starred</span>
             </div>
             {starredCount > 0 && (
-              <span className="text-[11px] text-muted-foreground font-normal">
+              <span className={cn("text-[11px] tabular-nums font-normal", filter === 'starred' ? "text-white/90 font-medium" : "text-muted-foreground")}>
                 {starredCount}
               </span>
             )}
@@ -295,10 +287,10 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
             type="button"
             onClick={() => handleSelectFilter('today')}
             className={cn(
-              'flex items-center justify-between w-full px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
               filter === 'today'
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold'
-                : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
+                : 'text-foreground/80 hover:bg-muted'
             )}
           >
             <div className="flex items-center gap-2.5">
@@ -306,7 +298,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
               <span>Due Today</span>
             </div>
             {todayCount > 0 && (
-              <span className="text-[11px] text-primary font-semibold">
+              <span className={cn("text-[11px] tabular-nums", filter === 'today' ? "text-white/90 font-medium" : "text-primary font-semibold")}>
                 {todayCount}
               </span>
             )}

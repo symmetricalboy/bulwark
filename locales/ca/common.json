@@ -117,7 +117,9 @@
       "starred": "Destacats",
       "all_mail": "Tot el correu",
       "spam": "Correu brossa",
-      "important": "Important"
+      "important": "Important",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Safata d'entrada unificada",
     "unified_sent": "Tots els enviats",
@@ -169,7 +171,9 @@
     "mv_next_day": "Dia següent",
     "mv_add_another_account": "Afegeix un altre compte",
     "mv_manage_account": "Gestiona el teu compte",
-    "mv_storage_used": "{percent}% de {total} utilitzat"
+    "mv_storage_used": "{percent}% de {total} utilitzat",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Aplicacions predeterminades",
@@ -490,7 +494,9 @@
       "compose": "Redacta (c)",
       "previous": "Correu anterior",
       "next": "Correu següent",
-      "edit_draft": "Edita l'esborrany"
+      "edit_draft": "Edita l'esborrany",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Denuncia com a brossa",
@@ -625,7 +631,12 @@
       "copied": "Codi copiat",
       "copy_failed": "No s'ha pogut copiar el codi"
     },
-    "mv_position": "{index} de {total}"
+    "mv_position": "{index} de {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimitza",
@@ -1289,7 +1300,10 @@
         "add_all": "Afegeix-les totes ({count})",
         "partial": "Només s'han analitzat els {scanned} correus més recents de {total}. Poden faltar etiquetes usades únicament en correus més antics.",
         "error": "No s'ha pogut analitzar el correu per cercar etiquetes."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Prova el so de notificació",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Superior esquerra",
         "corner_top-right": "Superior dreta",
         "corner_bottom-left": "Inferior esquerra",
-        "corner_bottom-right": "Inferior dreta"
+        "corner_bottom-right": "Inferior dreta",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Programa de correu predeterminat",
@@ -2144,7 +2159,18 @@
       "error_delete": "No s'ha pogut suprimir la carpeta",
       "error_delete_has_children": "No es pot suprimir la carpeta: encara conté subcarpetes. Suprimiu-les o moveu-les primer.",
       "error_delete_has_email": "No es pot suprimir la carpeta: encara conté correus. Moveu-los o suprimiu-los primer.",
-      "error_role": "No s'ha pogut actualitzar el rol de la carpeta"
+      "error_role": "No s'ha pogut actualitzar el rol de la carpeta",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Avançat",

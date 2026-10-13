@@ -12,8 +12,10 @@ interface SubAddressState {
 }
 
 interface IdentityStore {
-  // Identity state (from server)
+  // Identity state (unified for UI)
   identities: Identity[];
+  customIdentities: Identity[];
+  googleDefaultIdentities: Identity[];
   selectedIdentityId: string | null;
   preferredPrimaryId: string | null;
   isLoading: boolean;
@@ -24,6 +26,11 @@ interface IdentityStore {
 
   // Actions - Identity CRUD
   setIdentities: (identities: Identity[]) => void;
+  setCustomIdentities: (identities: Identity[]) => void;
+  addCustomIdentity: (identity: Identity) => void;
+  updateCustomIdentity: (identityId: string, updates: Partial<Identity>) => void;
+  removeCustomIdentity: (identityId: string) => void;
+  setGoogleDefaultIdentities: (identities: Identity[]) => void;
   addIdentity: (identity: Identity) => void;
   updateIdentityLocal: (identityId: string, updates: Partial<Identity>) => void;
   removeIdentity: (identityId: string) => void;
@@ -44,6 +51,8 @@ export const useIdentityStore = create<IdentityStore>()(
   persist(
     (set, get) => ({
       identities: [],
+      customIdentities: [],
+      googleDefaultIdentities: [],
       selectedIdentityId: null,
       preferredPrimaryId: null,
       isLoading: false,
@@ -53,7 +62,67 @@ export const useIdentityStore = create<IdentityStore>()(
         tagSuggestions: {},
       },
 
-      setIdentities: (identities) => set({ identities }),
+      setIdentities: (serverIdentities) => set((state) => {
+        // Enforce mayDelete: false on the primary Comail account identity
+        const normalizedServer = serverIdentities.map((id, index) => {
+          if (index === 0 || id.id === state.preferredPrimaryId) {
+            return { ...id, mayDelete: false };
+          }
+          return id;
+        });
+
+        // Merge in Google default identities and custom identities
+        const combined = [...normalizedServer];
+        for (const g of state.googleDefaultIdentities) {
+          if (!combined.some(i => i.id === g.id || i.email.toLowerCase() === g.email.toLowerCase())) {
+            combined.push(g);
+          }
+        }
+        for (const c of state.customIdentities) {
+          if (!combined.some(i => i.id === c.id)) {
+            combined.push(c);
+          }
+        }
+        return { identities: combined };
+      }),
+
+      setCustomIdentities: (customIdentities) => set({ customIdentities }),
+
+      addCustomIdentity: (identity) => set((state) => {
+        const nextCustom = [...state.customIdentities, identity];
+        const existsInAll = state.identities.some(i => i.id === identity.id);
+        return {
+          customIdentities: nextCustom,
+          identities: existsInAll ? state.identities : [...state.identities, identity],
+        };
+      }),
+
+      updateCustomIdentity: (identityId, updates) => set((state) => ({
+        customIdentities: state.customIdentities.map(id =>
+          id.id === identityId ? { ...id, ...updates } : id
+        ),
+        identities: state.identities.map(id =>
+          id.id === identityId ? { ...id, ...updates } : id
+        ),
+      })),
+
+      removeCustomIdentity: (identityId) => set((state) => ({
+        customIdentities: state.customIdentities.filter(id => id.id !== identityId),
+        identities: state.identities.filter(id => id.id !== identityId),
+        selectedIdentityId: state.selectedIdentityId === identityId
+          ? null
+          : state.selectedIdentityId,
+      })),
+
+      setGoogleDefaultIdentities: (googleDefaultIdentities) => set((state) => {
+        const nonGoogle = state.identities.filter(
+          i => !i.id.startsWith('google') && !googleDefaultIdentities.some(g => g.email.toLowerCase() === i.email.toLowerCase())
+        );
+        return {
+          googleDefaultIdentities,
+          identities: [...nonGoogle, ...googleDefaultIdentities],
+        };
+      }),
 
       addIdentity: (identity) => set((state) => ({
         identities: [...state.identities, identity]
@@ -62,11 +131,19 @@ export const useIdentityStore = create<IdentityStore>()(
       updateIdentityLocal: (identityId, updates) => set((state) => ({
         identities: state.identities.map(id =>
           id.id === identityId ? { ...id, ...updates } : id
-        )
+        ),
+        customIdentities: state.customIdentities.map(id =>
+          id.id === identityId ? { ...id, ...updates } : id
+        ),
+        googleDefaultIdentities: state.googleDefaultIdentities.map(id =>
+          id.id === identityId ? { ...id, ...updates } : id
+        ),
       })),
 
       removeIdentity: (identityId) => set((state) => ({
         identities: state.identities.filter(id => id.id !== identityId),
+        customIdentities: state.customIdentities.filter(id => id.id !== identityId),
+        googleDefaultIdentities: state.googleDefaultIdentities.filter(id => id.id !== identityId),
         selectedIdentityId: state.selectedIdentityId === identityId
           ? null
           : state.selectedIdentityId
@@ -123,18 +200,65 @@ export const useIdentityStore = create<IdentityStore>()(
     }),
     {
       name: 'identity-storage',
-      // Only persist sub-addressing data, not identities (they're server-side).
-      // The default sender identity (`preferredPrimaryId`) is the per-account
-      // value for the *active* account; it is kept here purely as a local
-      // fallback so the choice survives a reload when settings sync is off.
-      // The durable, cross-device, exportable source of truth is the synced
-      // settings store, keyed per account (`preferredIdentityIds`), which is
-      // re-applied via applyPreferredIdentity() once server settings load and
-      // overrides this value per account (issue #507).
+      // Persist sub-addressing data, preferred primary sender identity, and custom/Google identities
       partialize: (state) => ({
         subAddress: state.subAddress,
         preferredPrimaryId: state.preferredPrimaryId,
+        customIdentities: state.customIdentities,
+        googleDefaultIdentities: state.googleDefaultIdentities,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const combined = [...state.identities];
+          for (const g of (state.googleDefaultIdentities || [])) {
+            if (!combined.some(i => i.id === g.id || i.email.toLowerCase() === g.email.toLowerCase())) {
+              combined.push(g);
+            }
+          }
+          for (const c of (state.customIdentities || [])) {
+            if (!combined.some(i => i.id === c.id)) {
+              combined.push(c);
+            }
+          }
+          state.setIdentities(combined);
+        }
+      },
     }
   )
 );
+
+export async function syncGoogleIdentities(): Promise<Identity[]> {
+  try {
+    const { getGoogleStatus } = await import('@/lib/google/google-calendar-client');
+    const status = await getGoogleStatus().catch(() => ({ connected: false, accounts: [] }));
+    if (!status?.accounts?.length) {
+      return [];
+    }
+    const store = useIdentityStore.getState();
+    const existingGoogle = store.googleDefaultIdentities || [];
+    const nextGoogle: Identity[] = [];
+
+    for (const acc of status.accounts) {
+      if (!acc.email) continue;
+      const id = `google-default:${acc.id || acc.email}`;
+      const existing = existingGoogle.find(g => g.id === id || g.email.toLowerCase() === acc.email.toLowerCase());
+      nextGoogle.push({
+        id,
+        name: existing?.name || acc.name || acc.email,
+        email: acc.email,
+        replyTo: existing?.replyTo || undefined,
+        bcc: existing?.bcc || undefined,
+        textSignature: existing?.textSignature || '',
+        htmlSignature: existing?.htmlSignature || '',
+        mayDelete: false,
+        localAccountId: `google:${acc.id || acc.email}`,
+        accountName: acc.name ? `${acc.name} (Google)` : `Google (${acc.email})`,
+      });
+    }
+
+    store.setGoogleDefaultIdentities(nextGoogle);
+    return nextGoogle;
+  } catch {
+    return [];
+  }
+}

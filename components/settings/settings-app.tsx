@@ -59,6 +59,7 @@ import { AboutDataSettings } from '@/components/settings/about-data-settings';
 import { DebugSettings } from '@/components/settings/debug-settings';
 import { FolderSettings } from '@/components/settings/folder-settings';
 import { KeywordSettings } from '@/components/settings/keyword-settings';
+import { FoldersAndTagsSettings } from '@/components/settings/folders-and-tags-settings';
 import { AccountSecuritySettings } from '@/components/settings/account-security-settings';
 import { FilesSettingsComponent } from '@/components/settings/files-settings';
 import { DownloadsSettings } from '@/components/settings/downloads-settings';
@@ -83,6 +84,7 @@ import { useSettingsStore } from '@/stores/settings-store';
 import { useManagedAccountStore } from '@/stores/managed-account-store';
 import { useIsDesktop } from '@/hooks/use-media-query';
 import { NavigationRail } from '@/components/layout/navigation-rail';
+import { AppNavRail, AppSidebarHeader } from '@/components/layout/app-layout';
 import { SidebarAppsModal } from '@/components/layout/sidebar-apps-modal';
 import { InlineAppView } from '@/components/layout/inline-app-view';
 import { useSidebarApps } from '@/hooks/use-sidebar-apps';
@@ -160,6 +162,7 @@ const tabGroupOrder: TabGroup[] = ['general', 'appearance', 'mail', 'privacy', '
 const LEGACY_TAB_MAP: Record<string, Tab> = {
   email: 'reading',
   advanced: 'about_data',
+  keywords: 'folders',
 };
 
 function readPersistedTab(): SettingsTabId {
@@ -170,6 +173,9 @@ function readPersistedTab(): SettingsTabId {
     // default that the regular Settings button lands on. Cleared on mount.
     const deepLink = sessionStorage.getItem('settings-deep-link-tab');
     if (deepLink) {
+      if (deepLink === 'keywords') {
+        try { sessionStorage.setItem('settings-deep-link-subtab', 'tags'); } catch { /* ignore */ }
+      }
       return (deepLink in LEGACY_TAB_MAP ? LEGACY_TAB_MAP[deepLink] : deepLink) as SettingsTabId;
     }
     const saved = localStorage.getItem('settings-active-tab');
@@ -194,6 +200,9 @@ function readPersistedTab(): SettingsTabId {
 function tabFromDeepLink(segments: string[] | null | undefined): SettingsTabId | null {
   const raw = parseSettingsPath(segments ?? []);
   if (!raw) return null;
+  if (raw === 'keywords') {
+    try { sessionStorage.setItem('settings-deep-link-subtab', 'tags'); } catch { /* ignore */ }
+  }
   const migrated = raw in LEGACY_TAB_MAP ? LEGACY_TAB_MAP[raw] : raw;
   if (migrated in tabIcons) return migrated as SettingsTabId;
   if (migrated.startsWith('plugin:')) return migrated as SettingsTabId;
@@ -266,7 +275,10 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
   // Consume the one-shot deep-link key so a section gear only steers this one
   // open, never the persisted default for future Settings-button clicks.
   useEffect(() => {
-    try { sessionStorage.removeItem('settings-deep-link-tab'); } catch { /* ignore */ }
+    try {
+      sessionStorage.removeItem('settings-deep-link-tab');
+      sessionStorage.removeItem('settings-deep-link-subtab');
+    } catch { /* ignore */ }
   }, []);
   // Inside the Pro shell there is no route to read the tab from, so it arrives
   // through the handoff the redirect parked (#733).
@@ -580,8 +592,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     ...(supportsVacation ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation, group: 'mail' as TabGroup }] : []),
     ...(supportsSieve ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters, group: 'mail' as TabGroup }] : []),
     ...(isFeatureEnabled('templatesEnabled') ? [{ id: 'templates' as Tab, label: t('tabs.templates'), icon: tabIcons.templates, group: 'mail' as TabGroup }] : []),
-    { id: 'folders', label: t('tabs.folders'), icon: tabIcons.folders, group: 'mail' },
-    ...(isFeatureEnabled('customKeywordsEnabled') ? [{ id: 'keywords' as Tab, label: t('tabs.keywords'), icon: tabIcons.keywords, group: 'mail' as TabGroup }] : []),
+    { id: 'folders', label: t('tabs.folders_and_tags', { defaultValue: 'Folders & Tags' }) || 'Folders & Tags', icon: tabIcons.folders, group: 'mail' },
     ...(byomcEnabled ? [{ id: 'byomc' as Tab, label: t('tabs.byomc'), icon: tabIcons.byomc, group: 'mail' as TabGroup }] : []),
 
     // Privacy & Security
@@ -710,8 +721,17 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       {effectiveActiveTab === 'vacation' && <VacationSettings />}
       {effectiveActiveTab === 'filters' && <FilterSettings />}
       {effectiveActiveTab === 'templates' && <TemplateSettings />}
-      {effectiveActiveTab === 'folders' && <FolderSettings />}
-      {effectiveActiveTab === 'keywords' && <KeywordSettings />}
+      {effectiveActiveTab === 'folders' && (
+        <FoldersAndTagsSettings
+          initialSubTab={
+            linkSegments?.[0] === 'keywords' ||
+            (typeof window !== 'undefined' && sessionStorage.getItem('settings-deep-link-subtab') === 'tags')
+              ? 'tags'
+              : 'folders'
+          }
+        />
+      )}
+      {effectiveActiveTab === 'keywords' && <FoldersAndTagsSettings initialSubTab="tags" />}
       {effectiveActiveTab === 'byomc' && <ByomcSettings />}
       {effectiveActiveTab === 'security' && <AccountSecuritySettings />}
       {effectiveActiveTab === 'content_senders' && <ContentSendersSettings />}
@@ -906,18 +926,15 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       )}
       <div data-mv-card={mvShell ? "" : undefined} className={cn("flex flex-1 min-h-0", mvShell && "mb-4 mx-4")}>
       {!isEmbedded && !mvShell && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-          <NavigationRail
-            collapsed
-            quota={quota}
-            isPushConnected={isPushConnected}
-            onLogout={logout}
-            onManageApps={handleManageApps}
-            onInlineApp={handleInlineApp}
-            onCloseInlineApp={closeInlineApp}
-            activeAppId={inlineApp?.id ?? null}
-          />
-        </div>
+        <AppNavRail
+          quota={quota}
+          isPushConnected={isPushConnected}
+          onLogout={logout}
+          onManageApps={handleManageApps}
+          onInlineApp={handleInlineApp}
+          onCloseInlineApp={closeInlineApp}
+          activeAppId={inlineApp?.id ?? null}
+        />
       )}
 
       {inlineApp && (
@@ -927,24 +944,14 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       <>
       <div
         className={cn(
-          "border-e border-border bg-secondary flex flex-col",
-          !isResizing && "transition-[width] duration-300"
+          "w-[272px] flex flex-col flex-shrink-0 h-full bg-secondary border-e border-border"
         )}
-        style={{ width: `${settingsSidebarWidth}px` }}
+        style={{ width: "272px" }}
       >
-        {!proInterface && (
-          <div className="p-4 border-b border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/')}
-              className="w-full justify-start"
-            >
-              <ArrowLeft className="w-4 h-4 me-2" />
-              {t('back_to_mail')}
-            </Button>
-          </div>
-        )}
+        <AppSidebarHeader
+          icon={SettingsIcon}
+          title={t('title') || 'Settings'}
+        />
 
         <div className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs">
           <div className="px-3 pt-1 pb-1">
@@ -993,15 +1000,15 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         data-testid={`settings-tab-${tab.id}`}
                         onClick={() => handleTabSelect(tab.id)}
                         className={cn(
-                          'w-full text-start px-3 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
+                          'mx-2 w-[calc(100%-16px)] text-start px-2.5 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
                           effectiveActiveTab === tab.id
-                            ? 'bg-accent text-accent-foreground font-medium'
-                            : 'hover:bg-muted text-foreground'
+                            ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
+                            : 'hover:bg-muted text-foreground/80'
                         )}
                       >
                         <Icon className={cn(
                           'w-4 h-4 shrink-0',
-                          effectiveActiveTab === tab.id ? 'text-accent-foreground' : 'text-muted-foreground'
+                          effectiveActiveTab === tab.id ? 'text-white' : 'text-muted-foreground'
                         )} />
                         {tab.label}
                       </button>
@@ -1022,16 +1029,6 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
           </div>
         </div>
       </div>
-
-      <ResizeHandle
-        onResizeStart={() => { dragStartWidth.current = settingsSidebarWidth; setIsResizing(true); }}
-        onResize={(delta) => setSettingsSidebarWidth(Math.max(180, Math.min(400, dragStartWidth.current + delta)))}
-        onResizeEnd={() => {
-          setIsResizing(false);
-          localStorage.setItem('settings-sidebar-width', String(settingsSidebarWidth));
-        }}
-        onDoubleClick={() => { setSettingsSidebarWidth(256); localStorage.setItem('settings-sidebar-width', '256'); }}
-      />
 
       <div ref={attachContentScroll} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-6 py-6">

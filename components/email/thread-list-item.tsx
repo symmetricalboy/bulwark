@@ -29,8 +29,10 @@ import type { SwipeAction } from "@/stores/settings-store";
 import { ThreadEmailItem } from "./thread-email-item";
 import { EmailHoverActions } from "./email-hover-actions";
 import { SearchSnippetText } from "./search-snippet-text";
-import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
 import { useTranslations } from "next-intl";
+import { useOwnDomainAddress } from "@/hooks/use-own-domain-address";
+import { getStarForEmail, isGmailStarLabel, isStarredMailbox, type GmailStarDefinition } from "@/lib/google/gmail-stars";
+import { withBasePath } from "@/lib/browser-navigation";
 
 /**
  * Unread bullet in the row gutter.
@@ -90,6 +92,7 @@ function MvRowLead({
   onToggleStar,
   selectLabel,
   starLabel,
+  starInfo,
 }: {
   checked: boolean;
   onToggleChecked: (e: React.MouseEvent) => void;
@@ -97,6 +100,7 @@ function MvRowLead({
   onToggleStar?: () => void;
   selectLabel: string;
   starLabel: string;
+  starInfo?: GmailStarDefinition | null;
 }) {
   return (
     <div className="flex items-center gap-0.5 flex-shrink-0 self-center">
@@ -120,21 +124,30 @@ function MvRowLead({
       {onToggleStar && (
         <button
           type="button"
-          aria-label={starLabel}
+          aria-label={starInfo?.name || starLabel}
           aria-pressed={starred}
-          title={starLabel}
+          title={starInfo?.name || starLabel}
           onClick={(e) => {
             e.stopPropagation();
             onToggleStar();
           }}
-          className="p-1 rounded-full transition-colors hover:bg-foreground/10"
+          className="p-1 rounded-full transition-colors hover:bg-foreground/10 flex items-center justify-center"
         >
-          <Star
-            className={cn(
-              "w-[18px] h-[18px]",
-              starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/60"
-            )}
-          />
+          {starred && starInfo ? (
+            <img
+              src={withBasePath(starInfo.iconPath)}
+              alt={starInfo.name}
+              className="w-[18px] h-[18px] object-contain select-none"
+              draggable={false}
+            />
+          ) : (
+            <Star
+              className={cn(
+                "w-[18px] h-[18px]",
+                starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/60"
+              )}
+            />
+          )}
         </button>
       )}
     </div>
@@ -145,17 +158,19 @@ function MvMobileStar({
   starred,
   onToggle,
   label,
+  starInfo,
 }: {
   starred: boolean;
   onToggle?: () => void;
   label: string;
+  starInfo?: GmailStarDefinition | null;
 }) {
   return (
     <button
       type="button"
-      aria-label={label}
+      aria-label={starInfo?.name || label}
       aria-pressed={starred}
-      title={label}
+      title={starInfo?.name || label}
       disabled={!onToggle}
       onClick={(event) => {
         event.stopPropagation();
@@ -163,12 +178,21 @@ function MvMobileStar({
       }}
       className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 disabled:pointer-events-none"
     >
-      <Star
-        className={cn(
-          "h-[18px] w-[18px]",
-          starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/70"
-        )}
-      />
+      {starred && starInfo ? (
+        <img
+          src={withBasePath(starInfo.iconPath)}
+          alt={starInfo.name}
+          className="h-[18px] w-[18px] object-contain select-none"
+          draggable={false}
+        />
+      ) : (
+        <Star
+          className={cn(
+            "h-[18px] w-[18px]",
+            starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/70"
+          )}
+        />
+      )}
     </button>
   );
 }
@@ -242,6 +266,7 @@ interface ThreadListItemProps {
   onContextMenu?: (e: React.MouseEvent, email: Email) => void;
   onOpenConversation?: (thread: ThreadGroup) => void;
   onToggleStar?: (email: Email) => void;
+  onToggleImportant?: (email: Email) => void;
   onMarkAsRead?: (email: Email, read: boolean) => void;
   onDelete?: (email: Email) => void;
   onArchive?: (email: Email) => void;
@@ -261,6 +286,7 @@ interface SingleEmailItemProps {
   showPreview: boolean;
   rowTint: string | null;
   onToggleStar?: () => void;
+  onToggleImportant?: () => void;
   onMarkAsRead?: (read: boolean) => void;
   onDelete?: () => void;
   onArchive?: () => void;
@@ -282,7 +308,7 @@ const SWIPE_ACTION_META: Record<Exclude<SwipeAction, 'none'>, { icon: AppIcon; b
 };
 
 const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
-  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, rowTint, onToggleStar, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments }, ref) {
+  function SingleEmailItem({ email, selected, onClick, onDoubleClick, onContextMenu, showPreview, rowTint, onToggleStar, onToggleImportant, onMarkAsRead, onDelete, onArchive, onSetTag, onMarkAsSpam, onUndoSpam, onOpenAttachment, loadAttachments }, ref) {
     const t = useTranslations('email_viewer');
     const tBatch = useTranslations('email_list.batch_actions');
     const tHover = useTranslations('settings.email_behavior.hover_actions');
@@ -299,6 +325,8 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
     // to the unified role so junk-contextual UI and avatar hiding work.
     const currentMailboxRole = mailboxes.find(mb => mb.id === selectedMailbox)?.role
       ?? (isUnifiedView ? (unifiedRole ?? undefined) : undefined);
+    const isStarredFolder = isStarredMailbox(selectedMailbox, mailboxes, isUnifiedView, unifiedRole);
+    const starInfo = isStarredFolder ? getStarForEmail(email, mailboxes) : null;
     const showRecipient = currentMailboxRole === 'sent' || currentMailboxRole === 'drafts';
     const sender = showRecipient ? (email.to?.[0] ?? email.from?.[0]) : email.from?.[0];
     const formatAddress = useOwnDomainAddress();
@@ -338,7 +366,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
       ? formatScheduledSendAt(email.scheduledSendAt, timeFormat)
       : null;
 
-    const tagIds = sortTagIds(getEmailTagIds(email.keywords));
+    const tagIds = sortTagIds(getEmailTagIds(email.keywords)).filter((id) => !isGmailStarLabel(id));
     // The account tint stands in for the per-account dot, so it outranks the
     // tag tint - the tag still shows its own colour on its chip.
     //
@@ -537,6 +565,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
               onToggleStar={onToggleStar}
               selectLabel={tBatch('select')}
               starLabel={tHover('star')}
+              starInfo={starInfo}
             />
           )}
 
@@ -605,7 +634,19 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                 </div>
                 <div className="flex items-center gap-2.5 shrink-0">
                   {isPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
-                  {isStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                  {isStarred && !mvRow && (
+                    starInfo ? (
+                      <img
+                        src={withBasePath(starInfo.iconPath)}
+                        alt={starInfo.name}
+                        title={starInfo.name}
+                        className="w-3.5 h-3.5 object-contain shrink-0 select-none"
+                        draggable={false}
+                      />
+                    ) : (
+                      <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    )
+                  )}
                   {isAnswered && !isForwarded && !mvRow && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
                   {isForwarded && !isAnswered && !mvRow && <StatusIcon icon={Forward} label={tStatus('forwarded')} className="w-3.5 h-3.5 text-muted-foreground" />}
                   {isAnswered && isForwarded && !mvRow && (
@@ -671,7 +712,17 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                       )}
                       {isStarred && !mvMobileRow && (
-                        <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        starInfo ? (
+                          <img
+                            src={withBasePath(starInfo.iconPath)}
+                            alt={starInfo.name}
+                            title={starInfo.name}
+                            className="w-3.5 h-3.5 object-contain shrink-0 select-none"
+                            draggable={false}
+                          />
+                        ) : (
+                          <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        )
                       )}
                       {isAnswered && !isForwarded && (
                         <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />
@@ -715,6 +766,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         starred={!!isStarred}
                         onToggle={onToggleStar}
                         label={tHover('star')}
+                        starInfo={starInfo}
                       />
                     )}
                   </div>
@@ -754,6 +806,7 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
                         starred={!!isStarred}
                         onToggle={onToggleStar}
                         label={tHover('star')}
+                        starInfo={starInfo}
                       />
                     )}
                   </div>
@@ -769,7 +822,9 @@ const SingleEmailItem = React.forwardRef<HTMLDivElement, SingleEmailItemProps>(
           <EmailHoverActions
             email={email}
             backgroundClassName={resolvedRowTint ? resolvedRowTint : mvRow ? mvHoverBackground(isChecked, isUnread, selected) : ((selected || isChecked) ? "bg-accent" : "bg-muted")}
+            starInfo={starInfo}
             onToggleStar={onToggleStar}
+            onToggleImportant={onToggleImportant}
             onMarkAsRead={onMarkAsRead}
             onDelete={onDelete}
             onArchive={onArchive}
@@ -801,6 +856,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     onContextMenu,
     onOpenConversation,
     onToggleStar,
+    onToggleImportant,
     onMarkAsRead,
     onDelete,
     onArchive,
@@ -885,8 +941,12 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
     const conversationGrouping = useSettingsStore((state) => state.conversationGrouping);
+    const isStarredFolder = isStarredMailbox(selectedMailbox, mailboxes, isUnifiedView, unifiedRole);
+    const threadStarInfo = isStarredFolder
+      ? thread.emails.map((e) => getStarForEmail(e, mailboxes)).find(Boolean) || null
+      : null;
     // A collapsed row speaks for every message under it, so it carries their tags too.
-    const tagIds = sortTagIds(getThreadTagIds(thread.emails));
+    const tagIds = sortTagIds(getThreadTagIds(thread.emails)).filter((id) => !isGmailStarLabel(id));
     const threadTintSource = threadAccountColor
       ?? (latestEmail.sourceClientAccountId ? getAccountById(latestEmail.sourceClientAccountId)?.avatarColor : undefined)
       ?? (latestEmail.accountLabel ? generateAvatarColor(latestEmail.accountLabel) : undefined);
@@ -913,6 +973,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
           showPreview={showPreview}
           rowTint={rowTint}
           onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+          onToggleImportant={onToggleImportant ? () => onToggleImportant(latestEmail) : undefined}
           onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
           onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
           onArchive={onArchive ? () => onArchive(latestEmail) : undefined}
@@ -1073,6 +1134,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                 onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
                 selectLabel={tBatch('select')}
                 starLabel={tHover('star')}
+                starInfo={threadStarInfo}
               />
             )}
 
@@ -1189,7 +1251,19 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   </div>
                   <div className="flex items-center gap-2.5 shrink-0">
                     {hasPinned && <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />}
-                    {hasStarred && !mvRow && <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />}
+                    {hasStarred && !mvRow && (
+                      threadStarInfo ? (
+                        <img
+                          src={withBasePath(threadStarInfo.iconPath)}
+                          alt={threadStarInfo.name}
+                          title={threadStarInfo.name}
+                          className="w-3.5 h-3.5 object-contain shrink-0 select-none"
+                          draggable={false}
+                        />
+                      ) : (
+                        <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      )
+                    )}
                     {hasAnswered && !hasForwarded && !mvRow && <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />}
                     {hasForwarded && !hasAnswered && !mvRow && <StatusIcon icon={Forward} label={tStatus('forwarded')} className="w-3.5 h-3.5 text-muted-foreground" />}
                     {hasAnswered && hasForwarded && !mvRow && (
@@ -1262,7 +1336,17 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           <StatusIcon icon={Pin} label={tStatus('pinned')} className="w-3.5 h-3.5 text-primary" />
                         )}
                         {hasStarred && !mvMobileRow && (
-                          <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          threadStarInfo ? (
+                            <img
+                              src={withBasePath(threadStarInfo.iconPath)}
+                              alt={threadStarInfo.name}
+                              title={threadStarInfo.name}
+                              className="w-3.5 h-3.5 object-contain shrink-0 select-none"
+                              draggable={false}
+                            />
+                          ) : (
+                            <StatusIcon icon={Star} label={tStatus('starred')} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          )
                         )}
                         {hasAnswered && !hasForwarded && (
                           <StatusIcon icon={Reply} label={tStatus('replied')} className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1306,6 +1390,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           starred={!!hasStarred}
                           onToggle={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
                           label={tHover('star')}
+                          starInfo={threadStarInfo}
                         />
                       )}
                     </div>
@@ -1345,6 +1430,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                           starred={!!hasStarred}
                           onToggle={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
                           label={tHover('star')}
+                          starInfo={threadStarInfo}
                         />
                       )}
                     </div>
@@ -1364,7 +1450,9 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             <EmailHoverActions
               email={latestEmail}
               backgroundClassName={rowTint ? rowTint : mvRow ? mvHoverBackground(isChecked, hasUnread, isSelected) : ((isSelected || isChecked) ? "bg-accent" : "bg-muted")}
+              starInfo={threadStarInfo}
               onToggleStar={onToggleStar ? () => onToggleStar(latestEmail) : undefined}
+              onToggleImportant={onToggleImportant ? () => onToggleImportant(latestEmail) : undefined}
               onMarkAsRead={onMarkAsRead ? (read) => onMarkAsRead(latestEmail, read) : undefined}
               onDelete={onDelete ? () => onDelete(latestEmail) : undefined}
               onArchive={onArchive ? () => onArchive(latestEmail) : undefined}

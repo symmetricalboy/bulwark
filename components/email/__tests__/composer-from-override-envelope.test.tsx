@@ -190,11 +190,7 @@ const DRAFT = {
   subAddressTag: '',
   mode: 'compose' as const,
   draftId: null,
-  fromOverrideEnabled: true,
-  fromOverrideName: 'Shop',
 };
-
-const NOTICE = 'from_override.envelope_notice';
 
 async function send(onSend: ReturnType<typeof vi.fn>) {
   fireEvent.click(screen.getAllByTestId('composer-send')[0]);
@@ -202,41 +198,51 @@ async function send(onSend: ReturnType<typeof vi.fn>) {
   return onSend.mock.calls[0][0] as { fromEmail?: string; fromName?: string; identityId?: string; envelopeMailFrom?: string };
 }
 
-describe('composer From override envelope (#1009)', () => {
+describe('composer From identity selector dropdown', () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('asks for the override address as the envelope MAIL FROM', async () => {
+  it('renders a dropdown picker of configured identities', () => {
+    render(<EmailComposer initialData={DRAFT} />);
+    const select = screen.getByTestId('composer-from') as HTMLSelectElement;
+    expect(select.tagName).toBe('SELECT');
+    expect(select.value).toBe('id-me');
+    expect(screen.getByText('Me <me@example.com>')).toBeInTheDocument();
+    expect(screen.getByText('Sales <sales@example.com>')).toBeInTheDocument();
+  });
+
+  it('allows picking a different identity from the dropdown and sends with it', async () => {
     const onSend = vi.fn();
-    render(<EmailComposer initialData={{ ...DRAFT, fromOverrideEmail: 'shop@example.com' }} onSend={onSend} />);
+    render(<EmailComposer initialData={DRAFT} onSend={onSend} />);
+
+    const select = screen.getByTestId('composer-from') as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: 'id-sales' } });
 
     const sent = await send(onSend);
     expect(sent).toMatchObject({
-      fromEmail: 'shop@example.com',
-      fromName: 'Shop',
-      identityId: 'id-me',
-      envelopeMailFrom: 'shop@example.com',
+      fromEmail: 'sales@example.com',
+      fromName: 'Sales',
+      identityId: 'id-sales',
     });
+    expect(sent.envelopeMailFrom).toBeUndefined();
   });
 
-  it("warns that the server may use the identity's address instead", () => {
-    render(<EmailComposer initialData={{ ...DRAFT, fromOverrideEmail: 'shop@example.com' }} />);
-    expect(screen.getByText(NOTICE)).toBeInTheDocument();
+  it('does not render override inputs or toggle button', () => {
+    render(<EmailComposer initialData={DRAFT} />);
+    expect(screen.queryByPlaceholderText('from_override.name_placeholder')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('from_override.email_placeholder')).not.toBeInTheDocument();
+    expect(screen.queryByText('from_override.toggle_on')).not.toBeInTheDocument();
+    expect(screen.queryByText('from_override.toggle_off')).not.toBeInTheDocument();
   });
 
-  it('does not warn when an identity owns the override address', () => {
-    render(<EmailComposer initialData={{ ...DRAFT, fromOverrideEmail: 'Sales@Example.com' }} />);
-    expect(screen.queryByText(NOTICE)).not.toBeInTheDocument();
-  });
-
-  it('sends no envelope request without an override', async () => {
+  it('sends default identity when none explicitly picked', async () => {
     const onSend = vi.fn();
-    render(<EmailComposer initialData={{ ...DRAFT, fromOverrideEnabled: false }} onSend={onSend} />);
-    expect(screen.queryByText(NOTICE)).not.toBeInTheDocument();
+    render(<EmailComposer initialData={{ ...DRAFT, selectedIdentityId: null }} onSend={onSend} />);
 
     const sent = await send(onSend);
     expect(sent.fromEmail).toBe('me@example.com');
-    expect(sent.envelopeMailFrom).toBeUndefined();
+    expect(sent.fromName).toBe('Me');
+    expect(sent.identityId).toBe('id-me');
   });
 });

@@ -1,5 +1,6 @@
 import type { Email, Mailbox } from "./jmap/types";
 import { buildMailboxTree, type MailboxNode } from "./utils";
+import { isGmailStarLabel } from "./google/gmail-stars";
 
 /** Header node that wraps the user's own folders when another account leads. */
 export const OWN_ACCOUNT_MOVE_NODE_PREFIX = "own-account-";
@@ -46,6 +47,7 @@ export function buildMoveTargets(
           m.id !== opts.currentMailboxId &&
           m.role !== "drafts" &&
           !m.id.startsWith("shared-") &&
+          !isGmailStarLabel(m) &&
           m.myRights?.mayAddItems
       )
       .map((m) => m.id)

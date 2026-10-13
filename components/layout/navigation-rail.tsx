@@ -421,9 +421,8 @@ export function NavigationRail({
     if (onNavigate) {
       return activeItemId === itemId;
     }
-    if (href === "/") {
-      // Mountain View's bottom bar marks the mail tab on mail routes too.
-      return pathname === "/" || pathname === "" || (mountainView && pathname.startsWith("/mail"));
+    if (href === "/" || itemId === "mail") {
+      return pathname === "/" || pathname === "" || pathname.startsWith("/mail");
     }
     return pathname.startsWith(href);
   };
@@ -608,11 +607,11 @@ export function NavigationRail({
       )}
     >
       {!hideLogo && (() => {
-        // comail's light-mode rail is dark teal → use the dark wordmark there.
+        // comail's light-mode rail is dark teal → use the dark logo there.
         const useDarkLogo = resolvedTheme === 'dark' || comailLightRail;
         const logoUrl = withBasePath(useDarkLogo ? (appLogoDarkUrl || appLogoLightUrl) : (appLogoLightUrl || appLogoDarkUrl));
         return logoUrl ? (
-          <div className="flex flex-col items-center justify-center pt-2.5 pb-1 px-1 gap-1">
+          <div className={cn("flex flex-col items-center justify-center px-1 flex-shrink-0", hideAlphaBadge ? "h-14" : "pt-2.5 pb-1 gap-1")}>
             {!hideAlphaBadge && (
               <span
                 data-testid="comail-alpha-badge"

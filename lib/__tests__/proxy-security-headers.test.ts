@@ -58,6 +58,7 @@ const STATIC_ASSETS = [
   '/branding/logo.png',
   '/notification/cheerful-527.mp3',
   '/demo/prototype-v3.png',
+  '/gmail-stars/star_googyellow500_20dp.png',
 ];
 
 beforeEach(() => {

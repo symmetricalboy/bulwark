@@ -360,4 +360,23 @@ describe('KeywordSettings unrecognized tags', () => {
     expect(await screen.findByText('unrecognized.error')).toBeInTheDocument();
     expect(screen.queryByText('unrecognized.none')).not.toBeInTheDocument();
   });
+
+  it('toggles visibility when hide/show button is clicked on a tag', () => {
+    render(<KeywordSettings />);
+    const hideButtons = screen.getAllByTitle('hide_tag');
+    expect(hideButtons.length).toBe(DEFAULT_KEYWORDS.length);
+
+    // Hide first tag ('red')
+    fireEvent.click(hideButtons[0]);
+    const firstKeyword = useSettingsStore.getState().emailKeywords.find((k) => k.id === 'red');
+    expect(firstKeyword?.visibility).toBe('hide');
+    expect(screen.getByText('hidden')).toBeInTheDocument();
+
+    // Now it should show 'show_tag' button
+    const showBtn = screen.getByTitle('show_tag');
+    fireEvent.click(showBtn);
+    const updatedKeyword = useSettingsStore.getState().emailKeywords.find((k) => k.id === 'red');
+    expect(updatedKeyword?.visibility).toBe('show');
+    expect(screen.queryByText('hidden')).not.toBeInTheDocument();
+  });
 });

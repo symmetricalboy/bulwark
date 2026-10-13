@@ -117,7 +117,9 @@
       "starred": "Oznaczone gwiazdką",
       "all_mail": "Cała poczta",
       "spam": "Spam",
-      "important": "Ważne"
+      "important": "Ważne",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Wspólne odebrane",
     "unified_sent": "Wszystkie wysłane",
@@ -169,7 +171,9 @@
     "mv_next_day": "Następny dzień",
     "mv_add_another_account": "Dodaj kolejne konto",
     "mv_manage_account": "Zarządzaj kontem",
-    "mv_storage_used": "Wykorzystano {percent}% z {total}"
+    "mv_storage_used": "Wykorzystano {percent}% z {total}",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Aplikacje domyślne",
@@ -465,7 +469,9 @@
       "compose": "Napisz (c)",
       "previous": "Poprzednia wiadomość",
       "next": "Następna wiadomość",
-      "edit_draft": "Edytuj szkic"
+      "edit_draft": "Edytuj szkic",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Zgłoś spam",
@@ -625,7 +631,12 @@
       "copied": "Skopiowano kod",
       "copy_failed": "Nie udało się skopiować kodu"
     },
-    "mv_position": "{index} z {total}"
+    "mv_position": "{index} z {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimalizuj",
@@ -1286,7 +1297,10 @@
         "add_all": "Dodaj wszystkie ({count})",
         "partial": "Przeskanowano tylko {scanned} najnowszych z {total} wiadomości. Etykiety używane wyłącznie w starszej poczcie mogą zostać pominięte.",
         "error": "Nie udało się przeskanować poczty w poszukiwaniu etykiet."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Przetestuj dźwięk powiadomienia",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Lewy górny róg",
         "corner_top-right": "Prawy górny róg",
         "corner_bottom-left": "Lewy dolny róg",
-        "corner_bottom-right": "Prawy dolny róg"
+        "corner_bottom-right": "Prawy dolny róg",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Domyślny program pocztowy",
@@ -2137,7 +2152,18 @@
       "error_delete": "Nie udało się usunąć folderu",
       "error_delete_has_children": "Nie można usunąć folderu: nadal zawiera podfoldery. Najpierw usuń je lub przenieś.",
       "error_delete_has_email": "Nie można usunąć folderu: nadal zawiera wiadomości e-mail. Najpierw je przenieś lub usuń.",
-      "error_role": "Nie udało się zaktualizować roli folderu"
+      "error_role": "Nie udało się zaktualizować roli folderu",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Zaawansowane",

@@ -61,7 +61,12 @@ vi.mock('@/hooks/use-google-drive', () => ({
 }));
 
 vi.mock('../file-browser', () => ({
-  FileBrowser: () => <div data-testid="file-browser">File Browser Content</div>,
+  FileBrowser: ({ storagePickerSlot }: { storagePickerSlot?: React.ReactNode }) => (
+    <div data-testid="file-browser">
+      {storagePickerSlot}
+      File Browser Content
+    </div>
+  ),
 }));
 
 vi.mock('../google-drive-browser', () => ({

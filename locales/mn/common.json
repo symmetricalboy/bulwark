@@ -117,7 +117,9 @@
       "starred": "Одтой",
       "all_mail": "Бүх шуудан",
       "spam": "Спам",
-      "important": "Чухал"
+      "important": "Чухал",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Нэгдсэн ирсэн имэйл",
     "unified_sent": "Бүгд илгээсэн",
@@ -169,7 +171,9 @@
     "mv_next_day": "Дараах өдөр",
     "mv_add_another_account": "Өөр бүртгэл нэмэх",
     "mv_manage_account": "Бүртгэлээ удирдах",
-    "mv_storage_used": "{total}-с {percent}% ашигласан"
+    "mv_storage_used": "{total}-с {percent}% ашигласан",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Өгөгдмөл програмууд",
@@ -490,7 +494,9 @@
       "compose": "Бичих (c)",
       "previous": "Өмнөх имэйл",
       "next": "Дараагийн имэйл",
-      "edit_draft": "Ноорог засах"
+      "edit_draft": "Ноорог засах",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Спам мэдээлэх",
@@ -625,7 +631,12 @@
       "copied": "Код хуулагдлаа",
       "copy_failed": "Кодыг хуулж чадсангүй"
     },
-    "mv_position": "{total}-с {index}"
+    "mv_position": "{total}-с {index}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Багасгах",
@@ -1289,7 +1300,10 @@
         "add_all": "Бүх {count}",
         "partial": "Зөвхөн {scanned} хамгийн сүүлийн үеийн {total} мессежийг сканнердсан. Зөвхөн хуучин имэйлд ашигласан шошго байхгүй байж магадгүй.",
         "error": "Таны имэйлийг шошго хайж чадсангүй."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Туршилтын мэдэгдлийн дуу",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Зүүн дээд",
         "corner_top-right": "Баруун дээд",
         "corner_bottom-left": "Зүүн доод",
-        "corner_bottom-right": "Баруун доод"
+        "corner_bottom-right": "Баруун доод",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Өгөгдмөл шуудангийн програм",
@@ -2144,7 +2159,18 @@
       "error_delete": "Хавтсыг устгаж чадсангүй",
       "error_delete_has_children": "Фолдерыг устгах боломжгүй: энэ нь дэд хавтастай хэвээр байна. Эхлээд устгах эсвэл зөөх.",
       "error_delete_has_email": "Фолдерыг устгах боломжгүй: энэ нь имэйл агуулсан хэвээр байна. Эхлээд зөөж эсвэл устгана уу.",
-      "error_role": "Фолдерын үүргийг шинэчилж чадсангүй"
+      "error_role": "Фолдерын үүргийг шинэчилж чадсангүй",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Дэвшилтэт",

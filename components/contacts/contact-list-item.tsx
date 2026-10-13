@@ -59,13 +59,14 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
       onClick={onClick}
       onContextMenu={onContextMenu ? (e) => onContextMenu(e, contact) : undefined}
       className={cn(
-        "w-full flex items-center cursor-pointer select-none transition-all duration-200 border-b border-border",
+        "w-full flex items-center cursor-pointer select-none transition-all duration-200 border-b border-border px-3",
         isSelected
-          ? "bg-selection shadow-sm"
+          ? "bg-accent bg-selection shadow-sm"
           : "bg-background hover:bg-muted hover:shadow-sm",
-        isChecked && !isSelected && "ring-2 ring-primary/20 bg-selection/60",
+        isChecked && !isSelected && "ring-2 ring-primary/20 bg-accent/40 bg-selection/60",
+        isChecked && isSelected && "bg-accent bg-selection shadow-sm ring-2 ring-primary/20",
       )}
-      style={{ gap: 'var(--density-item-gap)', paddingInline: '16px', paddingBlock: 'var(--density-item-py)' }}
+      style={{ gap: 'var(--density-item-gap)', paddingBlock: 'var(--density-item-py)' }}
     >
       {hasSelection && (
         <button
@@ -97,7 +98,7 @@ export function ContactListItem({ contact, isSelected, isChecked, hasSelection, 
       )}
 
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">
+        <div className="text-sm font-semibold truncate text-foreground">
           {name || email || "-"}
         </div>
         {density !== 'extra-compact' && email && name && (

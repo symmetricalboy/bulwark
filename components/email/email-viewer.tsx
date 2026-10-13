@@ -113,6 +113,7 @@ import { RecipientPopover } from "./recipient-popover";
 import { MailtoLink } from "@/components/ui/mailto-link";
 import { imageBlobUrl, inertBlobType, isFilePreviewable, isMimeTypeSafeForInlinePreview, toInertBlob } from "@/lib/file-preview";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
+import { getStarForEmail, isGmailStarLabel, isStarredMailbox } from "@/lib/google/gmail-stars";
 import { parseTnef, isTnefAttachment } from "@/lib/tnef";
 import { debug } from "@/lib/debug";
 import { findVerificationCode, verificationCodeBodyText } from "@/lib/verification-code";
@@ -145,6 +146,7 @@ interface EmailViewerProps {
   onDelete?: () => void;
   onArchive?: () => void;
   onToggleStar?: () => void;
+  onToggleImportant?: () => void;
   onMarkAsRead?: (emailId: string, read: boolean) => void;
   onSetTag?: (emailId: string, tagId: string | null) => void;
   onDownloadAttachment?: (blobId: string, name: string, type?: string, forceDownload?: boolean) => void;
@@ -797,6 +799,7 @@ export function EmailViewer({
   onDelete,
   onArchive,
   onToggleStar,
+  onToggleImportant,
   onMarkAsRead,
   onSetTag,
   onDownloadAttachment,
@@ -858,6 +861,8 @@ export function EmailViewer({
   const trustedSendersAddressBook = useSettingsStore((state) => state.trustedSendersAddressBook);
   const isTrustedAddressBookSender = useContactStore((state) => state.isTrustedAddressBookSender);
   const addToTrustedSendersBook = useContactStore((state) => state.addToTrustedSendersBook);
+  const isImportantSender = useContactStore((state) => state.isImportantSender);
+  const toggleImportantSender = useContactStore((state) => state.toggleImportantSender);
   const emailKeywords = useSettingsStore((state) => state.emailKeywords);
   const { sortTagIds, tagColor } = useKeywordFormat();
   const toolbarPosition = useSettingsStore((state) => state.toolbarPosition);
@@ -941,6 +946,9 @@ export function EmailViewer({
   // inline images, export and attachment drag-out. Other viewer hosts keep
   // their existing fallback routing.
   const isUnifiedView = useEmailStore((s) => s.isUnifiedView);
+  const unifiedRole = useEmailStore((s) => s.unifiedRole);
+  const isStarredFolder = isStarredMailbox(selectedMailbox, mailboxes, isUnifiedView, unifiedRole);
+  const starInfo = isStarredFolder && email ? getStarForEmail(email, mailboxes) : null;
   const legacyBlobClient = useMemo(() => {
     const scid = isUnifiedView ? email?.sourceClientAccountId : undefined;
     return (scid ? useAuthStore.getState().getClientForAccount(scid) : null) ?? client;
@@ -1128,7 +1136,7 @@ export function EmailViewer({
   }, [moreMenuSub, moreMenuOpen, isMobile]);
   const [hiddenPriorities, setHiddenPriorities] = useState<Set<number>>(new Set());
   const currentTagIds = getEmailTagIds(email?.keywords);
-  const sortedTagIds = sortTagIds(currentTagIds);
+  const sortedTagIds = sortTagIds(currentTagIds).filter((id) => !isGmailStarLabel(id));
   // The header spans the reading pane, so it measures its own width rather than
   // inheriting the message list's answer.
   const headerTagsRef = useRef<HTMLDivElement>(null);
@@ -3090,7 +3098,9 @@ export function EmailViewer({
         : t('sender_check.unverified', { domain: senderVerification.domain });
   const isStarred = email.keywords?.$flagged;
   const isUnread = !email.keywords?.$seen;
-  const isImportant = email.keywords?.["$important"];
+  const senderEmail = email.from?.[0]?.email;
+  const isSenderImportant = senderEmail ? isImportantSender(senderEmail) : false;
+  const isImportant = Boolean(email.keywords?.["$important"]) || isSenderImportant;
 
   // Shared toolbar items used by both 'top' and 'below-subject' positions
   const renderToolbarItems = (showBackButton: boolean) => (
@@ -3384,6 +3394,23 @@ export function EmailViewer({
           )}
         </Button>
 
+        {/* Toggle Important */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleImportant}
+          data-overflow-item
+          data-overflow-priority="8"
+          className={cn(
+            "flex-col items-center gap-0.5 h-auto py-1.5 px-2 sm:flex-row sm:h-8 sm:gap-1.5 sm:py-0",
+            mvViewer && "order-6"
+          )}
+          title={isImportant ? t('tooltips.unimportant') : t('tooltips.important')}
+        >
+          <AlertTriangle className={cn("w-4 h-4", isImportant ? "fill-pink-500/20 text-pink-500 dark:text-pink-400" : "text-muted-foreground")} />
+          {showToolbarLabels && <span className="text-[10px] leading-tight sm:text-sm">{isImportant ? t('tooltips.unimportant') : t('tooltips.important')}</span>}
+        </Button>
+
         {/* Print - hidden on mobile, overflows to More menu. Mountain View
             has it on the subject line. */}
         {!mvViewer && (
@@ -3480,8 +3507,21 @@ export function EmailViewer({
                 onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
                 className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
               >
-                <Star className={cn("w-4 h-4", isStarred && "fill-yellow-400 text-yellow-400")} />
-                {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
+                {isStarred && starInfo ? (
+                  <img src={withBasePath(starInfo.iconPath)} alt={starInfo.name} className="w-4 h-4 object-contain select-none shrink-0" draggable={false} />
+                ) : (
+                  <Star className={cn("w-4 h-4", isStarred && "fill-yellow-400 text-yellow-400")} />
+                )}
+                {isStarred ? (starInfo?.name || t('tooltips.unstar')) : t('tooltips.star')}
+              </button>
+              {/* Important toggle */}
+              <button
+                role="menuitem"
+                onClick={() => { onToggleImportant?.(); setMoreMenuOpen(false); setMoreMenuSub(null); }}
+                className="w-full px-3 py-1.5 text-sm text-start hover:bg-muted text-foreground flex items-center gap-2"
+              >
+                <AlertTriangle className={cn("w-4 h-4", isImportant && "fill-pink-500/20 text-pink-500 dark:text-pink-400")} />
+                {isImportant ? t('tooltips.unimportant') : t('tooltips.important')}
               </button>
               {/* Overflow: reply */}
               <button
@@ -3839,8 +3879,21 @@ export function EmailViewer({
                 onClick={() => { onToggleStar?.(); setMoreMenuOpen(false); }}
                 className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
               >
-                <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
-                {isStarred ? t('tooltips.unstar') : t('tooltips.star')}
+                {isStarred && starInfo ? (
+                  <img src={withBasePath(starInfo.iconPath)} alt={starInfo.name} className="w-5 h-5 object-contain select-none shrink-0" draggable={false} />
+                ) : (
+                  <Star className={cn("w-5 h-5", isStarred && "fill-yellow-400 text-yellow-400")} />
+                )}
+                {isStarred ? (starInfo?.name || t('tooltips.unstar')) : t('tooltips.star')}
+              </button>
+              {/* Important toggle */}
+              <button
+                role="menuitem"
+                onClick={() => { onToggleImportant?.(); setMoreMenuOpen(false); }}
+                className="w-full px-4 py-3 min-h-[44px] text-sm text-start hover:bg-muted text-foreground flex items-center gap-3"
+              >
+                <AlertTriangle className={cn("w-5 h-5", isImportant && "fill-pink-500/20 text-pink-500 dark:text-pink-400")} />
+                {isImportant ? t('tooltips.unimportant') : t('tooltips.important')}
               </button>
               {/* Move to folder (opens sub-view). The toolbar's own Move button
                   is the first thing dropped when the toolbar runs out of room,
@@ -4071,16 +4124,37 @@ export function EmailViewer({
                 {/* Star inline with subject (top toolbar mode). Mountain View
                     has it on the sender's line instead. */}
                 {toolbarPosition === 'top' && !mvViewer && (
-                  <button
-                    onClick={onToggleStar}
-                    className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
-                    title={isStarred ? t('tooltips.unstar') : t('tooltips.star')}
-                  >
-                    <Star className={cn(
-                      "w-4 h-4 lg:w-5 lg:h-5 transition-colors",
-                      isStarred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40"
-                    )} />
-                  </button>
+                  <>
+                    <button
+                      onClick={onToggleStar}
+                      className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors flex items-center justify-center"
+                      title={isStarred ? (starInfo?.name || t('tooltips.unstar')) : t('tooltips.star')}
+                    >
+                      {isStarred && starInfo ? (
+                        <img
+                          src={withBasePath(starInfo.iconPath)}
+                          alt={starInfo.name}
+                          className="w-4 h-4 lg:w-5 lg:h-5 object-contain select-none shrink-0"
+                          draggable={false}
+                        />
+                      ) : (
+                        <Star className={cn(
+                          "w-4 h-4 lg:w-5 lg:h-5 transition-colors",
+                          isStarred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40"
+                        )} />
+                      )}
+                    </button>
+                    <button
+                      onClick={onToggleImportant}
+                      className="flex-shrink-0 p-1 rounded hover:bg-muted transition-colors"
+                      title={isImportant ? t('tooltips.unimportant') : t('tooltips.important')}
+                    >
+                      <AlertTriangle className={cn(
+                        "w-4 h-4 lg:w-5 lg:h-5 transition-colors",
+                        isImportant ? "fill-pink-500/20 text-pink-500 dark:text-pink-400" : "text-muted-foreground/40"
+                      )} />
+                    </button>
+                  </>
                 )}
                 {isImportant && (
                   <span className="px-1.5 lg:px-2 py-0.5 bg-warning/15 text-warning rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 self-center">
@@ -4232,11 +4306,30 @@ export function EmailViewer({
                           type="button"
                           onClick={onToggleStar}
                           className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                          title={isStarred ? t('tooltips.unstar') : t('tooltips.star')}
-                          aria-label={isStarred ? t('tooltips.unstar') : t('tooltips.star')}
+                          title={isStarred ? (starInfo?.name || t('tooltips.unstar')) : t('tooltips.star')}
+                          aria-label={isStarred ? (starInfo?.name || t('tooltips.unstar')) : t('tooltips.star')}
                           aria-pressed={!!isStarred}
                         >
-                          <Star className={cn("w-5 h-5", isStarred && "fill-amber-400 text-amber-400")} />
+                          {isStarred && starInfo ? (
+                            <img
+                              src={withBasePath(starInfo.iconPath)}
+                              alt={starInfo.name}
+                              className="w-5 h-5 object-contain select-none shrink-0"
+                              draggable={false}
+                            />
+                          ) : (
+                            <Star className={cn("w-5 h-5", isStarred && "fill-amber-400 text-amber-400")} />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onToggleImportant}
+                          className="grid place-items-center w-10 h-10 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                          title={isImportant ? t('tooltips.unimportant') : t('tooltips.important')}
+                          aria-label={isImportant ? t('tooltips.unimportant') : t('tooltips.important')}
+                          aria-pressed={!!isImportant}
+                        >
+                          <AlertTriangle className={cn("w-5 h-5", isImportant ? "fill-pink-500/20 text-pink-500 dark:text-pink-400" : "text-muted-foreground/40")} />
                         </button>
                         {!isDraft && !isScheduled && (
                           <button
@@ -5097,6 +5190,20 @@ export function EmailViewer({
                           >
                             <ShieldCheck className="w-3.5 h-3.5" />
                             {t('trust_sender')}
+                          </button>
+                        )}
+                        {email.from?.[0]?.email && (
+                          <button
+                            onClick={async () => {
+                              const sEmail = email.from?.[0]?.email;
+                              if (sEmail && client) {
+                                await toggleImportantSender(client, sEmail, email.from?.[0]?.name);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md border border-border hover:bg-muted transition-colors min-h-[36px]"
+                          >
+                            <AlertTriangle className={cn("w-3.5 h-3.5", isSenderImportant && "text-pink-500 dark:text-pink-400 fill-pink-500/20")} />
+                            {isSenderImportant ? t('remove_sender_important') : t('mark_sender_important')}
                           </button>
                         )}
                       </div>

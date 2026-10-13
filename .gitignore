@@ -56,4 +56,5 @@ result-*
 
 # Local review captures and retired tracker state.
 review-evidence/
+artifacts/
 .chainlink/

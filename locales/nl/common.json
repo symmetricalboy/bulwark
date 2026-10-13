@@ -117,7 +117,9 @@
       "starred": "Met ster",
       "all_mail": "Alle e-mail",
       "spam": "Spam",
-      "important": "Belangrijk"
+      "important": "Belangrijk",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Gecombineerd postvak IN",
     "unified_sent": "Alle verzonden",
@@ -169,7 +171,9 @@
     "mv_next_day": "Volgende dag",
     "mv_add_another_account": "Nog een account toevoegen",
     "mv_manage_account": "Account beheren",
-    "mv_storage_used": "{percent}% van {total} gebruikt"
+    "mv_storage_used": "{percent}% van {total} gebruikt",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Standaardapps",
@@ -463,7 +467,9 @@
       "compose": "Opstellen (c)",
       "previous": "Vorige e-mail",
       "next": "Volgende e-mail",
-      "edit_draft": "Concept bewerken"
+      "edit_draft": "Concept bewerken",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Spam melden",
@@ -625,7 +631,12 @@
       "copied": "Code gekopieerd",
       "copy_failed": "Kan de code niet kopiëren"
     },
-    "mv_position": "{index} van {total}"
+    "mv_position": "{index} van {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimaliseren",
@@ -1286,7 +1297,10 @@
         "add_all": "Alle {count} toevoegen",
         "partial": "Alleen de {scanned} meest recente van {total} e-mails zijn doorzocht. Labels die alleen op oudere e-mails staan, ontbreken mogelijk.",
         "error": "Kan uw e-mail niet doorzoeken op labels."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Meldingsgeluid testen",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Linksboven",
         "corner_top-right": "Rechtsboven",
         "corner_bottom-left": "Linksonder",
-        "corner_bottom-right": "Rechtsonder"
+        "corner_bottom-right": "Rechtsonder",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Standaard e-mailprogramma",
@@ -2137,7 +2152,18 @@
       "error_delete": "Map verwijderen mislukt",
       "error_delete_has_children": "Map kan niet worden verwijderd: deze bevat nog submappen. Verwijder of verplaats deze eerst.",
       "error_delete_has_email": "Map kan niet worden verwijderd: deze bevat nog e-mails. Verplaats of verwijder deze eerst.",
-      "error_role": "Maprol bijwerken mislukt"
+      "error_role": "Maprol bijwerken mislukt",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Geavanceerd",

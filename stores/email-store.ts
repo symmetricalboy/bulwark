@@ -130,6 +130,7 @@ interface EmailStore {
   // the server order. Cleared on navigation.
   retainedInViewIds: Set<string>;
   hasMoreEmails: boolean; // Track if more emails are available to load
+  googleNextPageToken: string | null;
   totalEmails: number; // Total number of emails in the current mailbox/query
   // The configured message-list order the current folder view was fetched
   // with (#718); empty for chronological. Thread grouping mirrors it.
@@ -339,6 +340,7 @@ interface EmailStore {
   clearSearchFilters: () => void;
   toggleAdvancedSearch: () => void;
   toggleStar: (client: IJMAPClient, emailId: string) => Promise<void>;
+  toggleImportant: (client: IJMAPClient, emailId: string) => Promise<void>;
   setEmailKeywords: (client: IJMAPClient, emailId: string, keywords: Record<string, boolean>) => Promise<void>;
   /**
    * Set (true) or clear (false) just the named keywords. Every other keyword
@@ -1002,6 +1004,38 @@ function resolveMailboxAccountTarget(
 }
 
 /**
+ * Overlays client-side custom folder roles from settings onto mailboxes,
+ * and maps standard JMAP 'flagged' role to 'starred'.
+ */
+export function applyCustomFolderRoles(mailboxes: Mailbox[]): Mailbox[] {
+  const customRoles = useSettingsStore.getState().customFolderRoles || {};
+  return mailboxes.map((mb) => {
+    let role = mb.role;
+    if (role === 'flagged') {
+      role = 'starred';
+    } else if (role === 'all_mail') {
+      role = 'all';
+    }
+    for (const [cRole, targetId] of Object.entries(customRoles)) {
+      if (targetId === mb.id) {
+        role = cRole;
+        break;
+      } else if (
+        (role === cRole ||
+          (cRole === 'all' && role === 'all_mail') ||
+          (cRole === 'all_mail' && role === 'all') ||
+          (cRole === 'starred' && role === 'flagged') ||
+          (cRole === 'flagged' && role === 'starred')) &&
+        targetId
+      ) {
+        role = undefined;
+      }
+    }
+    return role !== mb.role ? { ...mb, role } : mb;
+  });
+}
+
+/**
  * Resolves the store-side mailbox ids that make up a personal account's
  * contribution to the unified cross views (All mail / Unread / Starred), honoring
  * that account's `allMailFolderIds` folder selection. Returns `undefined` when the
@@ -1390,7 +1424,8 @@ async function refreshMailboxesForViewingAccount(fallbackClient: IJMAPClient): P
   const viewingId = useEmailStore.getState().viewingAccountId;
   const client = resolveActionClient(fallbackClient);
   try {
-    const mailboxes = await client.getMailboxes();
+    const rawMailboxes = await client.getMailboxes();
+    const mailboxes = applyCustomFolderRoles(rawMailboxes);
     if (viewingId) {
       useEmailStore.setState((state) => ({
         accountMailboxes: { ...state.accountMailboxes, [viewingId]: mailboxes },
@@ -1822,6 +1857,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   retainedInViewIds: new Set(),
   lastSelectedEmailKey: null,
   hasMoreEmails: false,
+  googleNextPageToken: null,
   totalEmails: 0,
   listOrder: [],
   listHold: null,
@@ -1876,9 +1912,9 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   spamUndoCache: new Map(),
 
   setEmails: (emails) => set({ emails }),
-  setMailboxes: (mailboxes) => set({ mailboxes }),
+  setMailboxes: (mailboxes) => set({ mailboxes: applyCustomFolderRoles(mailboxes) }),
   setAccountMailboxes: (accountId, mailboxes) => set((state) => ({
-    accountMailboxes: { ...state.accountMailboxes, [accountId]: mailboxes },
+    accountMailboxes: { ...state.accountMailboxes, [accountId]: applyCustomFolderRoles(mailboxes) },
   })),
   clearAccountMailboxes: () => set({ accountMailboxes: {} }),
   setViewingAccount: (accountId) => set({ viewingAccountId: accountId }),
@@ -2013,6 +2049,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         ? { searchMailboxId: mailboxId }
         : scopeIsDefault ? { searchMailboxId: defaultSearchScopeFor(mailboxes, mailboxId) } : {}),
       isLoadingMore: false,
+      googleNextPageToken: null,
       selectedEmail: null,
       selectedEmailKeys: new Set(),
       selectedKeyword: null,
@@ -2089,7 +2126,7 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         ? await client.getAllMailboxesWithState()
         : { mailboxes: await client.getAllMailboxes(), states: {} };
       if (stale()) return;
-      const mailboxes = fetched.mailboxes;
+      const mailboxes = applyCustomFolderRoles(fetched.mailboxes);
 
       // Guard against a transient fetch returning an empty list (e.g. a server
       // concurrent-request limit hit during a burst of deletes). Replacing a
@@ -2195,14 +2232,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const { fetchGoogleEmails } = await import('@/lib/google/google-mail-client');
         const { parseGoogleMailboxId } = await import('@/lib/google/gmail-mapper');
         const parsed = parseGoogleMailboxId(targetMailboxId);
-        const { emails, total } = await fetchGoogleEmails({
+        const { emails, total, nextPageToken } = await fetchGoogleEmails({
           mailboxId: targetMailboxId,
           googleAccountId: parsed?.accountEmail,
+          maxResults: 50,
         });
         if (!isCurrentView()) return;
         set({
           emails,
-          hasMoreEmails: false,
+          googleNextPageToken: nextPageToken || null,
+          hasMoreEmails: Boolean(nextPageToken),
           totalEmails: total ?? emails.length,
           isLoading: false,
           error: null,
@@ -2414,6 +2453,45 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
 
     // Don't load if already loading or no more emails
     if (isLoadingMore || !hasMoreEmails) return;
+
+    if (selectedMailbox && selectedMailbox.startsWith('google:')) {
+      const { googleNextPageToken, emails: currentEmails, searchQuery } = get();
+      if (!googleNextPageToken) {
+        set({ isLoadingMore: false, hasMoreEmails: false });
+        return;
+      }
+      set({ isLoadingMore: true, error: null });
+      try {
+        const { fetchGoogleEmails } = await import('@/lib/google/google-mail-client');
+        const { parseGoogleMailboxId } = await import('@/lib/google/gmail-mapper');
+        const parsed = parseGoogleMailboxId(selectedMailbox);
+        const { emails: newEmails, total, nextPageToken } = await fetchGoogleEmails({
+          mailboxId: selectedMailbox,
+          googleAccountId: parsed?.accountEmail,
+          pageToken: googleNextPageToken,
+          query: searchQuery || undefined,
+          maxResults: 50,
+        });
+        if (!isCurrentView()) return;
+        const existingIds = new Set(currentEmails.map((e) => e.id));
+        const filteredNew = newEmails.filter((e) => !existingIds.has(e.id));
+        const combined = [...currentEmails, ...filteredNew];
+        set({
+          emails: combined,
+          googleNextPageToken: nextPageToken || null,
+          hasMoreEmails: Boolean(nextPageToken),
+          totalEmails: total ?? combined.length,
+          isLoadingMore: false,
+        });
+      } catch (error) {
+        if (!isCurrentView()) return;
+        set({
+          error: error instanceof Error ? error.message : "Failed to load more emails",
+          isLoadingMore: false,
+        });
+      }
+      return;
+    }
 
     // Cross-account views fan out across all accounts' included folders. Paginate
     // via the cross-view loader (search-aware), mirroring the unified branch.
@@ -3439,14 +3517,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const { fetchGoogleEmails } = await import('@/lib/google/google-mail-client');
         const { parseGoogleMailboxId } = await import('@/lib/google/gmail-mapper');
         const parsed = parseGoogleMailboxId(targetMailboxId);
-        const { emails, total } = await fetchGoogleEmails({
+        const { emails, total, nextPageToken } = await fetchGoogleEmails({
           mailboxId: targetMailboxId,
           googleAccountId: parsed?.accountEmail,
           query,
+          maxResults: 50,
         });
         set({
           emails,
-          hasMoreEmails: false,
+          googleNextPageToken: nextPageToken || null,
+          hasMoreEmails: Boolean(nextPageToken),
           totalEmails: total ?? emails.length,
           isLoading: false,
           error: null,
@@ -3755,6 +3835,54 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : "Failed to update star"
+      });
+      throw error;
+    }
+  },
+
+  toggleImportant: async (client, emailId) => {
+    try {
+      if (emailId.startsWith('google:')) {
+        const email = get().emails.find(e => e.id === emailId);
+        const isImportant = email?.keywords?.$important || false;
+        const { updateGoogleEmail } = await import('@/lib/google/google-mail-client');
+        await updateGoogleEmail(emailId, {
+          addLabelIds: isImportant ? [] : ['IMPORTANT'],
+          removeLabelIds: isImportant ? ['IMPORTANT'] : [],
+        });
+        set((state) => ({
+          emails: state.emails.map(e =>
+            e.id === emailId ? { ...e, keywords: { ...e.keywords, $important: !isImportant } } : e
+          ),
+          selectedEmail: state.selectedEmail?.id === emailId
+            ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $important: !isImportant } }
+            : state.selectedEmail,
+        }));
+        return;
+      }
+
+      const email = get().emails.find(e => e.id === emailId);
+      if (!email) return;
+
+      const isImportant = email.keywords?.$important || false;
+      const { client: actionClient, accountId } = resolveEmailActionContext(email, client);
+      if (isImportant) {
+        await actionClient.removeKeyword(emailId, '$important', accountId);
+      } else {
+        await actionClient.setKeyword(emailId, '$important', accountId);
+      }
+
+      set((state) => ({
+        emails: state.emails.map(e =>
+          e.id === emailId ? { ...e, keywords: { ...e.keywords, $important: !isImportant } } : e
+        ),
+        selectedEmail: state.selectedEmail?.id === emailId
+          ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $important: !isImportant } }
+          : state.selectedEmail,
+      }));
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Failed to update important status"
       });
       throw error;
     }
@@ -5283,21 +5411,102 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
   setMailboxRole: async (client, mailboxId, role) => {
     try {
       const target = resolveMailboxMutationContext(client, mailboxId);
+      const settingsStore = useSettingsStore.getState();
+
+      // Clear any customFolderRoles for this mailbox or this role
+      const currentCustom = settingsStore.customFolderRoles || {};
+      for (const [r, id] of Object.entries(currentCustom)) {
+        if (
+          id === mailboxId ||
+          (role &&
+            (r === role ||
+              (role === 'all' && r === 'all_mail') ||
+              (role === 'all_mail' && r === 'all') ||
+              (role === 'starred' && r === 'flagged') ||
+              (role === 'flagged' && r === 'starred')))
+        ) {
+          settingsStore.setCustomFolderRole(r, null);
+        }
+      }
+
+      // If clearing role
+      if (!role) {
+        try {
+          await target.client.updateMailbox(target.mailboxId, { role: null }, target.accountId);
+        } catch {
+          // ignore error clearing server role
+        }
+        if (get().viewingAccountId) {
+          await refreshMailboxesForViewingAccount(client);
+        } else {
+          await get().fetchMailboxes(client);
+        }
+        return;
+      }
+
+      // Client-side only role: 'unread' (RFC 8621 has no unread role)
+      if (role === 'unread') {
+        try {
+          await target.client.updateMailbox(target.mailboxId, { role: null }, target.accountId);
+        } catch {
+          // ignore error clearing server role
+        }
+        settingsStore.setCustomFolderRole('unread', mailboxId);
+        if (get().viewingAccountId) {
+          await refreshMailboxesForViewingAccount(client);
+        } else {
+          await get().fetchMailboxes(client);
+        }
+        return;
+      }
+
+      // Map client role to RFC 8621 server role: 'starred' -> 'flagged', 'all_mail' -> 'all'
+      let serverRole: string | null = role;
+      if (role === 'starred') {
+        serverRole = 'flagged';
+      } else if (role === 'all_mail') {
+        serverRole = 'all';
+      }
+
       // If assigning a role, first clear that role from every other mailbox in
       // the SAME owning account. Never clear the active user's role while
       // changing a shared/group mailbox (or vice versa).
-      if (role) {
-        const existingMailboxes = resolveActionMailboxes().filter((mb) =>
-          mb.role === role
-          && mb.id !== mailboxId
-          && (target.ownerAccountId ? mb.accountId === target.ownerAccountId : !mb.isShared)
-        );
-        for (const existing of existingMailboxes) {
+      const existingMailboxes = resolveActionMailboxes().filter((mb) =>
+        (mb.role === role ||
+          (serverRole && mb.role === serverRole) ||
+          (role === 'all' && mb.role === 'all_mail') ||
+          (role === 'all_mail' && mb.role === 'all') ||
+          (role === 'starred' && mb.role === 'flagged') ||
+          (role === 'flagged' && mb.role === 'starred')) &&
+        mb.id !== mailboxId &&
+        (target.ownerAccountId ? mb.accountId === target.ownerAccountId : !mb.isShared)
+      );
+      for (const existing of existingMailboxes) {
+        try {
           const existingTarget = resolveMailboxMutationContext(client, existing.id);
           await existingTarget.client.updateMailbox(existingTarget.mailboxId, { role: null }, existingTarget.accountId);
+        } catch {
+          // ignore if server refuses to clear role on old folder
         }
       }
-      await target.client.updateMailbox(target.mailboxId, { role }, target.accountId);
+
+      try {
+        await target.client.updateMailbox(target.mailboxId, { role: serverRole }, target.accountId);
+      } catch (err) {
+        if (
+          role === 'starred' ||
+          role === 'flagged' ||
+          role === 'all' ||
+          role === 'all_mail' ||
+          role === 'unread'
+        ) {
+          console.warn(`Server rejected role ${serverRole} for mailbox ${target.mailboxId}, storing locally:`, err);
+          settingsStore.setCustomFolderRole(role, mailboxId);
+        } else {
+          throw err;
+        }
+      }
+
       if (get().viewingAccountId) {
         await refreshMailboxesForViewingAccount(client);
       } else {

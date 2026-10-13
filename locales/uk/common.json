@@ -117,7 +117,9 @@
       "starred": "Позначено зірочкою",
       "all_mail": "Вся пошта",
       "spam": "Спам",
-      "important": "важливо"
+      "important": "важливо",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Спільні вхідні",
     "unified_sent": "Усі надіслані",
@@ -169,7 +171,9 @@
     "mv_next_day": "Наступний день",
     "mv_add_another_account": "Додати інший обліковий запис",
     "mv_manage_account": "Керувати обліковим записом",
-    "mv_storage_used": "Використано {percent}% з {total}"
+    "mv_storage_used": "Використано {percent}% з {total}",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Програми за замовчуванням",
@@ -465,7 +469,9 @@
       "compose": "Скласти (с)",
       "previous": "Попередній електронний лист",
       "next": "Наступний електронний лист",
-      "edit_draft": "Редагувати чернетку"
+      "edit_draft": "Редагувати чернетку",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Повідомити про спам",
@@ -625,7 +631,12 @@
       "copied": "Код скопійовано",
       "copy_failed": "Не вдалося скопіювати код"
     },
-    "mv_position": "{index} з {total}"
+    "mv_position": "{index} з {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Згорнути",
@@ -1286,7 +1297,10 @@
         "add_all": "Додати всі ({count})",
         "partial": "Проскановано лише {scanned} найновіших листів із {total}. Теги, використані лише в старіших листах, можуть бути відсутні.",
         "error": "Не вдалося просканувати пошту на наявність тегів."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Тестовий звук сповіщення",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Зліва вгорі",
         "corner_top-right": "Верхній правий",
         "corner_bottom-left": "Внизу зліва",
-        "corner_bottom-right": "Внизу праворуч"
+        "corner_bottom-right": "Внизу праворуч",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Поштова програма за замовчуванням",
@@ -2137,7 +2152,18 @@
       "error_delete": "Не вдалося видалити папку",
       "error_delete_has_children": "Неможливо видалити папку: вона все ще містить вкладені папки. Спочатку видаліть або перемістіть їх.",
       "error_delete_has_email": "Неможливо видалити папку: вона все ще містить електронні листи. Спочатку перемістіть або видаліть їх.",
-      "error_role": "Не вдалося оновити роль папки"
+      "error_role": "Не вдалося оновити роль папки",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Просунутий",

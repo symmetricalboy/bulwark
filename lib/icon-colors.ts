@@ -124,6 +124,7 @@ export const SEMANTIC_RAINBOW_MAP: Record<string, string> = {
   Ban: 'var(--icon-rainbow-red)',
   AlertCircle: 'var(--icon-rainbow-red)',
   AlertTriangle: 'var(--icon-rainbow-amber)',
+  DoubleExclamation: 'var(--icon-rainbow-pink)',
 
   // Notifications: Amber / Yellow
   Bell: 'var(--icon-rainbow-amber)',
@@ -153,7 +154,7 @@ export function hashString(str: string): number {
 }
 
 const EXPLICIT_COLOR_PATTERN =
-  /\btext-(destructive|destructive-foreground|success|warning|error|primary|primary-foreground|accent-foreground|secondary-foreground|muted-foreground|current|inherit|white|black|red-|orange-|amber-|yellow-|lime-|green-|emerald-|teal-|cyan-|sky-|blue-|indigo-|violet-|purple-|fuchsia-|pink-|rose-|slate-|gray-|zinc-|neutral-|stone-)\b/;
+  /\btext-(destructive|destructive-foreground|success|warning|error|primary|primary-foreground|accent-foreground|secondary-foreground|muted-foreground|foreground|current|inherit|white|black|red-|orange-|amber-|yellow-|lime-|green-|emerald-|teal-|cyan-|sky-|blue-|indigo-|violet-|purple-|fuchsia-|pink-|rose-|slate-|gray-|zinc-|neutral-|stone-)\b/;
 
 /**
  * Determines whether the icon has an explicit caller-specified color or semantic class

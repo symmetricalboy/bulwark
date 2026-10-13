@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { ContactCard, AddressBook } from "@/lib/jmap/types";
 import { getContactDisplayName } from "@/stores/contact-store";
 import { useAccountStore } from "@/stores/account-store";
+import { AppSidebarHeader } from "@/components/layout/app-layout";
 
 export type ContactCategory = "all" | { groupId: string } | { addressBookId: string } | { keyword: string } | "uncategorized";
 
@@ -291,68 +292,73 @@ export function ContactsSidebar({
   return (
     <div className={cn("flex flex-col h-full bg-secondary", className)}>
       {/* Header */}
-      <div className="px-3 border-b border-border flex items-center justify-between" style={{ paddingBlock: 'var(--density-header-py)' }}>
-        <span className="text-sm font-semibold truncate">{t("title")}</span>
-        <div className="relative flex-shrink-0">
-          <Button
-            ref={menuBtnRef}
-            size="icon"
-            variant="ghost"
-            onClick={() => setShowMenu(v => !v)}
-            className="h-7 w-7"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-          {showMenu && (
-            <div
-              ref={menuRef}
-              className="absolute end-0 top-full mt-1 w-44 rounded-md border border-border bg-background text-foreground shadow-md z-50 py-1"
+      <AppSidebarHeader
+        icon={BookUser}
+        title={t("title")}
+        actions={
+          <div className="relative flex-shrink-0">
+            <Button
+              ref={menuBtnRef}
+              size="icon"
+              variant="ghost"
+              onClick={() => setShowMenu(v => !v)}
+              className="h-8 w-8"
+              aria-label={t("create_new")}
+              title={t("create_new")}
             >
-              <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                onClick={() => { setShowMenu(false); onCreateContact(); }}
+              <Plus className="w-4 h-4" />
+            </Button>
+            {showMenu && (
+              <div
+                ref={menuRef}
+                className="absolute end-0 top-full mt-1 w-44 rounded-md border border-border bg-background text-foreground shadow-md z-50 py-1"
               >
-                <UserPlus className="w-4 h-4" />
-                {t("create_new")}
-              </button>
-              <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                onClick={() => { setShowMenu(false); onCreateGroup(); }}
-              >
-                <UsersRound className="w-4 h-4" />
-                {t("groups.create")}
-              </button>
-              {onCreateAddressBook && (
                 <button
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                  onClick={() => { setShowMenu(false); onCreateAddressBook(); }}
+                  onClick={() => { setShowMenu(false); onCreateContact(); }}
                 >
-                  <BookPlus className="w-4 h-4" />
-                  {t("address_books.create")}
+                  <UserPlus className="w-4 h-4" />
+                  {t("create_new")}
                 </button>
-              )}
-              {onImport && (
                 <button
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                  onClick={() => { setShowMenu(false); onImport(); }}
+                  onClick={() => { setShowMenu(false); onCreateGroup(); }}
                 >
-                  <Upload className="w-4 h-4" />
-                  {t("import.title")}
+                  <UsersRound className="w-4 h-4" />
+                  {t("groups.create")}
                 </button>
-              )}
-              {onImportGoogle && (
-                <button
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
-                  onClick={() => { setShowMenu(false); onImportGoogle(); }}
-                >
-                  <GoogleContactsIcon className="w-4 h-4" />
-                  {t("import.import_google")}
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+                {onCreateAddressBook && (
+                  <button
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
+                    onClick={() => { setShowMenu(false); onCreateAddressBook(); }}
+                  >
+                    <BookPlus className="w-4 h-4" />
+                    {t("address_books.create")}
+                  </button>
+                )}
+                {onImport && (
+                  <button
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
+                    onClick={() => { setShowMenu(false); onImport(); }}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t("import.title")}
+                  </button>
+                )}
+                {onImportGoogle && (
+                  <button
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent transition-colors text-start"
+                    onClick={() => { setShowMenu(false); onImportGoogle(); }}
+                  >
+                    <GoogleContactsIcon className="w-4 h-4" />
+                    {t("import.import_google")}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        }
+      />
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-1">
@@ -360,16 +366,16 @@ export function ContactsSidebar({
         <button
           onClick={() => onSelectCategory("all")}
           className={cn(
-            "w-full flex items-center gap-2 px-3 text-sm transition-colors",
+            "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
             isAllActive
-              ? "bg-accent text-accent-foreground font-medium"
+              ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
               : "text-foreground/80 hover:bg-muted"
           )}
           style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
         >
           <BookUser className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">{t("tabs.all")}</span>
-          <span className="ms-auto text-xs text-muted-foreground tabular-nums">
+          <span className={cn("ms-auto text-xs tabular-nums", isAllActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
             {individuals.length}
           </span>
         </button>
@@ -565,16 +571,16 @@ export function ContactsSidebar({
                   onClick={() => onSelectCategory({ groupId: group.id })}
                   onContextMenu={(e) => openGroupContextMenu(e, group)}
                   className={cn(
-                    "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+                    "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
                     isActive
-                      ? "bg-accent text-accent-foreground font-medium"
+                      ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
                       : "text-foreground/80 hover:bg-muted"
                   )}
                   style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
                 >
                   <Users className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{getContactDisplayName(group)}</span>
-                  <span className="ms-auto text-xs text-muted-foreground tabular-nums">
+                  <span className={cn("ms-auto text-xs tabular-nums", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
                     {memberCount}
                   </span>
                 </button>
@@ -605,16 +611,16 @@ export function ContactsSidebar({
               <button
                 onClick={() => onSelectCategory("uncategorized")}
                 className={cn(
-                  "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+                  "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
                   activeCategory === "uncategorized"
-                    ? "bg-accent text-accent-foreground font-medium"
+                    ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
                     : "text-foreground/80 hover:bg-muted"
                 )}
                 style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
               >
                 <Tag className="w-3.5 h-3.5 flex-shrink-0 opacity-50" />
                 <span className="truncate italic">{t("no_category")}</span>
-                <span className="ms-auto text-xs text-muted-foreground tabular-nums">
+                <span className={cn("ms-auto text-xs tabular-nums", activeCategory === "uncategorized" ? "text-white/90 font-medium" : "text-muted-foreground")}>
                   {uncategorizedCount}
                 </span>
               </button>
@@ -874,9 +880,9 @@ function CategoryItem({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+        "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
         isActive
-          ? "bg-accent text-accent-foreground font-medium"
+          ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
           : "text-foreground/80 hover:bg-muted",
         isDragOver && "bg-primary/20 ring-2 ring-primary/50"
       )}
@@ -884,7 +890,7 @@ function CategoryItem({
     >
       <Tag className="w-3.5 h-3.5 flex-shrink-0" />
       <span className="truncate">{keyword}</span>
-      <span className="ms-auto text-xs text-muted-foreground tabular-nums">
+      <span className={cn("ms-auto text-xs tabular-nums", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
         {count}
       </span>
     </button>
@@ -945,9 +951,9 @@ function AddressBookItem({
       data-book-name={book.name}
       data-account={book.accountName ?? ''}
       className={cn(
-        "w-full flex items-center gap-2 ps-5 pe-3 text-sm transition-colors",
+        "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
         isActive
-          ? "bg-accent text-accent-foreground font-medium"
+          ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
           : "text-foreground/80 hover:bg-muted",
         isDragOver && "bg-primary/20 ring-2 ring-primary/50"
       )}
@@ -963,7 +969,8 @@ function AddressBookItem({
         <Users className="w-3 h-3 text-muted-foreground flex-shrink-0 ms-auto" />
       )}
       <span className={cn(
-        "text-xs text-muted-foreground tabular-nums",
+        "text-xs tabular-nums",
+        isActive ? "text-white/90 font-medium" : "text-muted-foreground",
         !(!book.isShared && Object.keys(book.shareWith || {}).length > 0) && "ms-auto"
       )}>
         {contactCount}

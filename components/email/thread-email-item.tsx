@@ -16,6 +16,8 @@ import { emailKeyFor, getEmailTagIds } from "@/lib/thread-utils";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
 import { useTagDisplay } from "@/hooks/use-tag-display";
 import { TagBadge } from "./tag-badge";
+import { getStarForEmail, isGmailStarLabel, isStarredMailbox } from "@/lib/google/gmail-stars";
+import { withBasePath } from "@/lib/browser-navigation";
 
 interface ThreadEmailItemProps {
   email: Email;
@@ -43,9 +45,11 @@ export function ThreadEmailItem({
   const { variant: tagVariant } = useTagDisplay();
   // A message inside an expanded thread carries its own tags; the collapsed
   // header pools them, so without this they disappear on the way in.
-  const tagIds = sortTagIds(getEmailTagIds(email.keywords));
+  const tagIds = sortTagIds(getEmailTagIds(email.keywords)).filter((id) => !isGmailStarLabel(id));
   const sender = email.from?.[0];
-  const { selectedMailbox, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+  const { selectedMailbox, mailboxes, isUnifiedView, unifiedRole, selectedEmailKeys, toggleEmailSelection, selectRangeEmails, clearSelection } = useEmailStore();
+  const isStarredFolder = isStarredMailbox(selectedMailbox, mailboxes, isUnifiedView, unifiedRole);
+  const starInfo = isStarredFolder ? getStarForEmail(email, mailboxes) : null;
   const density = useSettingsStore((state) => state.density);
   const isChecked = selectedEmailKeys.has(emailKeyFor(email));
 
@@ -175,7 +179,17 @@ export function ThreadEmailItem({
             {/* Indicators */}
             <div className="flex items-center gap-1 flex-shrink-0">
               {isStarred && (
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                starInfo ? (
+                  <img
+                    src={withBasePath(starInfo.iconPath)}
+                    alt={starInfo.name}
+                    title={starInfo.name}
+                    className="w-3 h-3 object-contain select-none shrink-0"
+                    draggable={false}
+                  />
+                ) : (
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                )
               )}
               {isAnswered && !isForwarded && (
                 <Reply className="w-3 h-3 text-muted-foreground" />

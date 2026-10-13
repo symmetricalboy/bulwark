@@ -14,7 +14,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { useEmailStore } from "@/stores/email-store";
 import { SettingsSection, SettingItem, ToggleSwitch, Select } from "./settings-section";
-import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search } from "@/components/icons";
+import { Plus, Pencil, Trash2, GripVertical, Check, X, Loader2, Search, Eye, EyeOff } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { KEYWORD_PREFIX } from "@/lib/thread-utils";
 import { findUnrecognizedKeywords, type UnrecognizedKeyword } from "@/lib/keyword-discovery";
@@ -102,6 +102,8 @@ function KeywordRow({
     { value: "hide", label: t("visibility.hide") },
   ];
 
+  const isHidden = getKeywordVisibility(keyword) === 'hide';
+
   return (
     <div
       draggable
@@ -111,13 +113,18 @@ function KeywordRow({
       onDragEnd={onDragEnd}
       className={cn(
         "flex items-center gap-3 py-2.5 px-3 rounded-md border bg-background group transition-opacity",
-        isDragging ? "opacity-40" : "opacity-100",
+        isDragging ? "opacity-40" : isHidden ? "opacity-75" : "opacity-100",
         isDragOver ? "border-primary" : "border-border"
       )}
     >
       <GripVertical className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-50 cursor-grab" />
-      <div className="flex min-w-0 flex-1">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         <TagBadge tagId={keyword.id} variant="badge" className="text-xs" />
+        {isHidden && (
+          <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium flex-shrink-0">
+            {t("hidden")}
+          </span>
+        )}
       </div>
       <span
         ref={keywordRef}
@@ -133,24 +140,39 @@ function KeywordRow({
         ariaLabel={t("visibility_field")}
         className="text-xs py-1"
       />
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={onEdit}
+          onClick={() => onVisibilityChange(isHidden ? "show" : "hide")}
           className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          title={t("edit")}
+          title={isHidden ? t("show_tag") : t("hide_tag")}
+          aria-label={isHidden ? t("show_tag") : t("hide_tag")}
         >
-          <Pencil className="w-3.5 h-3.5" />
+          {isHidden ? (
+            <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+          ) : (
+            <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+          )}
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={hasChildren}
-          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-          title={hasChildren ? t("has_children_delete") : t("delete")}
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title={t("edit")}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={hasChildren}
+            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+            title={hasChildren ? t("has_children_delete") : t("delete")}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );

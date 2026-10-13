@@ -243,6 +243,7 @@ export function getContactPhotoUri(contact: ContactCard): string | undefined {
 }
 
 export const TRUSTED_SENDERS_BOOK_NAME = 'Trusted Senders';
+export const IMPORTANT_ADDRESS_BOOK_NAME = 'Important';
 export const DEFAULT_COMAIL_ADDRESS_BOOK_NAME = 'Comail Contacts';
 
 /**
@@ -264,6 +265,8 @@ export function normalizeDefaultAddressBookName(book: AddressBook, allBooks?: Ad
 
 /** In-flight trusted senders load, shared by all callers to keep it single-flight. */
 let trustedSendersLoadPromise: Promise<void> | null = null;
+/** In-flight important senders load, shared by all callers to keep it single-flight. */
+let importantSendersLoadPromise: Promise<void> | null = null;
 
 /** Every e-mail address held by the given contacts, lowercased and de-duplicated. */
 export function collectContactEmails(contacts: ContactCard[]): string[] {
@@ -342,6 +345,12 @@ interface ContactStore {
   trustedSendersLoaded: boolean;
   trustedSendersLoading: boolean;
 
+  // Important senders address book cache (runtime only, not persisted)
+  importantSenderEmails: string[];
+  importantBookId: string | null;
+  importantSendersLoaded: boolean;
+  importantSendersLoading: boolean;
+
   // Recent recipients (from the Sent folder) for compose autocomplete - runtime only
   recentRecipients: Array<{ name: string; email: string }>;
   recentRecipientsLoaded: boolean;
@@ -408,6 +417,13 @@ interface ContactStore {
   removeFromTrustedSendersBook: (client: IJMAPClient, email: string) => Promise<void>;
   isTrustedAddressBookSender: (email: string) => boolean;
 
+  // Important senders address book
+  loadImportantBook: (client: IJMAPClient) => Promise<void>;
+  addToImportantBook: (client: IJMAPClient, email: string, name?: string) => Promise<void>;
+  removeFromImportantBook: (client: IJMAPClient, email: string) => Promise<void>;
+  isImportantSender: (email: string) => boolean;
+  toggleImportantSender: (client: IJMAPClient, email: string, name?: string) => Promise<boolean>;
+
   // Recent recipients (compose autocomplete, derived from the Sent folder)
   loadRecentRecipients: (client: IJMAPClient, sentMailboxId: string) => Promise<void>;
   // On-demand "search the server" for recipients not in the recent cache
@@ -461,6 +477,10 @@ export const useContactStore = create<ContactStore>()(
       trustedSendersBookId: null,
       trustedSendersLoaded: false,
       trustedSendersLoading: false,
+      importantSenderEmails: [],
+      importantBookId: null,
+      importantSendersLoaded: false,
+      importantSendersLoading: false,
       recentRecipients: [],
       recentRecipientsLoaded: false,
       sentMailboxId: null,
@@ -1360,6 +1380,117 @@ export const useContactStore = create<ContactStore>()(
         const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
         const normalizedEmail = (angleMatch ? angleMatch[2] : trimmed).toLowerCase().trim();
         return get().trustedSenderEmails.includes(normalizedEmail);
+      },
+
+      loadImportantBook: async (client) => {
+        if (importantSendersLoadPromise) return importantSendersLoadPromise;
+        set({ importantSendersLoading: true });
+
+        importantSendersLoadPromise = (async () => {
+          try {
+            debug.log('contacts', 'Loading important senders address book');
+            const books = await client.getAddressBooks({ throwOnError: true });
+            const matches = books
+              .filter(b => b.name === IMPORTANT_ADDRESS_BOOK_NAME)
+              .sort((a, b) => a.id.localeCompare(b.id));
+
+            let book = matches[0];
+            if (!book) {
+              debug.log('contacts', 'Creating new important senders address book');
+              book = await client.createAddressBook(IMPORTANT_ADDRESS_BOOK_NAME);
+            }
+            const bookId = book.id;
+            debug.log('contacts', 'Important senders book id:', bookId);
+            const contacts = await client.getContacts(bookId, { throwOnError: true });
+            debug.log('contacts', 'Loaded', contacts.length, 'important sender contacts');
+            const emails = collectContactEmails(contacts);
+
+            set({
+              importantBookId: bookId,
+              importantSenderEmails: emails,
+              importantSendersLoaded: true,
+              importantSendersLoading: false,
+            });
+          } catch (error) {
+            debug.error('Failed to load important senders address book:', error);
+            set({ importantSendersLoaded: true, importantSendersLoading: false });
+          } finally {
+            importantSendersLoadPromise = null;
+          }
+        })();
+
+        return importantSendersLoadPromise;
+      },
+
+      addToImportantBook: async (client, email, name) => {
+        const trimmed = email.trim();
+        const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
+        const displayName = name || (angleMatch ? angleMatch[1].trim() : undefined);
+        const emailAddress = (angleMatch ? angleMatch[2] : trimmed).toLowerCase().trim();
+        const { importantSenderEmails } = get();
+        if (importantSenderEmails.includes(emailAddress)) return;
+
+        let bookId = get().importantBookId;
+        if (!bookId) {
+          await get().loadImportantBook(client);
+          bookId = get().importantBookId;
+        }
+        if (!bookId) throw new Error('Could not find or create important senders address book');
+
+        debug.log('contacts', 'Adding important sender:', emailAddress, 'to book:', bookId);
+        await client.createContact({
+          addressBookIds: { [bookId]: true },
+          ...(displayName ? { name: { full: displayName } } : {}),
+          emails: { email: { address: emailAddress } },
+        });
+        set((state) => ({ importantSenderEmails: [...state.importantSenderEmails, emailAddress] }));
+        debug.log('contacts', 'Important sender added successfully');
+      },
+
+      removeFromImportantBook: async (client, email) => {
+        const trimmed = email.trim();
+        const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
+        const normalizedEmail = (angleMatch ? angleMatch[2] : trimmed).toLowerCase().trim();
+        const { importantBookId } = get();
+        if (!importantBookId) return;
+
+        debug.log('contacts', 'Removing important sender:', normalizedEmail);
+        const contacts = await client.getContacts(importantBookId);
+        const match = contacts.find(c =>
+          c.emails && Object.values(c.emails).some(e => e.address.toLowerCase().trim() === normalizedEmail)
+        );
+        if (match) {
+          await client.deleteContact(match.id);
+          debug.log('contacts', 'Important sender removed');
+        }
+        set((state) => ({ importantSenderEmails: state.importantSenderEmails.filter(e => e !== normalizedEmail) }));
+      },
+
+      isImportantSender: (email) => {
+        if (!email) return false;
+        const trimmed = email.trim();
+        const angleMatch = trimmed.match(/^(.+?)\s*<([^>]+)>$/);
+        const normalizedEmail = (angleMatch ? angleMatch[2] : trimmed).toLowerCase().trim();
+        const { importantSenderEmails, contacts, addressBooks } = get();
+        if (importantSenderEmails.includes(normalizedEmail)) return true;
+        const impBook = addressBooks.find(b => b.name === IMPORTANT_ADDRESS_BOOK_NAME);
+        if (!impBook) return false;
+        return contacts.some(c =>
+          c.addressBookIds?.[impBook.id] &&
+          c.emails &&
+          Object.values(c.emails).some(e => e.address?.toLowerCase().trim() === normalizedEmail)
+        );
+      },
+
+      toggleImportantSender: async (client, email, name) => {
+        const isImp = get().isImportantSender(email);
+        if (isImp) {
+          await get().removeFromImportantBook(client, email);
+          return false;
+        } else {
+          await get().addToImportantBook(client, email, name);
+          return true;
+        }
       },
 
       importContacts: async (client, contacts) => {

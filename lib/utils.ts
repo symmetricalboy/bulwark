@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import { Mailbox, UNIFIED_MAILBOX_IDS } from "./jmap/types";
 import type { UnifiedMailboxRole } from "./jmap/types";
 import { debug } from "./debug";
+import { SCHEDULED_MAILBOX_ID } from "./deep-links";
 import { getEffectiveLocale } from '@/i18n/detect-locale';
 import { useSettingsStore } from "@/stores/settings-store";
 import type { DateFormat, DateLocale } from "@/stores/settings-store";
@@ -10,6 +11,14 @@ import { getEffectiveTimeZone, getWallClock } from "./timezone";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Format badge counter numbers, capping any count greater than 999 at '999+'.
+ */
+export function formatCountBadge(count: number): string {
+  if (count > 999) return '999+';
+  return count.toLocaleString();
 }
 
 /**
@@ -361,15 +370,51 @@ export interface MailboxNode extends Mailbox {
 }
 
 // Role priority for mailbox ordering (lower number = higher priority)
-const ROLE_PRIORITY: Record<string, number> = {
-  inbox: 0,
-  drafts: 1,
-  sent: 2,
-  archive: 3,
-  junk: 4,
-  spam: 4, // Treat spam same as junk
-  trash: 5,
+export const ROLE_PRIORITY: Record<string, number> = {
+  inbox: 1,
+  starred: 2,
+  flagged: 2,
+  unread: 3,
+  important: 4,
+  drafts: 5,
+  scheduled: 6,
+  sent: 7,
+  archive: 8,
+  junk: 9,
+  spam: 9, // Treat spam same as junk
+  trash: 10,
+  all: 11,
+  all_mail: 11,
 };
+
+export function applyCustomOrder<T>(
+  list: T[],
+  savedOrder: string[] | undefined,
+  getId: (item: T) => string
+): T[] {
+  if (!savedOrder || savedOrder.length === 0) return list;
+  const orderMap = new Map<string, number>();
+  savedOrder.forEach((id, idx) => orderMap.set(id, idx));
+
+  if (!orderMap.has(SCHEDULED_MAILBOX_ID)) {
+    const draftsItem = list.find((item: any) => item?.role === 'drafts');
+    if (draftsItem) {
+      const draftsId = getId(draftsItem);
+      if (orderMap.has(draftsId)) {
+        orderMap.set(SCHEDULED_MAILBOX_ID, orderMap.get(draftsId)! + 0.5);
+      }
+    }
+  }
+
+  return [...list].sort((a, b) => {
+    const idA = getId(a);
+    const idB = getId(b);
+    const posA = orderMap.has(idA) ? orderMap.get(idA)! : 9999;
+    const posB = orderMap.has(idB) ? orderMap.get(idB)! : 9999;
+    if (posA !== posB) return posA - posB;
+    return 0;
+  });
+}
 
 // Deduplicate mailboxes (e.g., "Sent" vs "Sent Mail")
 function deduplicateMailboxes(mailboxes: Mailbox[]): Mailbox[] {
@@ -643,6 +688,32 @@ export function buildMailboxTree(mailboxes: Mailbox[]): MailboxNode[] {
   sortNodes(rootMailboxes);
 
   return rootMailboxes;
+}
+
+/**
+ * Recursively filters a MailboxNode tree to omit hidden folders, preserving
+ * parent nodes if any of their descendants remain visible or if a node is
+ * currently selected.
+ */
+export function filterVisibleMailboxTree(
+  nodes: MailboxNode[],
+  isHidden: (id: string) => boolean,
+  selectedId?: string
+): MailboxNode[] {
+  const result: MailboxNode[] = [];
+  for (const node of nodes) {
+    const children = node.children && node.children.length > 0
+      ? filterVisibleMailboxTree(node.children, isHidden, selectedId)
+      : [];
+    const isSelfHidden = isHidden(node.id) && node.id !== selectedId;
+    if (!isSelfHidden || children.length > 0) {
+      result.push({
+        ...node,
+        children,
+      });
+    }
+  }
+  return result;
 }
 
 /**

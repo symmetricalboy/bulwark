@@ -324,11 +324,12 @@ describe('composer reply addressing', () => {
   // forwards never take the rewrite, even when it is enabled.
   // Control: the opt-in path itself still works on a reply, so the two tests
   // above are proving the gate, not a broken resolver.
-  it('rewrites From to the catch-all address on a reply when the setting is on', () => {
+  it('selects matching identity on a reply when the setting is on', () => {
     setAutoSelect(true);
     try {
       render(<EmailComposer mode="reply" replyTo={RECEIVED_CATCH_ALL} />);
-      expect(screen.getByDisplayValue('colleague@example.com')).toBeTruthy();
+      expect(identitySelect().value).toBe('id-me');
+      expect(screen.queryByPlaceholderText('from_override.email_placeholder')).toBeNull();
     } finally {
       setAutoSelect(false);
     }
@@ -342,7 +343,7 @@ describe('composer reply addressing', () => {
     settings.setState({ autoSelectReplyIdentity: true, replyIdentityMatch: 'exact' });
     try {
       render(<EmailComposer mode="reply" replyTo={RECEIVED_CATCH_ALL} />);
-      expect(screen.queryByDisplayValue('colleague@example.com')).toBeNull();
+      expect(screen.queryByPlaceholderText('from_override.email_placeholder')).toBeNull();
       expect(identitySelect().value).toBe('id-me');
     } finally {
       settings.setState({ autoSelectReplyIdentity: false, replyIdentityMatch: 'domain' });

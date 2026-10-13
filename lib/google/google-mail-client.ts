@@ -1,6 +1,8 @@
 import type { Mailbox, Email } from '@/lib/jmap/types';
+import { useIdentityStore } from '@/stores/identity-store';
 import { getComailAccountHeaders } from './comail-headers';
 import { parseGoogleEmailId } from './gmail-mapper';
+import { registerKnownMailboxes } from './gmail-stars';
 
 export async function fetchGoogleMailboxes(googleAccountId?: string): Promise<Mailbox[]> {
   const url = googleAccountId
@@ -16,7 +18,28 @@ export async function fetchGoogleMailboxes(googleAccountId?: string): Promise<Ma
   }
 
   const data = await res.json();
-  return data.mailboxes || [];
+  const mailboxes = data.mailboxes || [];
+  registerKnownMailboxes(mailboxes);
+  return mailboxes;
+}
+
+export async function createGoogleLabel(name: string, googleAccountId?: string): Promise<Mailbox> {
+  const res = await fetch('/api/google/mail/labels', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getComailAccountHeaders(),
+    },
+    body: JSON.stringify({ name, googleAccountId }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Failed to create label (${res.status})`);
+  }
+
+  const data = await res.json();
+  return data.mailbox;
 }
 
 export interface FetchGoogleEmailsOptions {
@@ -126,4 +149,63 @@ export async function deleteGoogleEmail(emailId: string, permanent = false): Pro
   });
 
   return res.ok;
+}
+
+export interface SendGoogleEmailOptions {
+  googleAccountId?: string;
+  to: string[];
+  subject: string;
+  body: string;
+  cc?: string[];
+  bcc?: string[];
+  fromName?: string;
+  fromEmail?: string;
+  htmlBody?: string;
+  inReplyTo?: string;
+  references?: string[];
+  threadId?: string;
+  attachments?: Array<{
+    filename: string;
+    contentType: string;
+    contentBase64: string;
+    cid?: string;
+  }>;
+}
+
+export async function sendGoogleEmail(options: SendGoogleEmailOptions): Promise<{
+  success: boolean;
+  messageId: string;
+  threadId?: string;
+}> {
+  const res = await fetch('/api/google/mail/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getComailAccountHeaders(),
+    },
+    body: JSON.stringify(options),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || errorData.error || `Failed to send Google email (${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export function isGoogleSender(fromEmail?: string, localAccountId?: string, identityId?: string): boolean {
+  if (localAccountId?.startsWith('google')) return true;
+  if (identityId?.startsWith('google')) return true;
+  if (!fromEmail) return false;
+
+  const store = useIdentityStore.getState();
+  const googleIdentities = store.googleDefaultIdentities || [];
+  if (googleIdentities.some((g) => g.email.toLowerCase() === fromEmail.toLowerCase())) {
+    return true;
+  }
+  if (fromEmail.toLowerCase().endsWith('@gmail.com') || fromEmail.toLowerCase().endsWith('@googlemail.com')) {
+    return true;
+  }
+  return false;
 }

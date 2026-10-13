@@ -117,9 +117,13 @@
       "starred": "Starred",
       "all_mail": "All Mail",
       "spam": "Spam",
-      "important": "Important"
+      "important": "Important",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Unified Inbox",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories",
     "unified_sent": "All Sent",
     "unified_drafts": "All Drafts",
     "unified_trash": "All Trash",
@@ -490,7 +494,9 @@
       "compose": "Compose (c)",
       "previous": "Previous email",
       "next": "Next email",
-      "edit_draft": "Edit draft"
+      "edit_draft": "Edit draft",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Report spam",
@@ -625,7 +631,12 @@
       "copied": "Code copied",
       "copy_failed": "Could not copy the code"
     },
-    "mv_position": "{index} of {total}"
+    "mv_position": "{index} of {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimize",
@@ -1273,6 +1284,9 @@
       "has_children_locked": "Other tags are nested under this one, so its name and parent are locked. Move or remove them first.",
       "has_children_delete": "Remove the tags nested under this one first",
       "visibility_field": "Sidebar visibility",
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden",
       "visibility": {
         "show": "Show",
         "unread": "Show if unread",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Top Left",
         "corner_top-right": "Top Right",
         "corner_bottom-left": "Bottom Left",
-        "corner_bottom-right": "Bottom Right"
+        "corner_bottom-right": "Bottom Right",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Default Mail Program",
@@ -2105,13 +2120,16 @@
       "role_drafts": "Drafts",
       "role_sent": "Sent",
       "role_trash": "Trash",
-      "role_junk": "Spam / Junk",
+      "role_junk": "Spam",
       "role_archive": "Archive",
       "role_scheduled": "Scheduled",
       "role_snoozed": "Snoozed",
       "role_none": "None",
       "create_folder": "Create Folder",
       "create_subfolder": "Create Subfolder",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
       "reorder": "Drag up or down to reorder, left or right to change the parent folder",
       "reorder_error": "Failed to reorder folders",
       "move_error": "Failed to move folder",
@@ -2128,6 +2146,9 @@
       "subfolder_name": "Subfolder name",
       "new_folder_name": "Folder name",
       "rename": "Rename",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
       "change_icon": "Change icon",
       "delete": "Delete",
       "confirm_delete": "Are you sure you want to delete \"{name}\"? Emails in this folder will be moved to Trash.",
@@ -2144,7 +2165,12 @@
       "error_delete": "Failed to delete folder",
       "error_delete_has_children": "Cannot delete folder: it still contains subfolders. Delete or move them first.",
       "error_delete_has_email": "Cannot delete folder: it still contains emails. Move or delete them first.",
-      "error_role": "Failed to update folder role"
+      "error_role": "Failed to update folder role",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Advanced",

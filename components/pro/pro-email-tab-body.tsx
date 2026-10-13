@@ -86,6 +86,7 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
   const deleteEmail = useEmailStore((s) => s.deleteEmail);
   const markAsRead = useEmailStore((s) => s.markAsRead);
   const toggleStar = useEmailStore((s) => s.toggleStar);
+  const toggleImportant = useEmailStore((s) => s.toggleImportant);
   const moveToMailbox = useEmailStore((s) => s.moveToMailbox);
   const setEmailKeywordsLocal = useEmailStore((s) => s.setEmailKeywordsLocal);
   const mailboxes = useEmailStore((s) => s.mailboxes);
@@ -255,6 +256,22 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
     }
   }, [client, email, toggleStar]);
 
+  const handleToggleImportant = useCallback(async () => {
+    if (!client || !email) return;
+    try {
+      await toggleImportant(client, email.id);
+      setEmail((prev) => prev ? {
+        ...prev,
+        keywords: {
+          ...prev.keywords,
+          $important: !prev.keywords?.$important,
+        },
+      } : prev);
+    } catch (err) {
+      console.error('Toggle important failed:', err);
+    }
+  }, [client, email, toggleImportant]);
+
   const handleMarkAsRead = useCallback(async (emailIdToMark: string, read: boolean) => {
     if (!client) return;
     try {
@@ -380,6 +397,7 @@ export function ProEmailView({ emailId, client: clientOverride, accountId, onLoa
           onDelete={handleDelete}
           onArchive={handleArchive}
           onToggleStar={handleToggleStar}
+          onToggleImportant={handleToggleImportant}
           onMarkAsRead={handleMarkAsRead}
           onSetTag={handleSetTag}
           onDownloadAttachment={handleDownloadAttachment}

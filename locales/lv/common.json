@@ -117,7 +117,9 @@
       "starred": "Ar zvaigznīti",
       "all_mail": "Visas vēstules",
       "spam": "Mēstules",
-      "important": "Svarīgi"
+      "important": "Svarīgi",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Apvienotā iesūtne",
     "unified_sent": "Visi nosūtītie",
@@ -169,7 +171,9 @@
     "mv_next_day": "Nākamā diena",
     "mv_add_another_account": "Pievienot citu kontu",
     "mv_manage_account": "Pārvaldīt kontu",
-    "mv_storage_used": "Izmantoti {percent}% no {total}"
+    "mv_storage_used": "Izmantoti {percent}% no {total}",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Noklusējuma lietotnes",
@@ -465,7 +469,9 @@
       "compose": "Rakstīt (c)",
       "previous": "Iepriekšējā vēstule",
       "next": "Nākamā vēstule",
-      "edit_draft": "Rediģēt melnrakstu"
+      "edit_draft": "Rediģēt melnrakstu",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Ziņot par mēstuli",
@@ -625,7 +631,12 @@
       "copied": "Kods nokopēts",
       "copy_failed": "Neizdevās nokopēt kodu"
     },
-    "mv_position": "{index} no {total}"
+    "mv_position": "{index} no {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimizēt",
@@ -1286,7 +1297,10 @@
         "add_all": "Pievienot visus ({count})",
         "partial": "Tika pārmeklētas tikai {scanned} jaunākās no {total} vēstulēm. Tagi, kas izmantoti tikai vecākās vēstulēs, var nebūt atrasti.",
         "error": "Neizdevās pārmeklēt pastu, lai atrastu tagus."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Pārbaudīt paziņojuma skaņu",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Augšā pa kreisi",
         "corner_top-right": "Augšā pa labi",
         "corner_bottom-left": "Apakšā pa kreisi",
-        "corner_bottom-right": "Apakšā pa labi"
+        "corner_bottom-right": "Apakšā pa labi",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Noklusējuma pasta programma",
@@ -2137,7 +2152,18 @@
       "error_delete": "Neizdevās izdzēst mapi",
       "error_role": "Neizdevās atjaunināt mapes lomu",
       "error_delete_has_children": "Nevar dzēst mapi: tajā joprojām ir apakšmapes. Vispirms tās dzēsiet vai pārvietojiet.",
-      "error_delete_has_email": "Nevar dzēst mapi: tajā joprojām ir e-pasti. Vispirms tos pārvietojiet vai dzēsiet."
+      "error_delete_has_email": "Nevar dzēst mapi: tajā joprojām ir e-pasti. Vispirms tos pārvietojiet vai dzēsiet.",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Papildu",

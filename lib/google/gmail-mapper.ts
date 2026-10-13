@@ -1,5 +1,6 @@
 import type { Email, Mailbox, EmailAddress, EmailBodyPart, EmailBodyValue, Attachment } from '@/lib/jmap/types';
 import type { GmailLabel, GmailMessage, GmailMessagePart } from './types';
+import { matchGmailStar, cleanGmailStarDisplayName } from './gmail-stars';
 
 export function isGoogleMailboxId(id: string): boolean {
   return id.startsWith('google:');
@@ -31,21 +32,193 @@ export function parseGoogleEmailId(namespacedId: string): { accountEmail: string
   };
 }
 
-const SYSTEM_LABEL_ROLES: Record<string, { role: string; sortOrder: number; displayName: string }> = {
+export const SYSTEM_LABEL_ROLES: Record<string, { role: string; sortOrder: number; displayName: string }> = {
   INBOX: { role: 'inbox', sortOrder: 1, displayName: 'Inbox' },
   STARRED: { role: 'starred', sortOrder: 2, displayName: 'Starred' },
-  SENT: { role: 'sent', sortOrder: 3, displayName: 'Sent' },
-  DRAFT: { role: 'drafts', sortOrder: 4, displayName: 'Drafts' },
-  IMPORTANT: { role: 'important', sortOrder: 5, displayName: 'Important' },
-  SPAM: { role: 'junk', sortOrder: 90, displayName: 'Spam' },
-  TRASH: { role: 'trash', sortOrder: 99, displayName: 'Trash' },
+  UNREAD: { role: 'unread', sortOrder: 3, displayName: 'Unread' },
+  IMPORTANT: { role: 'important', sortOrder: 4, displayName: 'Important' },
+  DRAFT: { role: 'drafts', sortOrder: 5, displayName: 'Drafts' },
+  DRAFTS: { role: 'drafts', sortOrder: 5, displayName: 'Drafts' },
+  SCHEDULED: { role: 'scheduled', sortOrder: 6, displayName: 'Scheduled' },
+  SENT: { role: 'sent', sortOrder: 7, displayName: 'Sent' },
+  ARCHIVE: { role: 'archive', sortOrder: 8, displayName: 'Archive' },
+  SPAM: { role: 'junk', sortOrder: 9, displayName: 'Spam' },
+  TRASH: { role: 'trash', sortOrder: 10, displayName: 'Trash' },
+  ALL: { role: 'all', sortOrder: 11, displayName: 'All Mail' },
+  ALL_MAIL: { role: 'all', sortOrder: 11, displayName: 'All Mail' },
 };
 
+export const GOOGLE_SYSTEM_ROLES_ORDER = [
+  { role: 'inbox', labelId: 'INBOX', name: 'Inbox', sortOrder: 1 },
+  { role: 'starred', labelId: 'STARRED', name: 'Starred', sortOrder: 2 },
+  { role: 'unread', labelId: 'UNREAD', name: 'Unread', sortOrder: 3 },
+  { role: 'important', labelId: 'IMPORTANT', name: 'Important', sortOrder: 4 },
+  { role: 'drafts', labelId: 'DRAFT', name: 'Drafts', sortOrder: 5 },
+  { role: 'scheduled', labelId: 'SCHEDULED', name: 'Scheduled', sortOrder: 6 },
+  { role: 'sent', labelId: 'SENT', name: 'Sent', sortOrder: 7 },
+  { role: 'archive', labelId: 'ARCHIVE', name: 'Archive', sortOrder: 8 },
+  { role: 'junk', labelId: 'SPAM', name: 'Spam', sortOrder: 9 },
+  { role: 'trash', labelId: 'TRASH', name: 'Trash', sortOrder: 10 },
+  { role: 'all', labelId: 'ALL', name: 'All Mail', sortOrder: 11 },
+];
+
+export const GMAIL_CATEGORY_METAS: Record<string, { role: string; sortOrder: number; displayName: string }> = {
+  CATEGORY_PERSONAL: { role: 'category_personal', sortOrder: 1, displayName: 'Primary' },
+  CATEGORY_SOCIAL: { role: 'category_social', sortOrder: 2, displayName: 'Social' },
+  CATEGORY_UPDATES: { role: 'category_updates', sortOrder: 3, displayName: 'Updates' },
+  CATEGORY_FORUMS: { role: 'category_forums', sortOrder: 4, displayName: 'Forums' },
+  CATEGORY_PROMOTIONS: { role: 'category_promotions', sortOrder: 5, displayName: 'Promotions' },
+};
+
+export function isGoogleCategoryLabel(idOrRole?: string | null): boolean {
+  if (!idOrRole) return false;
+  const upper = idOrRole.toUpperCase();
+  return (
+    upper in GMAIL_CATEGORY_METAS ||
+    upper.startsWith('CATEGORY_') ||
+    idOrRole.includes('::CATEGORY_') ||
+    idOrRole.startsWith('category_')
+  );
+}
+
+export function isIgnoredGoogleLabel(labelIdOrName?: string | null): boolean {
+  if (!labelIdOrName) return false;
+  const upper = labelIdOrName.toUpperCase();
+  return upper === 'CHAT' || upper.endsWith('::CHAT') || upper === '^CHAT';
+}
+
+export function isGoogleSystemFolder(mailbox: Mailbox): boolean {
+  if (isIgnoredGoogleLabel(mailbox.originalId) || isIgnoredGoogleLabel(mailbox.id) || isIgnoredGoogleLabel(mailbox.name)) {
+    return false;
+  }
+  if (mailbox.role && ['inbox', 'starred', 'unread', 'important', 'drafts', 'scheduled', 'sent', 'archive', 'junk', 'trash', 'all', 'all_mail'].includes(mailbox.role)) {
+    return true;
+  }
+  const rawId = (mailbox.originalId || mailbox.id).toUpperCase();
+  return ['INBOX', 'STARRED', 'UNREAD', 'IMPORTANT', 'DRAFT', 'DRAFTS', 'SCHEDULED', 'SENT', 'ARCHIVE', 'SPAM', 'TRASH', 'ALL', 'ALL_MAIL'].some(
+    (k) => rawId === k || rawId.endsWith(`::${k}`)
+  );
+}
+
+export function ensureGoogleSystemMailboxes(existing: Mailbox[], accountEmail: string): Mailbox[] {
+  const result: Mailbox[] = [];
+  const handled = new Set<string>();
+
+  for (const sys of GOOGLE_SYSTEM_ROLES_ORDER) {
+    const found = existing.find(
+      (m) =>
+        m.role === sys.role ||
+        (m.originalId && m.originalId.toUpperCase() === sys.labelId) ||
+        m.id.toUpperCase().endsWith(`::${sys.labelId}`)
+    );
+
+    if (found) {
+      handled.add(found.id);
+      result.push({
+        ...found,
+        role: sys.role,
+        sortOrder: sys.sortOrder,
+        name: sys.name,
+      });
+    } else {
+      result.push({
+        id: `google:${accountEmail}::${sys.labelId}`,
+        originalId: sys.labelId,
+        name: sys.name,
+        role: sys.role,
+        sortOrder: sys.sortOrder,
+        totalEmails: 0,
+        unreadEmails: 0,
+        totalThreads: 0,
+        unreadThreads: 0,
+        isSubscribed: true,
+        accountId: `google:${accountEmail}`,
+        accountName: accountEmail,
+        isShared: false,
+        myRights: {
+          mayReadItems: true,
+          mayAddItems: true,
+          mayRemoveItems: true,
+          maySetSeen: true,
+          maySetKeywords: true,
+          mayCreateChild: false,
+          mayRename: false,
+          mayDelete: false,
+          maySubmit: true,
+        },
+      });
+    }
+  }
+
+  // Include any other user labels/categories (filtering out CHAT)
+  for (const mb of existing) {
+    if (!handled.has(mb.id)) {
+      if (!isIgnoredGoogleLabel(mb.originalId) && !isIgnoredGoogleLabel(mb.id) && !isIgnoredGoogleLabel(mb.name)) {
+        result.push(mb);
+      }
+    }
+  }
+
+  result.sort((a, b) => {
+    if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
+  return result;
+}
+
+export function getGoogleAccountCategories(accountEmail: string, existingMailboxes: Mailbox[]): Mailbox[] {
+  const categories: Mailbox[] = [];
+  for (const [catId, meta] of Object.entries(GMAIL_CATEGORY_METAS)) {
+    const existing = existingMailboxes.find(
+      (m) =>
+        m.originalId?.toUpperCase() === catId ||
+        m.id.toUpperCase().endsWith(`::${catId}`) ||
+        m.role === meta.role
+    );
+    if (existing) {
+      categories.push(existing);
+    } else {
+      categories.push({
+        id: `google:${accountEmail}::${catId}`,
+        originalId: catId,
+        name: meta.displayName,
+        role: meta.role,
+        sortOrder: meta.sortOrder,
+        totalEmails: 0,
+        unreadEmails: 0,
+        totalThreads: 0,
+        unreadThreads: 0,
+        isSubscribed: true,
+        accountId: `google:${accountEmail}`,
+        accountName: accountEmail,
+        isShared: false,
+        myRights: {
+          mayReadItems: true,
+          mayAddItems: true,
+          mayRemoveItems: true,
+          maySetSeen: true,
+          maySetKeywords: true,
+          mayCreateChild: false,
+          mayRename: false,
+          mayDelete: false,
+          maySubmit: true,
+        },
+      });
+    }
+  }
+  return categories;
+}
+
 export function googleLabelToMailbox(label: GmailLabel, accountEmail: string): Mailbox {
-  const meta = SYSTEM_LABEL_ROLES[label.id.toUpperCase()];
-  const role = meta?.role;
-  const name = meta?.displayName || label.name;
-  const sortOrder = meta?.sortOrder ?? 10;
+  const upperId = label.id.toUpperCase();
+  const sysMeta = SYSTEM_LABEL_ROLES[upperId];
+  const catMeta = GMAIL_CATEGORY_METAS[upperId];
+
+  const role = sysMeta?.role || catMeta?.role;
+  const rawName = sysMeta?.displayName || catMeta?.displayName || label.name;
+  const name = cleanGmailStarDisplayName(rawName);
+  const sortOrder = sysMeta?.sortOrder ?? catMeta?.sortOrder ?? 10;
 
   return {
     id: `google:${accountEmail}::${label.id}`,
@@ -228,6 +401,11 @@ export function googleMessageToEmail(msg: GmailMessage, accountEmail: string): E
   const labels = msg.labelIds || [];
   for (const labelId of labels) {
     mailboxIds[`google:${accountEmail}::${labelId}`] = true;
+    const starMatch = matchGmailStar(labelId);
+    if (starMatch) {
+      keywords['$flagged'] = true;
+      keywords[`$star:${starMatch.id}`] = true;
+    }
   }
 
   // Read status: If UNREAD is absent, it is seen

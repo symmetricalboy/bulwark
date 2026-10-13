@@ -11,6 +11,7 @@ import {
   DEFAULT_SUB_ADDRESS_DELIMITER,
   isValidSubAddressDelimiter,
 } from '@/lib/sub-addressing';
+import { SCHEDULED_MAILBOX_ID } from '@/lib/deep-links';
 
 // Use console directly to avoid circular dependency with lib/debug.ts
 // (debug.ts imports useSettingsStore for debugMode check)
@@ -251,7 +252,34 @@ const CROSS_ACCOUNT_VIEW_KEYS = new Set<string>([
   'enableCrossAllView',
 ]);
 
-export type HoverAction = 'delete' | 'star' | 'markRead' | 'archive' | 'tag' | 'spam';
+export interface SidebarCustomOrder {
+  accounts: string[];
+  subcategories: Record<string, string[]>;
+  items: Record<string, string[]>;
+}
+
+export function getInitialSidebarCustomOrder(): SidebarCustomOrder {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem('mail_sidebar_custom_order_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            accounts: Array.isArray(parsed.accounts) ? parsed.accounts : [],
+            subcategories: isPlainRecord(parsed.subcategories) ? parsed.subcategories : {},
+            items: isPlainRecord(parsed.items) ? parsed.items : {},
+          };
+        }
+      }
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return { accounts: [], subcategories: {}, items: {} };
+}
+
+export type HoverAction = 'delete' | 'star' | 'markRead' | 'archive' | 'tag' | 'spam' | 'important';
 /** Action fired by a mobile list-row swipe. 'none' disables that direction. */
 export type SwipeAction = 'none' | 'archive' | 'delete' | 'markRead' | 'star' | 'spam';
 export type HoverActionsMode = 'inline' | 'floating';
@@ -264,6 +292,7 @@ export const ALL_HOVER_ACTIONS: { id: HoverAction; labelKey: string }[] = [
   { id: 'archive', labelKey: 'archive' },
   { id: 'tag', labelKey: 'tag' },
   { id: 'spam', labelKey: 'spam' },
+  { id: 'important', labelKey: 'important' },
 ];
 
 export type DebugCategory = 'jmap' | 'calendar' | 'tasks' | 'auth' | 'filters' | 'email' | 'push' | 'contacts';
@@ -581,9 +610,16 @@ interface SettingsState {
   tintListRowsByTag: boolean; // Tint mail-list rows by the first tag color
   tintListRowsByAccount: boolean; // In the unified view, tint rows by account colour instead of showing the account dot
   showFolderTotalCount: boolean; // Show total message count next to folders/tags (alongside unread)
+  sidebarCustomOrder: SidebarCustomOrder; // User's custom drag-and-drop sort order (accounts, subcategories, items)
 
   // Folders
   folderIcons: Record<string, string>; // mailboxId -> icon name
+  scheduledFolderName: string; // custom display name for Scheduled folder
+  hideScheduledFolder: boolean; // whether Scheduled folder is hidden from sidebar
+  hiddenFolderIds: string[]; // Mailbox IDs hidden from the sidebar
+  customFolderRoles: Record<string, string>; // role -> mailboxId client-side override
+  googleStarsSubmenuEnabled: Record<string, boolean>; // accountEmail -> boolean
+  googleHiddenStarIds: Record<string, string[]>; // accountEmail -> starId[]
 
   // Keywords (labels/tags)
   emailKeywords: KeywordDefinition[];
@@ -641,9 +677,21 @@ interface SettingsState {
   exportSettings: () => string;
   importSettings: (json: string, opts?: { serverAccountId?: string; keepCrossAccountViews?: boolean }) => boolean;
 
-  // Folder icons
+  // Folder icons & customization
   setFolderIcon: (mailboxId: string, icon: string) => void;
   removeFolderIcon: (mailboxId: string) => void;
+  setScheduledFolderName: (name: string) => void;
+  setHideScheduledFolder: (hide: boolean) => void;
+  toggleHideScheduledFolder: () => void;
+  setFolderHidden: (mailboxId: string, hidden: boolean) => void;
+  toggleFolderHidden: (mailboxId: string) => void;
+  setCustomFolderRole: (role: string, mailboxId: string | null) => void;
+  setGoogleStarsSubmenuEnabled: (accountEmail: string, enabled: boolean) => void;
+  toggleGoogleStarHidden: (accountEmail: string, starId: string) => void;
+  setSidebarCustomOrder: (
+    order: SidebarCustomOrder | ((prev: SidebarCustomOrder) => SidebarCustomOrder)
+  ) => void;
+  resetSidebarCustomOrder: () => void;
 
   // Shared-calendar color overrides
   setSharedCalendarColor: (key: string, color: string) => void;
@@ -834,9 +882,16 @@ const DEFAULT_SETTINGS = {
   tintListRowsByTag: true,
   tintListRowsByAccount: false,
   showFolderTotalCount: true,
+  sidebarCustomOrder: getInitialSidebarCustomOrder(),
 
   // Folders
   folderIcons: {} as Record<string, string>,
+  scheduledFolderName: '',
+  hideScheduledFolder: false,
+  hiddenFolderIds: [] as string[],
+  customFolderRoles: {} as Record<string, string>,
+  googleStarsSubmenuEnabled: {} as Record<string, boolean>,
+  googleHiddenStarIds: {} as Record<string, string[]>,
 
   // Keywords
   emailKeywords: USING_MOCK_SERVER ? DEV_KEYWORDS : DEFAULT_KEYWORDS,
@@ -1094,6 +1149,13 @@ export const useSettingsStore = create<SettingsState>()(
           tintListRowsByAccount: state.tintListRowsByAccount,
           showFolderTotalCount: state.showFolderTotalCount,
           folderIcons: state.folderIcons,
+          scheduledFolderName: state.scheduledFolderName,
+          hideScheduledFolder: state.hideScheduledFolder,
+          hiddenFolderIds: state.hiddenFolderIds || [],
+          customFolderRoles: state.customFolderRoles || {},
+          googleStarsSubmenuEnabled: state.googleStarsSubmenuEnabled || {},
+          googleHiddenStarIds: state.googleHiddenStarIds || {},
+          sidebarCustomOrder: state.sidebarCustomOrder,
           emailKeywords: state.emailKeywords,
           nestedTags: state.nestedTags,
           attachmentReminderEnabled: state.attachmentReminderEnabled,
@@ -1181,6 +1243,15 @@ export const useSettingsStore = create<SettingsState>()(
               if (key === 'messageListOrderScope' && settings[key] !== 'inbox' && settings[key] !== 'all') {
                 return;
               }
+              if (key === 'sidebarCustomOrder' && isPlainRecord(settings[key])) {
+                const sco = settings[key] as Record<string, unknown>;
+                (get() as unknown as Record<string, unknown>)[key] = {
+                  accounts: Array.isArray(sco.accounts) ? sco.accounts : [],
+                  subcategories: isPlainRecord(sco.subcategories) ? sco.subcategories : {},
+                  items: isPlainRecord(sco.items) ? sco.items : {},
+                };
+                return;
+              }
               if (DEVICE_LOCAL_SETTING_KEYS.has(key)) {
                 return;
               }
@@ -1249,6 +1320,126 @@ export const useSettingsStore = create<SettingsState>()(
       removeFolderIcon: (mailboxId: string) => {
         const { [mailboxId]: _, ...rest } = get().folderIcons;
         set({ folderIcons: rest });
+      },
+
+      setScheduledFolderName: (name: string) => {
+        set({ scheduledFolderName: name });
+      },
+
+      setHideScheduledFolder: (hide: boolean) => {
+        const current = get().hiddenFolderIds || [];
+        set({
+          hideScheduledFolder: hide,
+          hiddenFolderIds: hide
+            ? (current.includes(SCHEDULED_MAILBOX_ID) ? current : [...current, SCHEDULED_MAILBOX_ID])
+            : current.filter((id) => id !== SCHEDULED_MAILBOX_ID),
+        });
+      },
+
+      toggleHideScheduledFolder: () => {
+        const current = get().hiddenFolderIds || [];
+        const isHidden = Boolean(get().hideScheduledFolder || current.includes(SCHEDULED_MAILBOX_ID));
+        const next = !isHidden;
+        set({
+          hideScheduledFolder: next,
+          hiddenFolderIds: next
+            ? (current.includes(SCHEDULED_MAILBOX_ID) ? current : [...current, SCHEDULED_MAILBOX_ID])
+            : current.filter((id) => id !== SCHEDULED_MAILBOX_ID),
+        });
+      },
+
+      setFolderHidden: (mailboxId: string, hidden: boolean) => {
+        if (mailboxId === SCHEDULED_MAILBOX_ID) {
+          set({ hideScheduledFolder: hidden });
+        }
+        set((state) => {
+          const current = state.hiddenFolderIds || [];
+          const exists = current.includes(mailboxId);
+          if (hidden && !exists) {
+            return { hiddenFolderIds: [...current, mailboxId] };
+          }
+          if (!hidden && exists) {
+            return { hiddenFolderIds: current.filter((id) => id !== mailboxId) };
+          }
+          return state;
+        });
+      },
+
+      toggleFolderHidden: (mailboxId: string) => {
+        const isScheduled = mailboxId === SCHEDULED_MAILBOX_ID;
+        const current = get().hiddenFolderIds || [];
+        const isHidden = isScheduled
+          ? (get().hideScheduledFolder || current.includes(SCHEDULED_MAILBOX_ID))
+          : current.includes(mailboxId);
+        const next = !isHidden;
+
+        if (isScheduled) {
+          set({ hideScheduledFolder: next });
+        }
+        set({
+          hiddenFolderIds: next
+            ? [...current.filter((id) => id !== mailboxId), mailboxId]
+            : current.filter((id) => id !== mailboxId),
+        });
+      },
+
+      setCustomFolderRole: (role: string, mailboxId: string | null) => {
+        set((state) => {
+          const current = { ...(state.customFolderRoles || {}) };
+          if (!mailboxId) {
+            delete current[role];
+          } else {
+            current[role] = mailboxId;
+          }
+          return { customFolderRoles: current };
+        });
+      },
+
+      setGoogleStarsSubmenuEnabled: (accountEmail: string, enabled: boolean) => {
+        set((state) => ({
+          googleStarsSubmenuEnabled: {
+            ...(state.googleStarsSubmenuEnabled || {}),
+            [accountEmail]: enabled,
+          },
+        }));
+      },
+
+      toggleGoogleStarHidden: (accountEmail: string, starId: string) => {
+        set((state) => {
+          const currentMap = state.googleHiddenStarIds || {};
+          const currentList = currentMap[accountEmail] || [];
+          const exists = currentList.includes(starId);
+          const nextList = exists
+            ? currentList.filter((id) => id !== starId)
+            : [...currentList, starId];
+          return {
+            googleHiddenStarIds: {
+              ...currentMap,
+              [accountEmail]: nextList,
+            },
+          };
+        });
+      },
+
+      setSidebarCustomOrder: (orderOrUpdater) => {
+        const current = get().sidebarCustomOrder || { accounts: [], subcategories: {}, items: {} };
+        const next = typeof orderOrUpdater === 'function' ? orderOrUpdater(current) : orderOrUpdater;
+        set({ sidebarCustomOrder: next });
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('mail_sidebar_custom_order_v1', JSON.stringify(next));
+          }
+        } catch { /* storage unavailable */ }
+      },
+
+      resetSidebarCustomOrder: () => {
+        const empty: SidebarCustomOrder = { accounts: [], subcategories: {}, items: {} };
+        set({ sidebarCustomOrder: empty });
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.removeItem('mail_sidebar_custom_order_v1');
+          }
+        } catch { /* storage unavailable */ }
       },
 
       // Shared-calendar color override methods
@@ -1498,6 +1689,13 @@ export const useSettingsStore = create<SettingsState>()(
             }
             if (!state.conversationGrouping) {
               state.conversationGrouping = state.disableThreading ? 'separate' : 'nested';
+            }
+            if (!state.sidebarCustomOrder || !isPlainRecord(state.sidebarCustomOrder)) {
+              state.sidebarCustomOrder = getInitialSidebarCustomOrder();
+            } else {
+              if (!Array.isArray(state.sidebarCustomOrder.accounts)) state.sidebarCustomOrder.accounts = [];
+              if (!isPlainRecord(state.sidebarCustomOrder.subcategories)) state.sidebarCustomOrder.subcategories = {};
+              if (!isPlainRecord(state.sidebarCustomOrder.items)) state.sidebarCustomOrder.items = {};
             }
             state.messageListOrder = sanitizeSortLevels(state.messageListOrder);
             if (state.messageListOrderScope !== 'inbox' && state.messageListOrderScope !== 'all') {
@@ -1762,4 +1960,15 @@ if (typeof window !== 'undefined') {
 export function getMessageListOrderFor(role: string | null | undefined): SortLevel[] {
   const { messageListOrder, messageListOrderScope } = useSettingsStore.getState();
   return orderForMailbox(messageListOrder, messageListOrderScope, role);
+}
+
+export function isMailboxHidden(
+  mailboxId: string,
+  hiddenFolderIds?: string[],
+  hideScheduledFolder?: boolean
+): boolean {
+  if (mailboxId === SCHEDULED_MAILBOX_ID) {
+    return Boolean(hideScheduledFolder || hiddenFolderIds?.includes(SCHEDULED_MAILBOX_ID));
+  }
+  return Boolean(hiddenFolderIds?.includes(mailboxId));
 }

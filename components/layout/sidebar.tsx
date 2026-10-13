@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, Fragment, ReactNode } from "react";
+import { useState, useEffect, useMemo, useCallback, Fragment, ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { PluginSlot } from "@/components/plugins/plugin-slot";
@@ -29,6 +29,7 @@ import {
   PlayCircle,
   Loader2,
   AlertTriangle,
+  DoubleExclamation,
   NotebookPen,
   Pencil,
   Plus,
@@ -38,8 +39,11 @@ import {
   Mails,
   MailOpen,
   MoreHorizontal,
+  Layers,
+  MessageSquare,
+  GoogleIcon,
 } from "@/components/icons";
-import { cn, buildMailboxTree, MailboxNode } from "@/lib/utils";
+import { cn, buildMailboxTree, MailboxNode, applyCustomOrder, filterVisibleMailboxTree, formatCountBadge } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
 import {
   buildKeywordTree,
@@ -65,9 +69,17 @@ import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useGoogleMail } from "@/hooks/use-google-mail";
 import { GoogleMailSidebarSection } from "@/components/mail/google-mail-sidebar-section";
+import {
+  isGoogleCategoryLabel,
+  isGoogleSystemFolder,
+  getGoogleAccountCategories,
+  isGoogleMailboxId,
+} from "@/lib/google/gmail-mapper";
+import { isGmailStarLabel, registerKnownMailboxes, GMAIL_STARS, type GmailStarId } from "@/lib/google/gmail-stars";
+import { GoogleAccountSettingsModal } from "@/components/settings/google-account-settings-modal";
 import { unifiedLoadProgress } from "@/lib/unified-mailbox";
 import { useVacationStore } from "@/stores/vacation-store";
-import { useSettingsStore, getKeywordVisibility } from "@/stores/settings-store";
+import { useSettingsStore, getKeywordVisibility, isMailboxHidden } from "@/stores/settings-store";
 import { useEmailStore } from "@/stores/email-store";
 import { toast } from "@/stores/toast-store";
 import { debug } from "@/lib/debug";
@@ -146,6 +158,39 @@ const ROW_PX_BASE = 8;
 const CHEVRON_SLOT = 20;
 const INDENT_STEP = 12;
 
+const REORDER_MIME = 'application/x-bulwark-sidebar-reorder';
+
+interface ReorderPayload {
+  level: 'account' | 'subcategory' | 'item';
+  id: string;
+  parentKey?: string;
+}
+
+export type { SidebarCustomOrder } from '@/stores/settings-store';
+import { type SidebarCustomOrder, getInitialSidebarCustomOrder } from '@/stores/settings-store';
+
+const STORAGE_KEY_COLLAPSED_ACCOUNTS = 'mail_sidebar_collapsed_accounts_v1';
+const STORAGE_KEY_COLLAPSED_SUBCATS = 'mail_sidebar_collapsed_subcategories_v1';
+
+
+function getCategoryIcon(role: string, isSelected: boolean, colorful: boolean) {
+  const base = "w-4 h-4 flex-shrink-0 transition-colors";
+  let color = isSelected ? "text-white" : "text-foreground/80";
+  if (colorful && !isSelected) {
+    if (role === 'category_personal') color = "text-blue-500";
+    else if (role === 'category_social') color = "text-cyan-500";
+    else if (role === 'category_updates') color = "text-amber-500";
+    else if (role === 'category_forums') color = "text-purple-500";
+    else if (role === 'category_promotions') color = "text-emerald-500";
+  }
+  if (role === 'category_personal') return <Inbox className={cn(base, color)} />;
+  if (role === 'category_social') return <Users className={cn(base, color)} />;
+  if (role === 'category_updates') return <File className={cn(base, color)} />;
+  if (role === 'category_forums') return <MessageSquare className={cn(base, color)} />;
+  if (role === 'category_promotions') return <Tag className={cn(base, color)} />;
+  return <Layers className={cn(base, color)} />;
+}
+
 const getIconForMailbox = (role?: string, name?: string, hasChildren?: boolean, isExpanded?: boolean, _isShared?: boolean, id?: string) => {
   const lowerName = name?.toLowerCase() || "";
 
@@ -154,17 +199,19 @@ const getIconForMailbox = (role?: string, name?: string, hasChildren?: boolean, 
   }
 
   if (role === "inbox" || lowerName.includes("inbox")) return Inbox;
+  if (role === "starred" || lowerName.includes("star") || lowerName.includes("flag")) return Star;
+  if (role === "unread" || lowerName.includes("unread")) return Mail;
+  if (role === "important" || lowerName.includes("important")) return DoubleExclamation;
   if (role === "sent" || lowerName.includes("sent")) return Send;
   if (role === "drafts" || lowerName.includes("draft")) return File;
   if (role === "trash" || lowerName.includes("trash") || lowerName.includes("deleted")) return Trash2;
   if (role === "junk" || role === "spam" || lowerName.includes("junk") || lowerName.includes("spam")) return Ban;
   if (role === "archive" || lowerName.includes("archive")) return Archive;
+  if (role === "all" || role === "all_mail" || lowerName.includes("all mail")) return Layers;
   if (role === "shared" || lowerName.includes("shared")) return Users;
-  if (role === "important" || lowerName.includes("important")) return AlertTriangle;
   if (role === "memos" || lowerName.includes("memo")) return NotebookPen;
   if (role === "scheduled" || lowerName.includes("scheduled")) return CalendarClock;
   if (role === "snoozed" || lowerName.includes("snoozed")) return BellOff;
-  if (lowerName.includes("star") || lowerName.includes("flag")) return Star;
 
   if (hasChildren) {
     return isExpanded ? FolderOpen : Folder;
@@ -175,30 +222,38 @@ const getIconForMailbox = (role?: string, name?: string, hasChildren?: boolean, 
 
 const ROLE_ICON_COLOR: Record<string, string> = {
   inbox: "text-blue-600/80 dark:text-blue-400/80",
-  sent: "text-emerald-600/80 dark:text-emerald-400/80",
+  starred: "text-yellow-500 dark:text-yellow-400",
+  unread: "text-lime-500 dark:text-lime-400",
+  important: "text-pink-500 dark:text-pink-400",
   drafts: "text-violet-600/80 dark:text-violet-400/80",
-  trash: "text-muted-foreground",
-  junk: "text-red-600/80 dark:text-red-400/80",
-  archive: "text-amber-600/80 dark:text-amber-400/80",
-  shared: "text-cyan-600/80 dark:text-cyan-400/80",
-  important: "text-orange-600/80 dark:text-orange-400/80",
-  memos: "text-yellow-600/80 dark:text-yellow-400/80",
   scheduled: "text-sky-600/80 dark:text-sky-400/80",
+  sent: "text-emerald-600/80 dark:text-emerald-400/80",
+  archive: "text-amber-600/80 dark:text-amber-400/80",
+  junk: "text-red-600/80 dark:text-red-400/80",
+  spam: "text-red-600/80 dark:text-red-400/80",
+  trash: "text-muted-foreground",
+  all: "text-purple-400 dark:text-purple-300",
+  all_mail: "text-purple-400 dark:text-purple-300",
+  shared: "text-cyan-600/80 dark:text-cyan-400/80",
+  memos: "text-yellow-600/80 dark:text-yellow-400/80",
   snoozed: "text-slate-500/80 dark:text-slate-400/80",
 };
 
 function resolveRoleKey(role?: string, name?: string): string | undefined {
   const lowerName = name?.toLowerCase() || "";
   if (role === "inbox" || lowerName.includes("inbox")) return "inbox";
-  if (role === "sent" || lowerName.includes("sent")) return "sent";
-  if (role === "drafts" || lowerName.includes("draft")) return "drafts";
-  if (role === "trash" || lowerName.includes("trash") || lowerName.includes("deleted")) return "trash";
-  if (role === "junk" || role === "spam" || lowerName.includes("junk") || lowerName.includes("spam")) return "junk";
-  if (role === "archive" || lowerName.includes("archive")) return "archive";
-  if (role === "shared" || lowerName.includes("shared")) return "shared";
+  if (role === "starred" || lowerName.includes("star") || lowerName.includes("flag")) return "starred";
+  if (role === "unread" || lowerName.includes("unread")) return "unread";
   if (role === "important" || lowerName.includes("important")) return "important";
-  if (role === "memos" || lowerName.includes("memo")) return "memos";
+  if (role === "drafts" || lowerName.includes("draft")) return "drafts";
   if (role === "scheduled" || lowerName.includes("scheduled")) return "scheduled";
+  if (role === "sent" || lowerName.includes("sent")) return "sent";
+  if (role === "archive" || lowerName.includes("archive")) return "archive";
+  if (role === "junk" || role === "spam" || lowerName.includes("junk") || lowerName.includes("spam")) return "junk";
+  if (role === "trash" || lowerName.includes("trash") || lowerName.includes("deleted")) return "trash";
+  if (role === "all" || role === "all_mail" || lowerName.includes("all mail")) return "all";
+  if (role === "shared" || lowerName.includes("shared")) return "shared";
+  if (role === "memos" || lowerName.includes("memo")) return "memos";
   if (role === "snoozed" || lowerName.includes("snoozed")) return "snoozed";
   return undefined;
 }
@@ -213,11 +268,13 @@ function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean
   return cn(base, isSelected ? "text-accent-foreground" : "text-foreground/80");
 }
 
+export { formatCountBadge };
+
 function SidebarRowCounts({
   unread,
   total,
   role,
-  isSelected: _isSelected,
+  isSelected,
   onUnreadClick,
 }: {
   unread?: number;
@@ -225,77 +282,58 @@ function SidebarRowCounts({
   role?: string | null;
   isSelected: boolean;
   onUnreadClick?: () => void;
+  isGoogle?: boolean;
 }) {
-  const showFolderTotalCount = useSettingsStore(s => s.showFolderTotalCount);
-  const mountainView = useSettingsStore(s => s.interfaceLayout === 'mountain-view');
-  // Mountain View counts one thing per row: what is unread, or for Drafts,
-  // how many there are, since a draft is never unread.
-  if (mountainView) {
-    const count = role === 'drafts' ? (total ?? 0) : (unread ?? 0);
-    if (count === 0) return null;
-    return (
-      <span
-        className="ms-auto flex-shrink-0 flex items-center justify-center text-xs tabular-nums"
-        style={{ minWidth: 16, marginInlineEnd: 28 }}
-        data-testid="folder-counts"
-        data-unread={unread ?? 0}
-        data-total={role === 'drafts' ? count : 0}
-      >
-        <span className={role === 'drafts' ? "text-muted-foreground" : "font-bold text-foreground"}>
-          {count.toLocaleString()}
-        </span>
-      </span>
-    );
-  }
+  const isUnsent = role === 'drafts' || role === 'scheduled';
   const unreadCount = unread ?? 0;
-  const totalCount = showFolderTotalCount ? (total ?? 0) : 0;
+  const count = isUnsent ? (total ?? unreadCount) : unreadCount;
 
-  if (unreadCount === 0 && totalCount === 0) return null;
+  if (count === 0) return null;
 
-  const unreadClass = "text-xs font-semibold tabular-nums text-foreground";
-  const totalClass = "text-xs tabular-nums text-muted-foreground";
+  const badgeClass = cn(
+    "text-xs px-1.5 py-0.5 rounded-full font-semibold tabular-nums min-w-5 h-5 flex items-center justify-center transition-colors",
+    isSelected
+      ? "bg-accent-foreground/15 text-accent-foreground"
+      : isUnsent
+        ? "bg-muted/60 text-muted-foreground font-normal"
+        : "bg-muted text-muted-foreground"
+  );
 
-  const unreadNode = unreadCount > 0 ? (
-    onUnreadClick ? (
-      <span
-        role="button"
-        tabIndex={0}
-        onClick={(e) => {
+  const badgeNode = (!isUnsent && onUnreadClick) ? (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        onUnreadClick();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
           e.stopPropagation();
           onUnreadClick();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            onUnreadClick();
-          }
-        }}
-        className={cn(unreadClass, "cursor-pointer hover:underline")}
-        title={`${unreadCount} unread`}
-      >
-        {unreadCount}
-      </span>
-    ) : (
-      <span className={unreadClass}>{unreadCount}</span>
-    )
-  ) : null;
+        }
+      }}
+      className={cn(badgeClass, "cursor-pointer hover:opacity-85")}
+      title={`${count} unread`}
+    >
+      {formatCountBadge(count)}
+    </span>
+  ) : (
+    <span className={badgeClass}>{formatCountBadge(count)}</span>
+  );
 
   return (
     <span
-      className="ms-auto flex-shrink-0 flex items-center justify-center"
-      style={{ minWidth: 16, marginInlineEnd: 28 }}
-      title={totalCount > 0 ? `${unreadCount} unread / ${totalCount} total` : `${unreadCount} unread`}
+      className="ms-auto flex-shrink-0 flex items-center justify-center w-[72px]"
+      style={{ width: 72 }}
+      title={isUnsent ? `${count} unsent` : `${count} unread`}
       data-testid="folder-counts"
-      data-unread={unreadCount}
-      data-total={totalCount}
+      data-unread={isUnsent ? 0 : count}
+      data-total={isUnsent ? count : 0}
     >
-      <span className="flex items-baseline gap-1">
-        {unreadNode}
-        {unreadCount > 0 && totalCount > 0 && (
-          <span className="text-xs text-muted-foreground/60">/</span>
-        )}
-        {totalCount > 0 && <span className={totalClass}>{totalCount}</span>}
+      <span className="flex items-center justify-center gap-1">
+        {badgeNode}
       </span>
     </span>
   );
@@ -327,6 +365,14 @@ interface SidebarRowProps {
   testName?: string;
   testMailboxId?: string;
   testShared?: boolean;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  isGoogle?: boolean;
 }
 
 function SidebarRow({
@@ -352,14 +398,48 @@ function SidebarRow({
   testName,
   testMailboxId,
   testShared,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragging,
+  isDragOver,
+  isGoogle,
 }: SidebarRowProps) {
+  const isGoogleRow = isGoogle || isGoogleMailboxId(testMailboxId ?? '');
   const t = useTranslations('sidebar');
   const leftPad = isCollapsed ? 0 : ROW_PX_BASE + depth * INDENT_STEP;
   const [labelRef, shortenedLabel] = useShortenedText(labelCandidates ?? [label]);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes(REORDER_MIME)) {
+      onDragOver?.(e);
+    } else if (dropHandlers && typeof (dropHandlers as Record<string, unknown>).onDragOver === 'function') {
+      ((dropHandlers as Record<string, unknown>).onDragOver as (e: React.DragEvent) => void)(e);
+    } else {
+      onDragOver?.(e);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes(REORDER_MIME)) {
+      onDrop?.(e);
+    } else if (dropHandlers && typeof (dropHandlers as Record<string, unknown>).onDrop === 'function') {
+      ((dropHandlers as Record<string, unknown>).onDrop as (e: React.DragEvent) => void)(e);
+    } else {
+      onDrop?.(e);
+    }
+  };
+
   return (
     <div
       {...(dropHandlers || {})}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={onDragEnd}
       onContextMenu={onContextMenu}
       data-testid="folder-row"
       data-mv-nav-row=""
@@ -371,17 +451,19 @@ function SidebarRow({
       data-has-unread={(unread ?? 0) > 0 && testRole !== 'drafts' ? '' : undefined}
       style={{ paddingBlock: 'var(--density-sidebar-py)' }}
       className={cn(
-        "group flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150",
+        "group flex items-center max-lg:min-h-[44px] text-sm transition-colors duration-150 relative",
         isCollapsed
           ? "w-full justify-center px-1"
           : "mx-2 w-[calc(100%-16px)] rounded-md pe-0",
         isVirtual
           ? "text-muted-foreground"
           : isSelected
-            ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
+            ? "bg-accent text-accent-foreground font-semibold hover:bg-accent/80"
             : "hover:bg-muted/50 text-foreground",
         isValidDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset",
-        isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50"
+        isInvalidDropTarget && "bg-destructive/10 ring-2 ring-destructive/30 ring-inset opacity-50",
+        isDragging && "opacity-50",
+        isDragOver && "border-t-2 border-primary"
       )}
     >
       {!isCollapsed && (
@@ -420,11 +502,11 @@ function SidebarRow({
           "flex items-center gap-2 min-w-0 transition-colors bg-transparent hover:bg-transparent",
           isCollapsed ? "justify-center" : "flex-1 text-start",
           isVirtual && "cursor-default select-none",
-          isSelected ? "text-white" : ""
+          isSelected ? "text-accent-foreground" : ""
         )}
         title={isCollapsed ? label : undefined}
       >
-        <span className="flex items-center justify-center flex-shrink-0 w-4 h-4">
+        <span className={cn("flex items-center justify-center flex-shrink-0 w-4 h-4", isSelected && "text-accent-foreground")}>
           {icon}
         </span>
         {!isCollapsed && (
@@ -436,6 +518,7 @@ function SidebarRow({
               role={testRole}
               isSelected={isSelected}
               onUnreadClick={onUnreadClick}
+              isGoogle={isGoogleRow}
             />
           </>
         )}
@@ -454,9 +537,20 @@ function SidebarSectionHeader({
   first,
   icon,
   sub,
+  isAccount,
+  accountType,
   testId,
   onContextMenu,
   status,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragging,
+  isDragOver,
+  unreadBadge,
+  actions,
 }: {
   label: string;
   expanded: boolean;
@@ -467,43 +561,117 @@ function SidebarSectionHeader({
   first?: boolean;
   icon?: ReactNode;
   sub?: boolean;
+  isAccount?: boolean;
+  accountType?: 'comail' | 'google';
   testId?: string;
   onContextMenu?: (event: React.MouseEvent) => void;
   /** A short note after the label, e.g. how many accounts have loaded. */
   status?: ReactNode;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  unreadBadge?: number;
+  actions?: ReactNode;
 }) {
   if (isCollapsed) {
     return first ? null : <div className="h-px bg-border/50 mx-2 my-2" aria-hidden />;
   }
 
-  const topSpacing = sub ? "pt-2" : first ? "pt-3" : "pt-5";
-  const textClass = sub
-    ? "text-xs font-semibold text-muted-foreground truncate"
-    : "text-sm font-semibold text-foreground truncate";
+  const topSpacing = isAccount
+    ? (first ? "pt-1.5 pb-1" : "pt-4 pb-1")
+    : sub
+    ? "pt-3.5 pb-0.5"
+    : first
+    ? "pt-2"
+    : "pt-4";
+
+  const textClass = isAccount
+    ? "text-xs font-semibold text-foreground tracking-tight truncate"
+    : sub
+    ? "text-[13px] font-bold text-foreground/90 tracking-tight truncate"
+    : "text-xs font-semibold text-foreground/90 truncate";
+
+  const containerClass = isAccount
+    ? cn(
+        "group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors",
+        "bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35",
+        isDragging && "opacity-50",
+        isDragOver && "border-t-2 border-primary"
+      )
+    : sub
+    ? cn(
+        "group flex items-center py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2",
+        isDragging && "opacity-50",
+        isDragOver && "border-t-2 border-primary"
+      )
+    : cn(
+        "group flex items-center py-1.5 select-none rounded-md hover:bg-muted/40 transition-colors",
+        isCollapsed ? "w-full px-2" : "mx-2 w-[calc(100%-16px)] px-2",
+        isDragging && "opacity-50",
+        isDragOver && "border-t-2 border-primary"
+      );
 
   return (
-    <div className={topSpacing}>
-      <button
-        onClick={onToggle}
+    <div
+      className={topSpacing}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes(REORDER_MIME)) {
+          onDragOver?.(e);
+        }
+      }}
+      onDrop={(e) => {
+        if (e.dataTransfer.types.includes(REORDER_MIME)) {
+          onDrop?.(e);
+        }
+      }}
+      onDragEnd={onDragEnd}
+    >
+      <div
         onContextMenu={onContextMenu}
         data-testid={testId}
         data-section-name={label}
         data-expanded={expanded ? 'true' : 'false'}
-        className={cn(
-          "group flex items-center py-1.5 select-none rounded-md hover:bg-muted/40 transition-colors",
-          isCollapsed ? "w-full px-2" : "mx-2 w-[calc(100%-16px)] px-2"
-        )}
+        className={containerClass}
       >
-        {expanded ? (
-          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-        ) : (
-          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+        <button
+          type="button"
+          onClick={onToggle}
+          data-folder-btn=""
+          className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
+        >
+          {expanded ? (
+            <ChevronDown className={cn(sub ? "w-3.5 h-3.5" : "w-3.5 h-3.5", "text-muted-foreground flex-shrink-0")} />
+          ) : (
+            <ChevronRight className={cn(sub ? "w-3.5 h-3.5" : "w-3.5 h-3.5", "text-muted-foreground flex-shrink-0")} />
+          )}
+          {icon && (
+            isAccount ? (
+              <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                {icon}
+              </span>
+            ) : (
+              <span className="flex-shrink-0 text-foreground/80">{icon}</span>
+            )
+          )}
+          <span className={cn(textClass, "ms-1")}>
+            {label}
+          </span>
+          {status}
+        </button>
+        {unreadBadge !== undefined && unreadBadge > 0 && !expanded && !isAccount && (
+          <span
+            className="text-[10px] px-2 py-0.5 rounded-full font-semibold tabular-nums me-1 bg-primary/10 text-primary"
+          >
+            {formatCountBadge(unreadBadge)}
+          </span>
         )}
-        {icon && <span className="ms-1.5 flex-shrink-0">{icon}</span>}
-        <span className={cn(textClass, "ms-1.5")}>
-          {label}
-        </span>
-        {status}
+        {actions}
         {onSettings && (
           <span
             role="button"
@@ -519,13 +687,13 @@ function SidebarSectionHeader({
                 onSettings();
               }
             }}
-            className="ms-auto p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
             title={settingsTitle}
           >
             <Settings className="w-3.5 h-3.5" />
           </span>
         )}
-      </button>
+      </div>
     </div>
   );
 }
@@ -541,6 +709,15 @@ function MailboxTreeItem({
   colorful,
   onContextMenu,
   dragAccountId = null,
+  depthOffset = 0,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragging,
+  isDragOver,
+  isGoogle,
 }: {
   node: MailboxNode;
   selectedMailbox: string;
@@ -555,7 +732,17 @@ function MailboxTreeItem({
    *  Travels in the folder-drag payload so a folder tab fetches through the
    *  right client. */
   dragAccountId?: string | null;
+  depthOffset?: number;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  isGoogle?: boolean;
 }) {
+  const isGoogleNode = isGoogle || isGoogleMailboxId(node.id) || Boolean(dragAccountId?.startsWith('google:'));
   const tNotifications = useTranslations('notifications');
   const tSidebar = useTranslations('sidebar');
   const hasChildren = node.children.length > 0;
@@ -614,7 +801,7 @@ function MailboxTreeItem({
         testName={node.name}
         testMailboxId={node.id}
         testShared={node.isShared}
-        depth={node.depth}
+        depth={node.depth + depthOffset}
         isSelected={isSelected}
         isVirtual={isVirtualNode}
         unread={node.unreadEmails}
@@ -636,6 +823,14 @@ function MailboxTreeItem({
         isValidDropTarget={isValidDropTarget}
         isInvalidDropTarget={isInvalidDropTarget}
         onContextMenu={onContextMenu && !isVirtualNode ? (e) => onContextMenu(e, node) : undefined}
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onDragEnd={onDragEnd}
+        isDragging={isDragging}
+        isDragOver={isDragOver}
+        isGoogle={isGoogleNode}
       />
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (
@@ -651,6 +846,8 @@ function MailboxTreeItem({
           colorful={colorful}
           onContextMenu={onContextMenu}
           dragAccountId={dragAccountId}
+          depthOffset={depthOffset}
+          isGoogle={isGoogleNode}
         />
       ))}
     </>
@@ -674,7 +871,7 @@ function ShowAllTagsRow({
     <SidebarRow
       icon={<MoreHorizontal className="w-4 h-4 text-muted-foreground" />}
       label={showAll ? t('show_fewer_tags') : t('show_all_tags', { count: hiddenCount })}
-      depth={0}
+      depth={1}
       onClick={onToggle}
       isCollapsed={isCollapsed}
     />
@@ -690,6 +887,14 @@ function TagItem({
   onToggleExpand,
   tagCounts,
   colorful,
+  depthOffset = 0,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragging,
+  isDragOver,
 }: {
   node: KeywordNode;
   selectedKeyword: string | null;
@@ -699,6 +904,14 @@ function TagItem({
   onToggleExpand: (keywordId: string) => void;
   tagCounts: Record<string, { total: number; unread: number }>;
   colorful: boolean;
+  depthOffset?: number;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  isDragging?: boolean;
+  isDragOver?: boolean;
 }) {
   const t = useTranslations('notifications');
   const { tagNameCandidates, tagColor } = useKeywordFormat();
@@ -744,7 +957,7 @@ function TagItem({
         icon={tagIcon}
         label={label}
         labelCandidates={labelCandidates}
-        depth={node.depth}
+        depth={node.depth + depthOffset}
         isSelected={isSelected}
         unread={tagCounts[node.id]?.unread ?? 0}
         total={tagCounts[node.id]?.total ?? 0}
@@ -755,6 +968,13 @@ function TagItem({
         isCollapsed={isCollapsed}
         dropHandlers={globalDragging ? (dropHandlers as Record<string, unknown>) : undefined}
         isValidDropTarget={isValidDropTarget}
+        draggable={draggable}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        onDragEnd={onDragEnd}
+        isDragging={isDragging}
+        isDragOver={isDragOver}
       />
 
       {hasChildren && isExpanded && !isCollapsed && node.children.map((child) => (
@@ -768,6 +988,7 @@ function TagItem({
           onToggleExpand={onToggleExpand}
           tagCounts={tagCounts}
           colorful={colorful}
+          depthOffset={depthOffset}
         />
       ))}
     </>
@@ -906,7 +1127,7 @@ export function Sidebar({
   const [railHovered, setRailHovered] = useState(false);
   const hoverExpanded = mvShell && sidebarCollapsed && railHovered;
   const isCollapsed = mvShell ? (sidebarCollapsed && !hoverExpanded) : false;
-  const { primaryIdentity: _primaryIdentity, activeAccountId } = useAuthStore();
+  const { primaryIdentity, activeAccountId } = useAuthStore();
   const googleMail = useGoogleMail();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
@@ -930,28 +1151,11 @@ export function Sidebar({
       return stored !== null ? JSON.parse(stored) : true;
     } catch { return true; }
   });
-  const [sharedExpanded, setSharedExpanded] = useState(() => {
-    try {
-      const stored = localStorage.getItem('sidebarSharedExpanded');
-      return stored !== null ? JSON.parse(stored) : false;
-    } catch { return false; }
-  });
   const [expandedSharedAccounts, setExpandedSharedAccounts] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem('sidebarExpandedSharedAccounts');
       return stored !== null ? new Set(JSON.parse(stored) as string[]) : new Set();
     } catch { return new Set(); }
-  });
-  // Per-connected-account collapse state for Pro / Thunderbird-style mode.
-  // Stored as the set of accountIds the user has explicitly collapsed -
-  // anything not in the set is treated as expanded. Inverting the storage
-  // model lets new accounts default to expanded automatically.
-  const [collapsedAccountGroups, setCollapsedAccountGroups] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem('sidebarCollapsedAccountGroups');
-      if (stored !== null) return new Set(JSON.parse(stored) as string[]);
-    } catch { /* fall through */ }
-    return new Set();
   });
   const emailKeywords = useSettingsStore(s => s.emailKeywords);
   const nestedTags = useSettingsStore(s => s.nestedTags);
@@ -961,6 +1165,9 @@ export function Sidebar({
   const isDarkSidebar = resolvedTheme === 'dark' || !activeThemeId || activeThemeId === 'builtin-comail';
   const enableUnifiedMailbox = useSettingsStore(s => s.enableUnifiedMailbox);
   const includeGroupInUnified = useSettingsStore(s => s.includeGroupInUnified);
+  const scheduledFolderName = useSettingsStore(s => s.scheduledFolderName);
+  const hideScheduledFolder = useSettingsStore(s => s.hideScheduledFolder);
+  const hiddenFolderIds = useSettingsStore(s => s.hiddenFolderIds);
   // Mountain View draws its navigation icons in the text colour.
   const colorfulSidebarIcons = useSettingsStore(s => s.colorfulSidebarIcons) && !mvShell;
   const tagCounts = useEmailStore(s => s.tagCounts);
@@ -1069,9 +1276,46 @@ export function Sidebar({
   // so it does not appear twice. (#495)
   const isServerScheduledNode = (n: MailboxNode) => showScheduledMailbox && n.role === 'scheduled';
 
+  const scheduledName = scheduledFolderName?.trim() || t('scheduled');
+  const scheduledNode: MailboxNode = useMemo(() => ({
+    id: SCHEDULED_MAILBOX_ID,
+    name: scheduledName,
+    role: 'scheduled',
+    parentId: undefined,
+    sortOrder: 25,
+    totalEmails: scheduledTotal,
+    unreadEmails: 0,
+    totalThreads: scheduledTotal,
+    unreadThreads: 0,
+    myRights: {
+      mayReadItems: true,
+      mayAddItems: false,
+      mayRemoveItems: true,
+      maySetSeen: true,
+      maySetKeywords: true,
+      mayCreateChild: false,
+      mayRename: true,
+      mayDelete: false,
+      maySubmit: false,
+    },
+    isSubscribed: true,
+    children: [],
+    depth: 0,
+  }), [scheduledName, scheduledTotal, t]);
+
+  if (mailboxes?.length) registerKnownMailboxes(mailboxes);
+  if (googleMail.mailboxes?.length) registerKnownMailboxes(googleMail.mailboxes);
+
   const mailboxTree = buildMailboxTree(mailboxes);
-  const ownTree = mailboxTree.filter(n => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n));
-  const sharedAccounts = mailboxTree.filter(n => n.id.startsWith('shared-account-'));
+  const ownTree = mailboxTree.filter(
+    (n) => !n.id.startsWith('shared-account-') && !isServerScheduledNode(n) && !isGmailStarLabel(n)
+  );
+  const sharedAccounts = mailboxTree.filter((n) => n.id.startsWith('shared-account-'));
+
+  const isNodeHidden = useCallback(
+    (id: string) => isMailboxHidden(id, hiddenFolderIds, hideScheduledFolder),
+    [hiddenFolderIds, hideScheduledFolder]
+  );
 
   // Mountain View's navigation is one flat list of the few places mail
   // actually goes, with everything else - the folders you made, the shared
@@ -1083,16 +1327,16 @@ export function Sidebar({
   const mvFlat = mvShell && !isCollapsed;
   const isPrimaryFolder = (node: MailboxNode) =>
     node.role === 'inbox' || node.role === 'sent' || node.role === 'drafts';
-  const primaryTree = mvFlat ? ownTree.filter(isPrimaryFolder) : ownTree;
-  const secondaryTree = mvFlat ? ownTree.filter((node) => !isPrimaryFolder(node)) : [];
+  const visibleOwnTree = useMemo(() => {
+    return filterVisibleMailboxTree(ownTree, isNodeHidden, selectedMailbox);
+  }, [ownTree, isNodeHidden, selectedMailbox]);
+  const primaryTree = mvFlat ? visibleOwnTree.filter(isPrimaryFolder) : visibleOwnTree;
+  const secondaryTree = mvFlat ? visibleOwnTree.filter((node) => !isPrimaryFolder(node)) : [];
   // Of those, the system folders (archive, spam, trash...) go behind "More",
   // and the folders the user made are listed with the tags under "Labels",
   // which is what they are to someone coming from Gmail.
   const moreTree = secondaryTree.filter((node) => !!node.role);
   const labelTree = secondaryTree.filter((node) => !node.role);
-  // Everything under "More" is hidden together, so one flag covers the extra
-  // folders, the shared accounts and the labels.
-  const showSecondary = !mvFlat || moreExpanded;
 
   // With nesting off every tag is its own root, so the same rows render through
   // one path whether or not the ids describe a hierarchy.
@@ -1105,6 +1349,7 @@ export function Sidebar({
   // filling it back in. A tag the server answered for with zero unread hides,
   // which is the point of the setting.
   const isTagVisible = (node: KeywordNode) => {
+    if (isGmailStarLabel(node.id) || isGmailStarLabel(node.label)) return false;
     if (showAllTags || node.id === selectedKeyword) return true;
     const visibility = getKeywordVisibility(node);
     if (visibility === 'hide') return false;
@@ -1118,28 +1363,14 @@ export function Sidebar({
   const hiddenTagCount = emailKeywords.length - countKeywordNodes(visibleTagTree);
 
   // Multi-account mode (Pro shell): render every connected account as its
-  // own collapsible group. The active account's tree comes from the
-  // `mailboxes` prop (which is the live email-store value); other accounts
-  // come from the per-account cache populated by useProMultiAccountMailboxes.
+  // own collapsible group.
   const useMultiAccount = multiAccountMode && connectedAccounts.length > 1;
-  const accountGroups = useMultiAccount
-    ? connectedAccounts.map((account) => {
-        const isActive = account.id === activeAccountId;
-        const accountMailboxList = isActive
-          ? mailboxes
-          : (accountMailboxes?.[account.id] ?? []);
-        const tree = buildMailboxTree(accountMailboxList).filter(
-          (n) => !n.id.startsWith('shared-account-') && !(isActive && isServerScheduledNode(n))
-        );
-        return { account, isActive, tree };
-      })
-    : [];
 
   // Scheduled row. Without an account it is the combined view (the user's own
   // tree); with one it scopes the list to that shared account's scheduled mail,
   // which lives in the shared JMAP account rather than the primary one (#874).
   const renderScheduledRow = (key: string, account?: { accountId?: string; depth?: number }) => {
-    if (!showScheduledMailbox) return null;
+    if (!showScheduledMailbox || isNodeHidden(SCHEDULED_MAILBOX_ID)) return null;
     const accountId = account?.accountId;
     const mailboxId = accountId ? scopedScheduledMailboxId(accountId) : SCHEDULED_MAILBOX_ID;
     const count = accountId
@@ -1153,7 +1384,7 @@ export function Sidebar({
       <SidebarRow
         key={key}
         icon={<CalendarClock className={cn("w-4 h-4 flex-shrink-0", mvShell ? "text-foreground/80" : "text-sky-600 dark:text-sky-400")} />}
-        label={t('scheduled')}
+        label={scheduledName}
         depth={account?.depth ?? 0}
         isSelected={!selectedKeyword && isScheduledSelected}
         total={count}
@@ -1236,13 +1467,6 @@ export function Sidebar({
       return next;
     });
   };
-  const toggleShared = () => {
-    setSharedExpanded((prev: boolean) => {
-      const next = !prev;
-      try { localStorage.setItem('sidebarSharedExpanded', JSON.stringify(next)); } catch { /* */ }
-      return next;
-    });
-  };
   const toggleSharedAccount = (id: string) => {
     setExpandedSharedAccounts((prev) => {
       const next = new Set(prev);
@@ -1251,20 +1475,12 @@ export function Sidebar({
       return next;
     });
   };
-  const toggleAccountGroup = (id: string) => {
-    setCollapsedAccountGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      try { localStorage.setItem('sidebarCollapsedAccountGroups', JSON.stringify(Array.from(next))); } catch { /* */ }
-      return next;
-    });
-  };
 
   // The tab now travels in the URL (#733) rather than through sessionStorage,
   // so a gear click is a link the user can also bookmark or share. It still
   // steers only this one open - the persisted default is written on tab click.
-  const openFolderSettings = () => { router.push(buildSettingsPath('folders')); };
-  const openKeywordSettings = () => { router.push(buildSettingsPath('keywords')); };
+  const openFolderSettings = useCallback(() => { router.push(buildSettingsPath('folders')); }, [router]);
+  const openKeywordSettings = useCallback(() => { router.push(buildSettingsPath('keywords')); }, [router]);
 
   const {
     contextMenu: mailboxContextMenu,
@@ -1274,6 +1490,7 @@ export function Sidebar({
   } = useContextMenu<MailboxContextTarget>();
 
   const handleMailboxContextMenu = (e: React.MouseEvent, node: MailboxNode) => {
+    if (node.id === SCHEDULED_MAILBOX_ID) return;
     const mailbox = mailboxes.find(mb => mb.id === node.id);
     if (!mailbox) return;
     openMailboxContextMenu(e, { kind: "mailbox", mailbox, hasChildren: node.children.length > 0 });
@@ -1291,7 +1508,412 @@ export function Sidebar({
     accountId && accountId !== "unknown" ? accountId : undefined;
 
   const handleSharedAccountContextMenu = (e: React.MouseEvent, accountId: string) => {
-    openMailboxContextMenu(e, { kind: "folders-section", accountId });
+    openMailboxContextMenu(e, { kind: "folders-section", accountId: sharedAccountMenuId(accountId) });
+  };
+
+  const storedCustomOrder = useSettingsStore((s) => s.sidebarCustomOrder);
+  const customOrder = useMemo(() => {
+    const isEmpty =
+      (!storedCustomOrder?.accounts || storedCustomOrder.accounts.length === 0) &&
+      (!storedCustomOrder?.subcategories || Object.keys(storedCustomOrder.subcategories).length === 0) &&
+      (!storedCustomOrder?.items || Object.keys(storedCustomOrder.items).length === 0);
+    if (isEmpty) {
+      return getInitialSidebarCustomOrder();
+    }
+    return storedCustomOrder;
+  }, [storedCustomOrder]);
+  const setSidebarCustomOrder = useSettingsStore((s) => s.setSidebarCustomOrder);
+  const [dragReorderSource, setDragReorderSource] = useState<ReorderPayload | null>(null);
+  const [dragReorderTarget, setDragReorderTarget] = useState<ReorderPayload | null>(null);
+  const [googleSettingsAccount, setGoogleSettingsAccount] = useState<string | null>(null);
+  const googleStarsSubmenuEnabled = useSettingsStore((s) => s.googleStarsSubmenuEnabled);
+  const googleHiddenStarIds = useSettingsStore((s) => s.googleHiddenStarIds);
+
+  const [collapsedAccounts, setCollapsedAccounts] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_COLLAPSED_ACCOUNTS);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch { /* */ }
+    return new Set<string>();
+  });
+
+  const [collapsedSubcategories, setCollapsedSubcategories] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_COLLAPSED_SUBCATS);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch { /* */ }
+    return new Set<string>();
+  });
+
+  const toggleAccountCollapse = (accountId: string) => {
+    setCollapsedAccounts((prev) => {
+      const next = new Set(prev);
+      if (next.has(accountId)) next.delete(accountId);
+      else next.add(accountId);
+      try {
+        localStorage.setItem(STORAGE_KEY_COLLAPSED_ACCOUNTS, JSON.stringify(Array.from(next)));
+      } catch { /* */ }
+      return next;
+    });
+  };
+
+  const toggleSubcategoryCollapse = (subcatKey: string) => {
+    setCollapsedSubcategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(subcatKey)) next.delete(subcatKey);
+      else next.add(subcatKey);
+      try {
+        localStorage.setItem(STORAGE_KEY_COLLAPSED_SUBCATS, JSON.stringify(Array.from(next)));
+      } catch { /* */ }
+      return next;
+    });
+  };
+
+  const handleReorderDragStart = (e: React.DragEvent, payload: ReorderPayload) => {
+    e.stopPropagation();
+    setDragReorderSource(payload);
+    e.dataTransfer.setData(REORDER_MIME, JSON.stringify(payload));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleReorderDragOver = (e: React.DragEvent, target: ReorderPayload) => {
+    if (!e.dataTransfer.types.includes(REORDER_MIME)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      dragReorderSource &&
+      dragReorderSource.level === target.level &&
+      dragReorderSource.parentKey === target.parentKey &&
+      dragReorderSource.id !== target.id
+    ) {
+      e.dataTransfer.dropEffect = 'move';
+      if (dragReorderTarget?.id !== target.id) {
+        setDragReorderTarget(target);
+      }
+    }
+  };
+
+  const handleReorderDragEnd = () => {
+    setDragReorderSource(null);
+    setDragReorderTarget(null);
+  };
+
+  const handleReorderDrop = (e: React.DragEvent, target: ReorderPayload, currentList: string[]) => {
+    if (!e.dataTransfer.types.includes(REORDER_MIME)) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const data: ReorderPayload = JSON.parse(e.dataTransfer.getData(REORDER_MIME));
+      if (
+        data.level === target.level &&
+        data.parentKey === target.parentKey &&
+        data.id !== target.id
+      ) {
+        const sourceId = data.id;
+        const targetId = target.id;
+        const baseList = [...currentList];
+        const srcIdx = baseList.indexOf(sourceId);
+        const tgtIdx = baseList.indexOf(targetId);
+        if (srcIdx !== -1 && tgtIdx !== -1) {
+          baseList.splice(srcIdx, 1);
+          baseList.splice(tgtIdx, 0, sourceId);
+
+          setSidebarCustomOrder((prev) => {
+            const next: SidebarCustomOrder = {
+              accounts: [...(prev?.accounts || [])],
+              subcategories: { ...(prev?.subcategories || {}) },
+              items: { ...(prev?.items || {}) },
+            };
+            if (target.level === 'account') {
+              next.accounts = baseList;
+            } else if (target.level === 'subcategory' && target.parentKey) {
+              next.subcategories = {
+                ...next.subcategories,
+                [target.parentKey]: baseList,
+              };
+            } else if (target.level === 'item' && target.parentKey) {
+              next.items = {
+                ...next.items,
+                [target.parentKey]: baseList,
+              };
+            }
+            return next;
+          });
+        }
+      }
+    } catch (err) {
+      debug.error('Failed to parse reorder drag payload', err);
+    } finally {
+      setDragReorderSource(null);
+      setDragReorderTarget(null);
+    }
+  };
+
+  interface SidebarSubcategory {
+    id: string;
+    label: string;
+    icon: ReactNode;
+    type: 'folders' | 'tags' | 'shared' | 'google_folders' | 'google_categories' | 'google_labels' | 'google_stars';
+    settingsAction?: () => void;
+    itemsCount?: number;
+  }
+
+  interface SidebarAccountItem {
+    id: string;
+    email: string;
+    type: 'comail' | 'google';
+    icon: ReactNode;
+    unreadTotal: number;
+    subcategories: SidebarSubcategory[];
+    isActive?: boolean;
+    comailAccountId?: string | null;
+    settingsAction?: () => void;
+  }
+
+  const comailEmail = useMemo(() => {
+    const email =
+      primaryIdentity?.email ||
+      connectedAccounts.find((a) => a.id === activeAccountId)?.email ||
+      connectedAccounts[0]?.email ||
+      accounts[0]?.email;
+    return email ? toUnicodeEmail(email) : 'user@comail.com';
+  }, [primaryIdentity, connectedAccounts, activeAccountId, accounts]);
+
+  const comailUnreadTotal = useMemo(() => {
+    return ownTree.reduce((sum, n) => sum + (n.unreadEmails || 0), 0);
+  }, [ownTree]);
+
+  const allInboxesUnreadTotal = useMemo(() => {
+    const comailInboxUnread = mailboxes.find((m) => m.role === 'inbox')?.unreadEmails || 0;
+    const secondaryInboxesUnread = Object.values(accountMailboxes || {}).reduce(
+      (sum, mbs) => sum + (mbs.find((m) => m.role === 'inbox')?.unreadEmails || 0),
+      0
+    );
+    const googleInboxesUnread = googleMail.accountsData.reduce((sum, g) => {
+      const ib = g.mailboxes.find((m) => m.role === 'inbox');
+      return sum + (ib?.unreadEmails ?? g.unreadTotal ?? 0);
+    }, 0);
+    return comailInboxUnread + secondaryInboxesUnread + googleInboxesUnread;
+  }, [mailboxes, accountMailboxes, googleMail.accountsData]);
+
+  const isAllInboxesSelected = !selectedKeyword && selectedMailbox === UNIFIED_MAILBOX_IDS.inbox;
+
+  const defaultAccounts: SidebarAccountItem[] = useMemo(() => {
+    const list: SidebarAccountItem[] = [];
+
+    // Primary Comail account
+    const comailSubcats: SidebarSubcategory[] = [
+      {
+        id: 'folders',
+        label: t('folders'),
+        icon: <Folder className="w-4 h-4 text-foreground/75" />,
+        type: 'folders',
+      },
+      {
+        id: 'tags',
+        label: t('tags'),
+        icon: <Tag className="w-4 h-4 text-foreground/75" />,
+        type: 'tags',
+      },
+    ];
+
+    if (sharedAccounts.length > 0) {
+      comailSubcats.push({
+        id: 'shared',
+        label: t('shared'),
+        icon: <Users className="w-4 h-4 text-foreground/75" />,
+        type: 'shared',
+        itemsCount: sharedAccounts.length,
+      });
+    }
+
+    list.push({
+      id: 'comail:primary',
+      email: comailEmail,
+      type: 'comail',
+      icon: (
+        <img
+          src={withBasePath("/branding/comail/cammie-mark.png")}
+          alt="Comail"
+          className="w-3.5 h-3.5 object-contain flex-shrink-0"
+        />
+      ),
+      unreadTotal: comailUnreadTotal,
+      subcategories: comailSubcats,
+      isActive: true,
+      comailAccountId: null,
+      settingsAction: openFolderSettings,
+    });
+
+    // If multi-account mode, add secondary Comail accounts
+    if (useMultiAccount) {
+      connectedAccounts
+        .filter((a) => a.id !== activeAccountId)
+        .forEach((account) => {
+          const accMailboxes = accountMailboxes?.[account.id] ?? [];
+          const accUnread = accMailboxes.reduce((sum, m) => sum + (m.unreadEmails || 0), 0);
+          list.push({
+            id: `comail:${account.id}`,
+            email: toUnicodeEmail(account.email || account.username || account.label),
+            type: 'comail',
+            icon: (
+              <img
+                src={withBasePath("/branding/comail/cammie-mark.png")}
+                alt="Comail"
+                className="w-3.5 h-3.5 object-contain flex-shrink-0"
+              />
+            ),
+            unreadTotal: accUnread,
+            subcategories: [
+              {
+                id: 'folders',
+                label: t('folders'),
+                icon: <Folder className="w-4 h-4 text-foreground/75" />,
+                type: 'folders',
+              },
+            ],
+            isActive: false,
+            comailAccountId: account.id,
+          });
+        });
+    }
+
+    // Google accounts
+    if (googleMail.hasGmailAccounts) {
+      googleMail.accountsData.forEach(({ account, mailboxes: gMailboxes, unreadTotal }) => {
+        const sysFolders = gMailboxes.filter(
+          (m) => isGoogleSystemFolder(m) && !isGoogleCategoryLabel(m.originalId || m.id || m.role)
+        );
+        const categories = getGoogleAccountCategories(account.email, gMailboxes);
+        const userLabels = gMailboxes.filter(
+          (m) =>
+            !isGoogleSystemFolder(m) &&
+            !isGoogleCategoryLabel(m.originalId || m.id || m.role) &&
+            !isGmailStarLabel(m)
+        );
+
+        const googleSubcats: SidebarSubcategory[] = [
+          {
+            id: 'folders',
+            label: t('folders'),
+            icon: <Folder className="w-4 h-4 text-foreground/75" />,
+            type: 'google_folders',
+            itemsCount: sysFolders.length,
+          },
+          {
+            id: 'categories',
+            label: t('categories'),
+            icon: <Layers className="w-4 h-4 text-foreground/75" />,
+            type: 'google_categories',
+            itemsCount: categories.length,
+          },
+          {
+            id: 'labels',
+            label: t('labels'),
+            icon: <Tag className="w-4 h-4 text-foreground/75" />,
+            type: 'google_labels',
+            itemsCount: userLabels.length,
+          },
+        ];
+
+        const isStarsEnabled = Boolean(googleStarsSubmenuEnabled?.[account.email]);
+        if (isStarsEnabled) {
+          const hiddenStars = googleHiddenStarIds?.[account.email] || [];
+          const visibleStars = (Object.keys(GMAIL_STARS) as GmailStarId[])
+            .filter((id) => !hiddenStars.includes(id));
+          googleSubcats.push({
+            id: 'stars',
+            label: 'Stars',
+            icon: <Star className="w-4 h-4 text-yellow-500" />,
+            type: 'google_stars',
+            itemsCount: visibleStars.length,
+          });
+        }
+
+        list.push({
+          id: `google:${account.email}`,
+          email: account.email,
+          type: 'google',
+          icon: <GoogleIcon className="w-3.5 h-3.5 flex-shrink-0" />,
+          unreadTotal,
+          subcategories: googleSubcats,
+          settingsAction: () => setGoogleSettingsAccount(account.email),
+        });
+      });
+    }
+
+    return list;
+  }, [
+    comailEmail,
+    comailUnreadTotal,
+    sharedAccounts,
+    useMultiAccount,
+    connectedAccounts,
+    activeAccountId,
+    accountMailboxes,
+    googleMail.hasGmailAccounts,
+    googleMail.accountsData,
+    openFolderSettings,
+    googleStarsSubmenuEnabled,
+    googleHiddenStarIds,
+    t,
+  ]);
+
+  const orderedAccounts = useMemo(() => {
+    return applyCustomOrder(defaultAccounts, customOrder.accounts, (a) => a.id);
+  }, [defaultAccounts, customOrder.accounts]);
+
+  const getOrderedSubcategories = (account: SidebarAccountItem) => {
+    return applyCustomOrder(
+      account.subcategories,
+      customOrder.subcategories[account.id],
+      (s) => s.id
+    );
+  };
+
+  const comailFolders = useMemo(() => {
+    let tree = ownTree;
+    if (showScheduledMailbox && !isNodeHidden(SCHEDULED_MAILBOX_ID)) {
+      if (!ownTree.some((n) => n.id === SCHEDULED_MAILBOX_ID || n.role === 'scheduled')) {
+        const draftsIdx = ownTree.findIndex((n) => n.role === 'drafts');
+        if (draftsIdx !== -1) {
+          tree = [...ownTree.slice(0, draftsIdx + 1), scheduledNode, ...ownTree.slice(draftsIdx + 1)];
+        } else {
+          tree = [...ownTree, scheduledNode];
+        }
+      }
+    }
+    return filterVisibleMailboxTree(tree, isNodeHidden, selectedMailbox);
+  }, [ownTree, showScheduledMailbox, isNodeHidden, scheduledNode, selectedMailbox]);
+
+  const orderedComailFolders = useMemo(() => {
+    return applyCustomOrder(comailFolders, customOrder.items['comail:primary:folders'], (n) => n.id);
+  }, [comailFolders, customOrder.items]);
+
+  const orderedComailTags = useMemo(() => {
+    return applyCustomOrder(visibleTagTree, customOrder.items['comail:primary:tags'], (n) => n.id);
+  }, [visibleTagTree, customOrder.items]);
+
+  const getOrderedGoogleFolders = (accountEmail: string, sysFolders: Mailbox[]) => {
+    const key = `google:${accountEmail}:folders`;
+    const visible = sysFolders.filter((m) => !isNodeHidden(m.id) || m.id === selectedMailbox);
+    const sorted = [...visible].sort((a, b) => (a.sortOrder ?? 10) - (b.sortOrder ?? 10));
+    return applyCustomOrder(sorted, customOrder.items[key], (m) => m.id);
+  };
+
+  const getOrderedGoogleCategories = (accountEmail: string, cats: Mailbox[]) => {
+    const key = `google:${accountEmail}:categories`;
+    const visible = cats.filter((m) => !isNodeHidden(m.id) || m.id === selectedMailbox);
+    const sorted = [...visible].sort((a, b) => (a.sortOrder ?? 10) - (b.sortOrder ?? 10));
+    return applyCustomOrder(sorted, customOrder.items[key], (m) => m.id);
+  };
+
+  const getOrderedGoogleLabels = (accountEmail: string, userLabels: Mailbox[]) => {
+    const key = `google:${accountEmail}:labels`;
+    const tree = buildMailboxTree(userLabels);
+    const visibleTree = filterVisibleMailboxTree(tree, isNodeHidden, selectedMailbox);
+    return applyCustomOrder(visibleTree, customOrder.items[key], (m) => m.id);
   };
 
   return (
@@ -1391,7 +2013,23 @@ export function Sidebar({
       {!isCollapsed && <VacationBanner />}
 
       {/* Mailbox List */}
-      <div className="flex-1 overflow-y-auto" data-tour="sidebar">
+      <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable]" data-tour="sidebar">
+        {/* All Inboxes Button */}
+        <div className="pt-2 pb-1">
+          <SidebarRow
+            icon={<Inbox className={getIconClass(isAllInboxesSelected, false, colorfulSidebarIcons, 'inbox')} />}
+            label={t("all_inboxes") || "All Inboxes"}
+            testRole="inbox"
+            testName="all-inboxes"
+            testMailboxId={UNIFIED_MAILBOX_IDS.inbox}
+            depth={0}
+            isSelected={isAllInboxesSelected}
+            unread={allInboxesUnreadTotal}
+            onClick={() => onMailboxSelect?.(UNIFIED_MAILBOX_IDS.inbox)}
+            isCollapsed={isCollapsed}
+          />
+        </div>
+
         {(showUnified || showCrossUnread || showCrossStarred || showCrossAll) && (
           <div>
             <SidebarSectionHeader
@@ -1461,259 +2099,150 @@ export function Sidebar({
           </div>
         )}
 
-        {useMultiAccount ? (
-          accountGroups.map(({ account, isActive, tree }) => {
-            const expanded = !collapsedAccountGroups.has(account.id);
-            const isViewing = isActive ? viewingAccountId === null : viewingAccountId === account.id;
-            return (
-              <div key={account.id} onContextMenu={isActive ? handleFoldersHeaderContextMenu : undefined}>
-                <SidebarSectionHeader
-                  label={toUnicodeEmail(account.email || account.username || account.label)}
-                  expanded={expanded}
-                  onToggle={() => toggleAccountGroup(account.id)}
-                  onSettings={isActive ? openFolderSettings : undefined}
-                  settingsTitle={isActive ? t('settings') : undefined}
-                  isCollapsed={isCollapsed}
-                  first={!showUnified && account.id === connectedAccounts[0]?.id}
-                  icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
-                />
-                {((expanded && !isCollapsed) || isCollapsed) && (
-                  <>
-                    {tree.length === 0 ? (
-                      <div className="px-4 py-2 text-sm text-muted-foreground">
-                        {!isCollapsed && t("loading_mailboxes")}
-                      </div>
-                    ) : (
-                      <>
-                        {tree.map((node) => (
-                          <Fragment key={node.id}>
-                            <MailboxTreeItem
-                              node={node}
-                              selectedMailbox={selectedKeyword || !isViewing ? "" : selectedMailbox}
-                              expandedFolders={expandedFolders}
-                              onMailboxSelect={(mailboxId) =>
-                                onAccountMailboxSelect?.(isActive ? null : account.id, mailboxId)
-                              }
-                              onToggleExpand={handleToggleExpand}
-                              isCollapsed={isCollapsed}
-                              onUnreadFilterClick={isActive ? onUnreadFilterClick : undefined}
-                              colorful={colorfulSidebarIcons}
-                              onContextMenu={isActive ? handleMailboxContextMenu : undefined}
-                              dragAccountId={isActive ? null : account.id}
-                            />
-                            {isActive && node.role === 'drafts' && renderScheduledRow(`scheduled-${account.id}`)}
-                          </Fragment>
-                        ))}
-                        {isActive && !tree.some((node) => node.role === 'drafts') && renderScheduledRow(`scheduled-${account.id}`)}
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          })
-        ) : (
-          <div onContextMenu={handleFoldersHeaderContextMenu}>
-            {!mvFlat && (
-              <SidebarSectionHeader
-                label={t("folders")}
-                expanded={foldersExpanded}
-                onToggle={toggleFolders}
-                onSettings={openFolderSettings}
-                settingsTitle={t('settings')}
-                isCollapsed={isCollapsed}
-                first={!showUnified}
+        {mvFlat ? (
+          <>
+            <div onContextMenu={handleFoldersHeaderContextMenu}>
+              {primaryTree.map((node) => (
+                <Fragment key={node.id}>
+                  <MailboxTreeItem
+                    node={node}
+                    selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                    expandedFolders={expandedFolders}
+                    onMailboxSelect={onMailboxSelect}
+                    onToggleExpand={handleToggleExpand}
+                    isCollapsed={isCollapsed}
+                    onUnreadFilterClick={onUnreadFilterClick}
+                    colorful={colorfulSidebarIcons}
+                    onContextMenu={handleMailboxContextMenu}
+                  />
+                  {node.role === 'drafts' && renderScheduledRow('scheduled')}
+                  {node.role === 'inbox' && onOpenStarred && (
+                    <SidebarRow
+                      icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons)} />}
+                      label={t("mailboxes.starred")}
+                      testName="mv-starred"
+                      depth={0}
+                      isSelected={!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred}
+                      onClick={onOpenStarred}
+                      isCollapsed={false}
+                    />
+                  )}
+                </Fragment>
+              ))}
+              {!primaryTree.some((node) => node.role === 'drafts') && renderScheduledRow('scheduled')}
+              <SidebarRow
+                icon={moreExpanded
+                  ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                label={moreExpanded ? t("show_fewer") : t("show_more")}
+                testName="mv-more"
+                depth={0}
+                isSelected={false}
+                onClick={() => setMoreExpanded((prev) => !prev)}
+                isCollapsed={false}
               />
-            )}
-            {(mvFlat || (foldersExpanded && !isCollapsed) || isCollapsed) && (
-              <>
-                {mailboxes.length === 0 ? (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    {!isCollapsed && t("loading_mailboxes")}
-                  </div>
-                ) : (
-                  <>
-                    {primaryTree.map((node) => (
-                      <Fragment key={node.id}>
-                        <MailboxTreeItem
-                          node={node}
-                          selectedMailbox={selectedKeyword ? "" : selectedMailbox}
-                          expandedFolders={expandedFolders}
-                          onMailboxSelect={onMailboxSelect}
-                          onToggleExpand={handleToggleExpand}
+              {moreExpanded && moreTree.map((node) => (
+                <MailboxTreeItem
+                  key={node.id}
+                  node={node}
+                  selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                  expandedFolders={expandedFolders}
+                  onMailboxSelect={onMailboxSelect}
+                  onToggleExpand={handleToggleExpand}
+                  isCollapsed={isCollapsed}
+                  onUnreadFilterClick={onUnreadFilterClick}
+                  colorful={colorfulSidebarIcons}
+                  onContextMenu={handleMailboxContextMenu}
+                />
+              ))}
+              {moreExpanded && sharedAccounts.length > 0 && (
+                <div>
+                  {sharedAccounts.map((accountNode) => {
+                    const accountExpanded = expandedSharedAccounts.has(accountNode.id);
+                    return (
+                      <Fragment key={accountNode.id}>
+                        <SidebarRow
+                          icon={<Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                          label={accountNode.name}
+                          depth={0}
+                          isSelected={false}
+                          hasChildren={accountNode.children.length > 0}
+                          isExpanded={accountExpanded}
+                          onExpandToggle={() => toggleSharedAccount(accountNode.id)}
+                          onContextMenu={(e) => handleSharedAccountContextMenu(e, accountNode.id)}
                           isCollapsed={isCollapsed}
-                          onUnreadFilterClick={onUnreadFilterClick}
-                          colorful={colorfulSidebarIcons}
-                          onContextMenu={handleMailboxContextMenu}
                         />
-                        {node.role === 'drafts' && renderScheduledRow('scheduled')}
-                        {/* Mountain View lists Starred right under the Inbox. */}
-                        {mvFlat && node.role === 'inbox' && onOpenStarred && (
-                          <SidebarRow
-                            // Drawn like the "All starred" row it stands in for.
-                            icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons)} />}
-                            label={t("mailboxes.starred")}
-                            testName="mv-starred"
-                            depth={0}
-                            isSelected={!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred}
-                            onClick={onOpenStarred}
-                            isCollapsed={false}
+                        {accountExpanded && accountNode.children.map((child) => (
+                          <MailboxTreeItem
+                            key={child.id}
+                            node={child}
+                            selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                            expandedFolders={expandedFolders}
+                            onMailboxSelect={onMailboxSelect}
+                            onToggleExpand={handleToggleExpand}
+                            isCollapsed={isCollapsed}
+                            onUnreadFilterClick={onUnreadFilterClick}
+                            colorful={colorfulSidebarIcons}
+                            onContextMenu={handleMailboxContextMenu}
+                            depthOffset={0}
                           />
-                        )}
+                        ))}
                       </Fragment>
-                    ))}
-                    {!primaryTree.some((node) => node.role === 'drafts') && renderScheduledRow('scheduled')}
-                    {mvFlat && (
-                      <SidebarRow
-                        icon={moreExpanded
-                          ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                          : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                        label={moreExpanded ? t("show_fewer") : t("show_more")}
-                        testName="mv-more"
-                        depth={0}
-                        isSelected={false}
-                        onClick={() => setMoreExpanded((prev) => !prev)}
-                        isCollapsed={false}
-                      />
-                    )}
-                    {mvFlat && moreExpanded && moreTree.map((node) => (
-                      <MailboxTreeItem
-                        key={node.id}
-                        node={node}
-                        selectedMailbox={selectedKeyword ? "" : selectedMailbox}
-                        expandedFolders={expandedFolders}
-                        onMailboxSelect={onMailboxSelect}
-                        onToggleExpand={handleToggleExpand}
-                        isCollapsed={isCollapsed}
-                        onUnreadFilterClick={onUnreadFilterClick}
-                        colorful={colorfulSidebarIcons}
-                        onContextMenu={handleMailboxContextMenu}
-                      />
-                    ))}
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        )}
-        {googleMail.hasGmailAccounts && (
-          <GoogleMailSidebarSection
-            accountsData={googleMail.accountsData}
-            selectedMailbox={selectedMailbox}
-            onMailboxSelect={(mbId) => {
-              onMailboxSelect?.(mbId);
-            }}
-            isCollapsed={isCollapsed}
-          />
-        )}
-
-        {mvFlat && !useMultiAccount && (
-          <div data-mv-labels="">
-            <div className="flex items-center justify-between ps-[26px] pe-3 pt-4 pb-1">
-              <span className="text-base font-medium text-foreground">{t("labels")}</span>
-              {onCreateFolder && (
-                <button
-                  type="button"
-                  onClick={() => onCreateFolder()}
-                  className="grid place-items-center w-8 h-8 rounded-full text-foreground hover:bg-[var(--mv-nav-hover)] transition-colors"
-                  title={t("create_label")}
-                  aria-label={t("create_label")}
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
-            {labelTree.map((node) => (
-              <MailboxTreeItem
-                key={node.id}
-                node={node}
-                selectedMailbox={selectedKeyword ? "" : selectedMailbox}
-                expandedFolders={expandedFolders}
-                onMailboxSelect={onMailboxSelect}
-                onToggleExpand={handleToggleExpand}
-                isCollapsed={isCollapsed}
-                onUnreadFilterClick={onUnreadFilterClick}
-                colorful={colorfulSidebarIcons}
-                onContextMenu={handleMailboxContextMenu}
-              />
-            ))}
-          </div>
-        )}
 
-        {!useMultiAccount && showSecondary && sharedAccounts.length > 0 && (
-          <div>
-            <SidebarSectionHeader
-              label={t("shared")}
-              expanded={sharedExpanded}
-              onToggle={toggleShared}
-              isCollapsed={isCollapsed}
-              testId="section-shared"
-            />
-            {((sharedExpanded && !isCollapsed) || isCollapsed) && (
-              <>
-                {sharedAccounts.map((account) => {
-                  const accountExpanded = expandedSharedAccounts.has(account.id);
-                  const menuAccountId = sharedAccountMenuId(account.accountId);
-                  return (
-                    <div key={account.id}>
-                      <SidebarSectionHeader
-                        label={account.name}
-                        expanded={accountExpanded}
-                        onToggle={() => toggleSharedAccount(account.id)}
-                        isCollapsed={isCollapsed}
-                        sub
-                        icon={<User className="w-3.5 h-3.5 text-muted-foreground" />}
-                        testId="section-shared-account"
-                        onContextMenu={menuAccountId
-                          ? (e) => handleSharedAccountContextMenu(e, menuAccountId)
-                          : undefined}
-                      />
-                      {accountExpanded && !isCollapsed && (
-                        <>
-                          {account.children.map((child) => (
-                            <Fragment key={child.id}>
-                              <MailboxTreeItem
-                                node={child}
-                                selectedMailbox={selectedKeyword ? "" : selectedMailbox}
-                                expandedFolders={expandedFolders}
-                                onMailboxSelect={onMailboxSelect}
-                                onToggleExpand={handleToggleExpand}
-                                isCollapsed={isCollapsed}
-                                onUnreadFilterClick={onUnreadFilterClick}
-                                colorful={colorfulSidebarIcons}
-                                onContextMenu={handleMailboxContextMenu}
-                              />
-                              {child.role === 'drafts' && menuAccountId
-                                && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId })}
-                            </Fragment>
-                          ))}
-                          {menuAccountId && !account.children.some((child) => child.role === 'drafts')
-                            && renderScheduledRow(`${account.id}-scheduled`, { accountId: menuAccountId })}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        )}
-
-        {(showSecondary || mvFlat) && emailKeywords.length > 0 && (
-          <div data-tour="keyword-tags">
-            {/* Under Mountain View the tags continue the "Labels" list. */}
-            {!mvFlat && (
-              <SidebarSectionHeader
-                label={t("tags")}
-                expanded={tagsExpanded}
-                onToggle={toggleTags}
-                onSettings={openKeywordSettings}
-                settingsTitle={t('settings')}
+            {googleMail.hasGmailAccounts && (
+              <GoogleMailSidebarSection
+                accountsData={googleMail.accountsData}
+                selectedMailbox={selectedMailbox}
+                onMailboxSelect={(mbId) => {
+                  onMailboxSelect?.(mbId);
+                }}
+                onAccountSettings={(email) => {
+                  setGoogleSettingsAccount(email);
+                }}
                 isCollapsed={isCollapsed}
               />
             )}
-            {((tagsExpanded && !isCollapsed) || isCollapsed || mvFlat) && (
-              <>
+
+            {!useMultiAccount && (
+              <div data-mv-labels="">
+                <div className="flex items-center justify-between ps-[26px] pe-3 pt-4 pb-1">
+                  <span className="text-base font-medium text-foreground">{t("labels")}</span>
+                  {onCreateFolder && (
+                    <button
+                      type="button"
+                      onClick={() => onCreateFolder()}
+                      className="grid place-items-center w-8 h-8 rounded-full text-foreground hover:bg-[var(--mv-nav-hover)] transition-colors"
+                      title={t("create_label")}
+                      aria-label={t("create_label")}
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+                {labelTree.map((node) => (
+                  <MailboxTreeItem
+                    key={node.id}
+                    node={node}
+                    selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                    expandedFolders={expandedFolders}
+                    onMailboxSelect={onMailboxSelect}
+                    onToggleExpand={handleToggleExpand}
+                    isCollapsed={isCollapsed}
+                    onUnreadFilterClick={onUnreadFilterClick}
+                    colorful={colorfulSidebarIcons}
+                    onContextMenu={handleMailboxContextMenu}
+                  />
+                ))}
+              </div>
+            )}
+
+            {emailKeywords.length > 0 && (
+              <div data-tour="keyword-tags">
                 {visibleTagTree.map((node) => (
                   <TagItem
                     key={node.id}
@@ -1735,8 +2264,645 @@ export function Sidebar({
                     isCollapsed={isCollapsed}
                   />
                 )}
-              </>
+              </div>
             )}
+          </>
+        ) : (
+          <div>
+            {orderedAccounts.map((account, accountIdx) => {
+              const isAccountExpanded = !collapsedAccounts.has(account.id);
+              const subcats = getOrderedSubcategories(account);
+              const isCurrentDraggingAccount =
+                dragReorderSource?.level === 'account' && dragReorderSource?.id === account.id;
+              const isCurrentDragOverAccount =
+                dragReorderTarget?.level === 'account' && dragReorderTarget?.id === account.id;
+
+              return (
+                <div key={account.id} className="mb-2 last:mb-0">
+                  <SidebarSectionHeader
+                    label={account.email}
+                    expanded={isAccountExpanded}
+                    onToggle={() => toggleAccountCollapse(account.id)}
+                    onSettings={account.settingsAction}
+                    settingsTitle={t('settings')}
+                    isCollapsed={isCollapsed}
+                    first={accountIdx === 0}
+                    icon={account.icon}
+                    unreadBadge={account.unreadTotal}
+                    isAccount={true}
+                    accountType={account.type}
+                    draggable={true}
+                    onDragStart={(e) => handleReorderDragStart(e, { level: 'account', id: account.id })}
+                    onDragOver={(e) => handleReorderDragOver(e, { level: 'account', id: account.id })}
+                    onDrop={(e) =>
+                      handleReorderDrop(e, { level: 'account', id: account.id }, orderedAccounts.map((a) => a.id))
+                    }
+                    onDragEnd={handleReorderDragEnd}
+                    isDragging={isCurrentDraggingAccount}
+                    isDragOver={isCurrentDragOverAccount}
+                  />
+
+                  {((isAccountExpanded && !isCollapsed) || isCollapsed) && (
+                    <div className="space-y-0.5">
+                      {subcats.map((subcat) => {
+                        const subcatKey = `${account.id}:${subcat.id}`;
+                        let isSubcatExpanded = !collapsedSubcategories.has(subcatKey);
+                        if (account.id === 'comail:primary' && subcat.id === 'folders') {
+                          isSubcatExpanded = foldersExpanded && !collapsedSubcategories.has(subcatKey);
+                        } else if (account.id === 'comail:primary' && subcat.id === 'tags') {
+                          isSubcatExpanded = tagsExpanded && !collapsedSubcategories.has(subcatKey);
+                        }
+
+                        const toggleSubcat = () => {
+                          toggleSubcategoryCollapse(subcatKey);
+                          if (account.id === 'comail:primary') {
+                            if (subcat.id === 'folders') toggleFolders();
+                            if (subcat.id === 'tags') toggleTags();
+                          }
+                        };
+
+                        const isCurrentDraggingSubcat =
+                          dragReorderSource?.level === 'subcategory' &&
+                          dragReorderSource?.id === subcat.id &&
+                          dragReorderSource?.parentKey === account.id;
+                        const isCurrentDragOverSubcat =
+                          dragReorderTarget?.level === 'subcategory' &&
+                          dragReorderTarget?.id === subcat.id &&
+                          dragReorderTarget?.parentKey === account.id;
+
+                        return (
+                          <div key={subcat.id}>
+                            <SidebarSectionHeader
+                              label={subcat.label}
+                              expanded={isSubcatExpanded}
+                              onToggle={toggleSubcat}
+                              onSettings={subcat.settingsAction}
+                              settingsTitle={t('settings')}
+                              isCollapsed={isCollapsed}
+                              icon={subcat.icon}
+                              sub
+                              draggable={true}
+                              onDragStart={(e) =>
+                                handleReorderDragStart(e, {
+                                  level: 'subcategory',
+                                  id: subcat.id,
+                                  parentKey: account.id,
+                                })
+                              }
+                              onDragOver={(e) =>
+                                handleReorderDragOver(e, {
+                                  level: 'subcategory',
+                                  id: subcat.id,
+                                  parentKey: account.id,
+                                })
+                              }
+                              onDrop={(e) =>
+                                handleReorderDrop(
+                                  e,
+                                  { level: 'subcategory', id: subcat.id, parentKey: account.id },
+                                  subcats.map((s) => s.id)
+                                )
+                              }
+                              onDragEnd={handleReorderDragEnd}
+                              isDragging={isCurrentDraggingSubcat}
+                              isDragOver={isCurrentDragOverSubcat}
+                            />
+
+                            {((isSubcatExpanded && !isCollapsed) || isCollapsed) && (
+                              <>
+                                {/* Comail Folders */}
+                                {subcat.type === 'folders' && (
+                                  <>
+                                    {account.isActive ? (
+                                      mailboxes.length === 0 ? (
+                                        <div className="px-6 py-1.5 text-xs text-muted-foreground italic">
+                                          {!isCollapsed && t("loading_mailboxes")}
+                                        </div>
+                                      ) : (
+                                        <>
+                                          {orderedComailFolders.map((node) => {
+                                            const isItemDragging =
+                                              dragReorderSource?.level === 'item' &&
+                                              dragReorderSource?.id === node.id &&
+                                              dragReorderSource?.parentKey === 'comail:primary:folders';
+                                            const isItemDragOver =
+                                              dragReorderTarget?.level === 'item' &&
+                                              dragReorderTarget?.id === node.id &&
+                                              dragReorderTarget?.parentKey === 'comail:primary:folders';
+
+                                            return (
+                                              <MailboxTreeItem
+                                                key={node.id}
+                                                node={node}
+                                                selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                                                expandedFolders={expandedFolders}
+                                                onMailboxSelect={onMailboxSelect}
+                                                onToggleExpand={handleToggleExpand}
+                                                isCollapsed={isCollapsed}
+                                                onUnreadFilterClick={onUnreadFilterClick}
+                                                colorful={colorfulSidebarIcons}
+                                                onContextMenu={handleMailboxContextMenu}
+                                                depthOffset={0}
+                                                draggable={true}
+                                                onDragStart={(e) =>
+                                                  handleReorderDragStart(e, {
+                                                    level: 'item',
+                                                    id: node.id,
+                                                    parentKey: 'comail:primary:folders',
+                                                  })
+                                                }
+                                                onDragOver={(e) =>
+                                                  handleReorderDragOver(e, {
+                                                    level: 'item',
+                                                    id: node.id,
+                                                    parentKey: 'comail:primary:folders',
+                                                  })
+                                                }
+                                                onDrop={(e) =>
+                                                  handleReorderDrop(
+                                                    e,
+                                                    {
+                                                      level: 'item',
+                                                      id: node.id,
+                                                      parentKey: 'comail:primary:folders',
+                                                    },
+                                                    orderedComailFolders.map((n) => n.id)
+                                                  )
+                                                }
+                                                onDragEnd={handleReorderDragEnd}
+                                                isDragging={isItemDragging}
+                                                isDragOver={isItemDragOver}
+                                              />
+                                            );
+                                          })}
+                                        </>
+                                      )
+                                    ) : (
+                                      // Secondary Comail Account
+                                      (() => {
+                                        const secAccId = account.comailAccountId!;
+                                        const secMailboxes = accountMailboxes?.[secAccId] ?? [];
+                                        const secTree = buildMailboxTree(secMailboxes).filter(
+                                          (n) => !n.id.startsWith('shared-account-') && !isGmailStarLabel(n)
+                                        );
+                                        const visibleSecTree = filterVisibleMailboxTree(secTree, isNodeHidden, selectedMailbox);
+                                        const orderedSecTree = applyCustomOrder(
+                                          visibleSecTree,
+                                          customOrder.items[`comail:${secAccId}:folders`],
+                                          (n) => n.id
+                                        );
+                                        const isViewing = viewingAccountId === secAccId;
+
+                                        return secMailboxes.length === 0 ? (
+                                          <div className="px-6 py-1.5 text-xs text-muted-foreground italic">
+                                            {!isCollapsed && t("loading_mailboxes")}
+                                          </div>
+                                        ) : (
+                                          orderedSecTree.map((node) => (
+                                            <MailboxTreeItem
+                                              key={node.id}
+                                              node={node}
+                                              selectedMailbox={selectedKeyword || !isViewing ? "" : selectedMailbox}
+                                              expandedFolders={expandedFolders}
+                                              onMailboxSelect={(mailboxId) =>
+                                                onAccountMailboxSelect?.(secAccId, mailboxId)
+                                              }
+                                              onToggleExpand={handleToggleExpand}
+                                              isCollapsed={isCollapsed}
+                                              colorful={colorfulSidebarIcons}
+                                              depthOffset={0}
+                                              dragAccountId={secAccId}
+                                              draggable={true}
+                                              onDragStart={(e) =>
+                                                handleReorderDragStart(e, {
+                                                  level: 'item',
+                                                  id: node.id,
+                                                  parentKey: `comail:${secAccId}:folders`,
+                                                })
+                                              }
+                                              onDragOver={(e) =>
+                                                handleReorderDragOver(e, {
+                                                  level: 'item',
+                                                  id: node.id,
+                                                  parentKey: `comail:${secAccId}:folders`,
+                                                })
+                                              }
+                                              onDrop={(e) =>
+                                                handleReorderDrop(
+                                                  e,
+                                                  {
+                                                    level: 'item',
+                                                    id: node.id,
+                                                    parentKey: `comail:${secAccId}:folders`,
+                                                  },
+                                                  orderedSecTree.map((n) => n.id)
+                                                )
+                                              }
+                                              onDragEnd={handleReorderDragEnd}
+                                              isDragging={
+                                                dragReorderSource?.level === 'item' &&
+                                                dragReorderSource?.id === node.id &&
+                                                dragReorderSource?.parentKey === `comail:${secAccId}:folders`
+                                              }
+                                              isDragOver={
+                                                dragReorderTarget?.level === 'item' &&
+                                                dragReorderTarget?.id === node.id &&
+                                                dragReorderTarget?.parentKey === `comail:${secAccId}:folders`
+                                              }
+                                            />
+                                          ))
+                                        );
+                                      })()
+                                    )}
+                                  </>
+                                )}
+
+                                {/* Comail Tags */}
+                                {subcat.type === 'tags' && (
+                                  <div data-tour="keyword-tags">
+                                    {orderedComailTags.length === 0 ? (
+                                      <div className="px-6 py-1.5 text-xs text-muted-foreground italic">
+                                        {!isCollapsed && "No tags"}
+                                      </div>
+                                    ) : (
+                                      <>
+                                        {orderedComailTags.map((node) => {
+                                          const isTagDragging =
+                                            dragReorderSource?.level === 'item' &&
+                                            dragReorderSource?.id === node.id &&
+                                            dragReorderSource?.parentKey === 'comail:primary:tags';
+                                          const isTagDragOver =
+                                            dragReorderTarget?.level === 'item' &&
+                                            dragReorderTarget?.id === node.id &&
+                                            dragReorderTarget?.parentKey === 'comail:primary:tags';
+
+                                          return (
+                                            <TagItem
+                                              key={node.id}
+                                              node={node}
+                                              selectedKeyword={selectedKeyword}
+                                              expandedTags={expandedTags}
+                                              isCollapsed={isCollapsed}
+                                              onTagSelect={onTagSelect}
+                                              onToggleExpand={handleToggleTagExpand}
+                                              tagCounts={tagCounts}
+                                              colorful={colorfulSidebarIcons}
+                                              depthOffset={0}
+                                              draggable={true}
+                                              onDragStart={(e) =>
+                                                handleReorderDragStart(e, {
+                                                  level: 'item',
+                                                  id: node.id,
+                                                  parentKey: 'comail:primary:tags',
+                                                })
+                                              }
+                                              onDragOver={(e) =>
+                                                handleReorderDragOver(e, {
+                                                  level: 'item',
+                                                  id: node.id,
+                                                  parentKey: 'comail:primary:tags',
+                                                })
+                                              }
+                                              onDrop={(e) =>
+                                                handleReorderDrop(
+                                                  e,
+                                                  {
+                                                    level: 'item',
+                                                    id: node.id,
+                                                    parentKey: 'comail:primary:tags',
+                                                  },
+                                                  orderedComailTags.map((n) => n.id)
+                                                )
+                                              }
+                                              onDragEnd={handleReorderDragEnd}
+                                              isDragging={isTagDragging}
+                                              isDragOver={isTagDragOver}
+                                            />
+                                          );
+                                        })}
+                                        {(hiddenTagCount > 0 || showAllTags) && (
+                                          <ShowAllTagsRow
+                                            hiddenCount={hiddenTagCount}
+                                            showAll={showAllTags}
+                                            onToggle={() => setShowAllTags((prev) => !prev)}
+                                            isCollapsed={isCollapsed}
+                                          />
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Comail Shared Accounts */}
+                                {subcat.type === 'shared' && (
+                                  <div>
+                                    {sharedAccounts.map((accountNode) => {
+                                      const accountExpanded = expandedSharedAccounts.has(accountNode.id);
+                                      return (
+                                        <Fragment key={accountNode.id}>
+                                          <SidebarRow
+                                            icon={<Users className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                                            label={accountNode.name}
+                                            depth={0}
+                                            isSelected={false}
+                                            hasChildren={accountNode.children.length > 0}
+                                            isExpanded={accountExpanded}
+                                            onExpandToggle={() => toggleSharedAccount(accountNode.id)}
+                                            onContextMenu={(e) => handleSharedAccountContextMenu(e, accountNode.id)}
+                                            isCollapsed={isCollapsed}
+                                          />
+                                          {accountExpanded && accountNode.children.map((child) => (
+                                            <MailboxTreeItem
+                                              key={child.id}
+                                              node={child}
+                                              selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                                              expandedFolders={expandedFolders}
+                                              onMailboxSelect={onMailboxSelect}
+                                              onToggleExpand={handleToggleExpand}
+                                              isCollapsed={isCollapsed}
+                                              onUnreadFilterClick={onUnreadFilterClick}
+                                              colorful={colorfulSidebarIcons}
+                                              onContextMenu={handleMailboxContextMenu}
+                                              depthOffset={1}
+                                            />
+                                          ))}
+                                        </Fragment>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Google System Folders */}
+                                {subcat.type === 'google_folders' && (() => {
+                                  const gAccountData = googleMail.accountsData.find(
+                                    (g) => g.account.email === account.email
+                                  );
+                                  const sysFolders = (gAccountData?.mailboxes ?? []).filter(
+                                    (m) =>
+                                      isGoogleSystemFolder(m) &&
+                                      !isGoogleCategoryLabel(m.originalId || m.id || m.role)
+                                  );
+                                  const orderedFolders = getOrderedGoogleFolders(account.email, sysFolders);
+                                  const parentKey = `google:${account.email}:folders`;
+
+                                  return orderedFolders.length === 0 ? (
+                                    <div className="px-6 py-1.5 text-xs text-muted-foreground italic">
+                                      {!isCollapsed && t("loading_mailboxes")}
+                                    </div>
+                                  ) : (
+                                    orderedFolders.map((mb) => {
+                                      const isSelected = !selectedKeyword && selectedMailbox === mb.id;
+                                      const roleKey = resolveRoleKey(mb.role, mb.name);
+                                      const Icon = getIconForMailbox(mb.role, mb.name, false, false, false, mb.id);
+                                      const isItemDragging =
+                                        dragReorderSource?.level === 'item' &&
+                                        dragReorderSource?.id === mb.id &&
+                                        dragReorderSource?.parentKey === parentKey;
+                                      const isItemDragOver =
+                                        dragReorderTarget?.level === 'item' &&
+                                        dragReorderTarget?.id === mb.id &&
+                                        dragReorderTarget?.parentKey === parentKey;
+
+                                      return (
+                                        <SidebarRow
+                                          key={mb.id}
+                                          icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons, roleKey)} />}
+                                          label={mb.name}
+                                          testRole={mb.role}
+                                          testName={mb.name}
+                                          testMailboxId={mb.id}
+                                          depth={0}
+                                          isSelected={isSelected}
+                                          unread={mb.unreadEmails}
+                                          total={mb.totalEmails}
+                                          isGoogle={true}
+                                          onClick={() => onMailboxSelect?.(mb.id)}
+                                          isCollapsed={isCollapsed}
+                                          draggable={true}
+                                          onDragStart={(e) =>
+                                            handleReorderDragStart(e, {
+                                              level: 'item',
+                                              id: mb.id,
+                                              parentKey,
+                                            })
+                                          }
+                                          onDragOver={(e) =>
+                                            handleReorderDragOver(e, {
+                                              level: 'item',
+                                              id: mb.id,
+                                              parentKey,
+                                            })
+                                          }
+                                          onDrop={(e) =>
+                                            handleReorderDrop(
+                                              e,
+                                              {
+                                                level: 'item',
+                                                id: mb.id,
+                                                parentKey,
+                                              },
+                                              orderedFolders.map((m) => m.id)
+                                            )
+                                          }
+                                          onDragEnd={handleReorderDragEnd}
+                                          isDragging={isItemDragging}
+                                          isDragOver={isItemDragOver}
+                                        />
+                                      );
+                                    })
+                                  );
+                                })()}
+
+                                {/* Google Categories */}
+                                {subcat.type === 'google_categories' && (() => {
+                                  const gAccountData = googleMail.accountsData.find(
+                                    (g) => g.account.email === account.email
+                                  );
+                                  const cats = getGoogleAccountCategories(account.email, gAccountData?.mailboxes ?? []);
+                                  const orderedCats = getOrderedGoogleCategories(account.email, cats);
+                                  const parentKey = `google:${account.email}:categories`;
+
+                                  return orderedCats.map((cat) => {
+                                    const isSelected = !selectedKeyword && selectedMailbox === cat.id;
+                                    const isItemDragging =
+                                      dragReorderSource?.level === 'item' &&
+                                      dragReorderSource?.id === cat.id &&
+                                      dragReorderSource?.parentKey === parentKey;
+                                    const isItemDragOver =
+                                      dragReorderTarget?.level === 'item' &&
+                                      dragReorderTarget?.id === cat.id &&
+                                      dragReorderTarget?.parentKey === parentKey;
+
+                                    return (
+                                      <SidebarRow
+                                        key={cat.id}
+                                        icon={getCategoryIcon(cat.role || '', isSelected, colorfulSidebarIcons)}
+                                        label={cat.name}
+                                        testRole={cat.role}
+                                        testName={cat.name}
+                                        testMailboxId={cat.id}
+                                        depth={0}
+                                        isSelected={isSelected}
+                                        unread={cat.unreadEmails}
+                                        total={cat.totalEmails}
+                                        isGoogle={true}
+                                        onClick={() => onMailboxSelect?.(cat.id)}
+                                        isCollapsed={isCollapsed}
+                                        draggable={true}
+                                        onDragStart={(e) =>
+                                          handleReorderDragStart(e, {
+                                            level: 'item',
+                                            id: cat.id,
+                                            parentKey,
+                                          })
+                                        }
+                                        onDragOver={(e) =>
+                                          handleReorderDragOver(e, {
+                                            level: 'item',
+                                            id: cat.id,
+                                            parentKey,
+                                          })
+                                        }
+                                        onDrop={(e) =>
+                                          handleReorderDrop(
+                                            e,
+                                            {
+                                              level: 'item',
+                                              id: cat.id,
+                                              parentKey,
+                                            },
+                                            orderedCats.map((c) => c.id)
+                                          )
+                                        }
+                                        onDragEnd={handleReorderDragEnd}
+                                        isDragging={isItemDragging}
+                                        isDragOver={isItemDragOver}
+                                      />
+                                    );
+                                  });
+                                })()}
+
+                                {/* Google User Labels */}
+                                {subcat.type === 'google_labels' && (() => {
+                                  const gAccountData = googleMail.accountsData.find(
+                                    (g) => g.account.email === account.email
+                                  );
+                                  const userLabels = (gAccountData?.mailboxes ?? []).filter(
+                                    (m) =>
+                                      !isGoogleSystemFolder(m) &&
+                                      !isGoogleCategoryLabel(m.originalId || m.id || m.role) &&
+                                      !isGmailStarLabel(m)
+                                  );
+                                  const orderedLabels = getOrderedGoogleLabels(account.email, userLabels);
+                                  const parentKey = `google:${account.email}:labels`;
+
+                                  return orderedLabels.length === 0 ? (
+                                    <div className="px-6 py-1.5 text-xs text-muted-foreground italic">
+                                      {!isCollapsed && "No labels"}
+                                    </div>
+                                  ) : (
+                                    orderedLabels.map((node) => {
+                                      const isItemDragging =
+                                        dragReorderSource?.level === 'item' &&
+                                        dragReorderSource?.id === node.id &&
+                                        dragReorderSource?.parentKey === parentKey;
+                                      const isItemDragOver =
+                                        dragReorderTarget?.level === 'item' &&
+                                        dragReorderTarget?.id === node.id &&
+                                        dragReorderTarget?.parentKey === parentKey;
+
+                                      return (
+                                        <MailboxTreeItem
+                                          key={node.id}
+                                          node={node}
+                                          selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                                          expandedFolders={expandedFolders}
+                                          onMailboxSelect={onMailboxSelect}
+                                          onToggleExpand={handleToggleExpand}
+                                          isCollapsed={isCollapsed}
+                                          colorful={colorfulSidebarIcons}
+                                          depthOffset={0}
+                                          dragAccountId={`google:${account.email}`}
+                                          draggable={true}
+                                          isGoogle={true}
+                                          onDragStart={(e) =>
+                                            handleReorderDragStart(e, {
+                                              level: 'item',
+                                              id: node.id,
+                                              parentKey,
+                                            })
+                                          }
+                                          onDragOver={(e) =>
+                                            handleReorderDragOver(e, {
+                                              level: 'item',
+                                              id: node.id,
+                                              parentKey,
+                                            })
+                                          }
+                                          onDrop={(e) =>
+                                            handleReorderDrop(
+                                              e,
+                                              {
+                                                level: 'item',
+                                                id: node.id,
+                                                parentKey,
+                                              },
+                                              orderedLabels.map((n) => n.id)
+                                            )
+                                          }
+                                          onDragEnd={handleReorderDragEnd}
+                                          isDragging={isItemDragging}
+                                          isDragOver={isItemDragOver}
+                                        />
+                                      );
+                                    })
+                                  );
+                                })()}
+
+                                {/* Google 12 Stars Subcategory */}
+                                {subcat.type === 'google_stars' && (() => {
+                                  const hiddenStars = googleHiddenStarIds?.[account.email] || [];
+                                  const visibleStars = (Object.keys(GMAIL_STARS) as GmailStarId[])
+                                    .map((id) => GMAIL_STARS[id])
+                                    .filter((s) => !hiddenStars.includes(s.id));
+
+                                  return visibleStars.map((star) => {
+                                    const starMailboxId = `google:${account.email}::star:${star.id}`;
+                                    const isSelected = !selectedKeyword && selectedMailbox === starMailboxId;
+
+                                    return (
+                                      <SidebarRow
+                                        key={star.id}
+                                        icon={
+                                          <img
+                                            src={withBasePath(star.iconPath)}
+                                            alt={star.name}
+                                            className="w-4 h-4 object-contain flex-shrink-0"
+                                          />
+                                        }
+                                        label={star.name}
+                                        testRole="star"
+                                        testName={star.name}
+                                        testMailboxId={starMailboxId}
+                                        depth={0}
+                                        isSelected={isSelected}
+                                        isGoogle={true}
+                                        onClick={() => onMailboxSelect?.(starMailboxId)}
+                                        isCollapsed={isCollapsed}
+                                      />
+                                    );
+                                  });
+                                })()}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -1761,6 +2927,18 @@ export function Sidebar({
         onShareFolder={onShareFolder}
         onImportEmail={onImportEmail}
         onRefresh={onRefreshMailboxes}
+      />
+
+      <GoogleAccountSettingsModal
+        isOpen={Boolean(googleSettingsAccount)}
+        onClose={() => setGoogleSettingsAccount(null)}
+        accountEmail={googleSettingsAccount || ""}
+        mailboxes={
+          googleMail.accountsData.find((g) => g.account.email === googleSettingsAccount)?.mailboxes || []
+        }
+        onMailboxesUpdated={() => {
+          void googleMail.refreshMailboxes();
+        }}
       />
     </div>
   );

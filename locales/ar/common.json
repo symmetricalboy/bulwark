@@ -117,7 +117,9 @@
       "starred": "المميزة بنجمة",
       "all_mail": "كل البريد",
       "spam": "البريد المزعج",
-      "important": "مهم"
+      "important": "مهم",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "البريد الوارد الموحّد",
     "unified_sent": "كل المرسل",
@@ -169,7 +171,9 @@
     "mv_next_day": "اليوم التالي",
     "mv_add_another_account": "إضافة حساب آخر",
     "mv_manage_account": "إدارة حسابك",
-    "mv_storage_used": "تم استخدام {percent}% من {total}"
+    "mv_storage_used": "تم استخدام {percent}% من {total}",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "التطبيقات الافتراضية",
@@ -490,7 +494,9 @@
       "compose": "إنشاء رسالة (c)",
       "previous": "الرسالة السابقة",
       "next": "الرسالة التالية",
-      "edit_draft": "تعديل المسودة"
+      "edit_draft": "تعديل المسودة",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "الإبلاغ عن بريد مزعج",
@@ -625,7 +631,12 @@
       "copied": "تم نسخ الرمز",
       "copy_failed": "تعذّر نسخ الرمز"
     },
-    "mv_position": "{index} من {total}"
+    "mv_position": "{index} من {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "تصغير",
@@ -1289,7 +1300,10 @@
         "add_all": "إضافة الكل ({count})",
         "partial": "تم فحص أحدث {scanned} رسالة فقط من أصل {total}. قد تكون الوسوم المستخدمة في البريد الأقدم فقط غير مدرجة.",
         "error": "تعذّر فحص بريدك بحثًا عن الوسوم."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "اختبار صوت الإشعار",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "أعلى اليسار",
         "corner_top-right": "أعلى اليمين",
         "corner_bottom-left": "أسفل اليسار",
-        "corner_bottom-right": "أسفل اليمين"
+        "corner_bottom-right": "أسفل اليمين",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "برنامج البريد الافتراضي",
@@ -2144,7 +2159,18 @@
       "error_delete": "فشل حذف المجلد",
       "error_delete_has_children": "لا يمكن حذف المجلد: لا يزال يحتوي على مجلدات فرعية. احذفها أو انقلها أولًا.",
       "error_delete_has_email": "لا يمكن حذف المجلد: لا يزال يحتوي على رسائل. انقلها أو احذفها أولًا.",
-      "error_role": "فشل تحديث دور المجلد"
+      "error_role": "فشل تحديث دور المجلد",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "متقدم",

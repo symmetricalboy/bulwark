@@ -117,7 +117,9 @@
       "starred": "スター付き",
       "all_mail": "すべてのメール",
       "spam": "迷惑メール",
-      "important": "重要"
+      "important": "重要",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "統合受信トレイ",
     "unified_sent": "すべての送信済み",
@@ -169,7 +171,9 @@
     "mv_next_day": "翌日",
     "mv_add_another_account": "別のアカウントを追加",
     "mv_manage_account": "アカウントを管理",
-    "mv_storage_used": "{total} のうち {percent}% を使用中"
+    "mv_storage_used": "{total} のうち {percent}% を使用中",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "既定のアプリ",
@@ -463,7 +467,9 @@
       "compose": "新規作成 (c)",
       "previous": "前のメール",
       "next": "次のメール",
-      "edit_draft": "下書きを編集"
+      "edit_draft": "下書きを編集",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "迷惑メールを報告",
@@ -625,7 +631,12 @@
       "copied": "コードをコピーしました",
       "copy_failed": "コードをコピーできませんでした"
     },
-    "mv_position": "{index} / {total}"
+    "mv_position": "{index} / {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "最小化",
@@ -1286,7 +1297,10 @@
         "add_all": "{count}件すべて追加",
         "partial": "{total}件のうち最新の{scanned}件のみを検索しました。古いメールにのみ使われているラベルは見つからない場合があります。",
         "error": "メールからラベルを検索できませんでした。"
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "通知音をテスト",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "左上",
         "corner_top-right": "右上",
         "corner_bottom-left": "左下",
-        "corner_bottom-right": "右下"
+        "corner_bottom-right": "右下",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "既定のメールプログラム",
@@ -2137,7 +2152,18 @@
       "error_delete": "フォルダーの削除に失敗しました",
       "error_delete_has_children": "フォルダーを削除できません：サブフォルダーが含まれています。先にサブフォルダーを削除または移動してください。",
       "error_delete_has_email": "フォルダーを削除できません：メールが含まれています。先にメールを移動または削除してください。",
-      "error_role": "フォルダーの役割の更新に失敗しました"
+      "error_role": "フォルダーの役割の更新に失敗しました",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "詳細設定",

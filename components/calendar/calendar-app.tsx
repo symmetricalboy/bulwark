@@ -44,6 +44,7 @@ import { ICalSubscriptionModal } from "@/components/calendar/ical-subscription-m
 import { ProtocolAccountPicker } from "@/components/protocol/protocol-account-picker";
 import { RecurrenceScopeDialog, type RecurrenceEditScope } from "@/components/calendar/recurrence-scope-dialog";
 import { NavigationRail } from "@/components/layout/navigation-rail";
+import { AppNavRail } from "@/components/layout/app-layout";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
@@ -1824,18 +1825,15 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       <div data-mv-card={mvShell ? "" : undefined} className={cn("relative flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col", mvShell && "mb-4 mx-4")}>
       {/* Left Navigation Rail (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && !mvShell && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-          <NavigationRail
-            collapsed
-            quota={quota}
-            isPushConnected={isPushConnected}
-            onLogout={logout}
-            onManageApps={handleManageApps}
-            onInlineApp={handleInlineApp}
-            onCloseInlineApp={closeInlineApp}
-            activeAppId={inlineApp?.id ?? null}
-          />
-        </div>
+        <AppNavRail
+          quota={quota}
+          isPushConnected={isPushConnected}
+          onLogout={logout}
+          onManageApps={handleManageApps}
+          onInlineApp={handleInlineApp}
+          onCloseInlineApp={closeInlineApp}
+          activeAppId={inlineApp?.id ?? null}
+        />
       )}
 
       {inlineApp && (
@@ -1858,19 +1856,17 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
       <div className="flex flex-1 min-w-0 min-h-0">
       {/* Sidebar - in-flow when desktop pane, overlay when narrow */}
       {(isNarrow || !sidebarCollapsed) && (
-        <>
-          <div
-            className={cn(
-              "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
-              !isResizing && "transition-[width] duration-300",
-              isNarrow && cn(
-                "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
-                "transform transition-transform duration-300 ease-in-out",
-                !narrowSidebarOpen && "-translate-x-full"
-              )
-            )}
-            style={isNarrow ? undefined : { width: `${calSidebarWidth}px` }}
-          >
+        <div
+          className={cn(
+            "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
+            isNarrow && cn(
+              "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+              "transform transition-transform duration-300 ease-in-out",
+              !narrowSidebarOpen && "-translate-x-full"
+            )
+          )}
+          style={isNarrow ? undefined : { width: "272px" }}
+        >
             <CalendarSidebarHeader
               onCreateEvent={() => { setNarrowSidebarOpen(false); openCreateModal(); }}
               tourTarget={!isNarrow}
@@ -1961,18 +1957,6 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
             />
             </div>
           </div>
-          {!isNarrow && (
-            <ResizeHandle
-              onResizeStart={() => { dragStartWidth.current = calSidebarWidth; setIsResizing(true); }}
-              onResize={(delta) => setCalSidebarWidth(Math.max(180, Math.min(400, dragStartWidth.current + delta)))}
-              onResizeEnd={() => {
-                setIsResizing(false);
-                localStorage.setItem("calendar-sidebar-width", String(calSidebarWidth));
-              }}
-              onDoubleClick={() => { setCalSidebarWidth(256); localStorage.setItem("calendar-sidebar-width", "256"); }}
-            />
-          )}
-        </>
       )}
 
       <div className="flex flex-col flex-1 min-w-0 min-h-0">

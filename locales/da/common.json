@@ -117,7 +117,9 @@
       "starred": "Stjernemarkerede",
       "all_mail": "Al mail",
       "spam": "Spam",
-      "important": "Vigtig"
+      "important": "Vigtig",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Samlet indbakke",
     "unified_sent": "Alle sendte",
@@ -169,7 +171,9 @@
     "mv_next_day": "Næste dag",
     "mv_add_another_account": "Tilføj en anden konto",
     "mv_manage_account": "Administrer din konto",
-    "mv_storage_used": "{percent}% af {total} brugt"
+    "mv_storage_used": "{percent}% af {total} brugt",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Standardapps",
@@ -490,7 +494,9 @@
       "compose": "Ny besked (c)",
       "previous": "Forrige e-mail",
       "next": "Næste e-mail",
-      "edit_draft": "Redigér kladde"
+      "edit_draft": "Redigér kladde",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Rapportér spam",
@@ -625,7 +631,12 @@
       "copied": "Kode kopieret",
       "copy_failed": "Koden kunne ikke kopieres"
     },
-    "mv_position": "{index} af {total}"
+    "mv_position": "{index} af {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimer",
@@ -1289,7 +1300,10 @@
         "add_all": "Tilføj alle {count}",
         "partial": "Kun de {scanned} nyeste af {total} e-mails blev scannet. Tags, der kun bruges på ældre post, mangler måske.",
         "error": "Kunne ikke scanne din post for tags."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Test notifikationslyd",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Øverst til venstre",
         "corner_top-right": "Øverst til højre",
         "corner_bottom-left": "Nederst til venstre",
-        "corner_bottom-right": "Nederst til højre"
+        "corner_bottom-right": "Nederst til højre",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Standard mailprogram",
@@ -2140,7 +2155,18 @@
       "error_delete": "Kunne ikke slette mappe",
       "error_delete_has_children": "Kan ikke slette mappe: den indeholder stadig undermapper. Slet eller flyt dem først.",
       "error_delete_has_email": "Kan ikke slette mappe: den indeholder stadig e-mails. Flyt eller slet dem først.",
-      "error_role": "Kunne ikke opdatere mappens rolle"
+      "error_role": "Kunne ikke opdatere mappens rolle",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Avanceret",

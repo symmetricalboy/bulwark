@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Mail, Pencil, Trash2, Plus, AlertTriangle, Star } from '@/components/icons';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,8 @@ import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
 import { useConfig } from '@/hooks/use-config';
 import { toUnicodeEmail } from '@/lib/idn';
+import { getGoogleStatus } from '@/lib/google/google-calendar-client';
+import { generateUUID } from '@/lib/utils';
 
 function emailMatchesUsername(email: string, username: string): boolean {
   if (email === username) return true;
@@ -62,28 +64,86 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
   // From-identities. Editing (display name + signature) stays available.
   const { identityManagementEnabled } = useConfig();
 
-  const refreshIdentitiesFromServer = useRefreshIdentities();
+  const username = useAuthStore((state) => state.username);
+  const storeGoogle = useIdentityStore((state) => state.googleDefaultIdentities);
 
-  // Refresh identities from server whenever the modal is opened
-  useEffect(() => {
-    if (isOpen) {
-      refreshIdentitiesFromServer();
-    }
-  }, [isOpen, refreshIdentitiesFromServer]);
+  const fallbackEmails = useMemo(() => {
+    return Array.from(new Set([
+      ...(username ? [username.includes('@') ? username : `${username}@comail.at`] : []),
+      ...identities.map(i => i.email),
+      ...storeGoogle.map(g => g.email),
+    ].filter(Boolean)));
+  }, [username, identities, storeGoogle]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [availableEmails, setAvailableEmails] = useState<string[]>([]);
   const { dialogProps: confirmDialogProps, confirm: confirmDialog } = useConfirmDialog();
+
+  const effectiveAvailableEmails = availableEmails.length > 0 ? availableEmails : fallbackEmails;
 
   // Re-fetch all identities from server and update stores
   const refreshIdentities = useCallback(async () => {
-    if (!client) return;
     try {
-      const serverIdentities = await client.getIdentities();
+      const serverIdentities = client ? await client.getIdentities() : [];
       const username = useAuthStore.getState().username;
       const preferredPrimaryId = useIdentityStore.getState().preferredPrimaryId;
-      const sorted = [...serverIdentities].sort((a, b) => {
+
+      // Ensure Comail primary default identity cannot be deleted
+      const comailIdentities = serverIdentities.map((id, index) => ({
+        ...id,
+        mayDelete: index === 0 || emailMatchesUsername(id.email, username || '') ? false : id.mayDelete,
+      }));
+
+      // Fetch connected Google accounts
+      let googleAccounts: Array<{ id: string; email: string; name?: string }> = [];
+      try {
+        const googleStatus = await getGoogleStatus();
+        if (googleStatus.connected && googleStatus.accounts) {
+          googleAccounts = googleStatus.accounts;
+        }
+      } catch {
+        // fail-open if google status fetch fails
+      }
+
+      // Generate default identities for linked Google accounts (mayDelete: false)
+      const googleOverrides = useIdentityStore.getState().googleDefaultIdentities || [];
+      const googleDefaultIdentities: Identity[] = googleAccounts.map((acc) => {
+        const id = `google-default:${acc.id || acc.email}`;
+        const existing = googleOverrides.find((g) => g.id === id || g.email.toLowerCase() === acc.email.toLowerCase());
+        return {
+          id,
+          name: existing?.name || acc.name || acc.email,
+          email: acc.email,
+          replyTo: existing?.replyTo,
+          bcc: existing?.bcc,
+          textSignature: existing?.textSignature,
+          htmlSignature: existing?.htmlSignature,
+          mayDelete: false,
+          localAccountId: `google:${acc.id || acc.email}`,
+          accountName: acc.name ? `${acc.name} (Google)` : `Google (${acc.email})`,
+        };
+      });
+      useIdentityStore.getState().setGoogleDefaultIdentities(googleDefaultIdentities);
+
+      // Custom identities created by the user
+      const customIdentities = useIdentityStore.getState().customIdentities || [];
+
+      // Collect all available account emails that users can recycle
+      const allEmails = Array.from(
+        new Set([
+          ...(username ? [username.includes('@') ? username : `${username}@comail.at`] : []),
+          ...comailIdentities.map((i) => i.email),
+          ...googleAccounts.map((a) => a.email),
+          ...customIdentities.map((c) => c.email),
+        ].filter(Boolean))
+      );
+      setAvailableEmails(allEmails);
+
+      const combined = [...comailIdentities, ...googleDefaultIdentities, ...customIdentities];
+
+      const sorted = [...combined].sort((a, b) => {
         const aMatch = emailMatchesUsername(a.email, username || '');
         const bMatch = emailMatchesUsername(b.email, username || '');
         if (aMatch && !bMatch) return -1;
@@ -94,6 +154,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
         }
         return 0;
       });
+
       // Move preferred primary to front if set
       if (preferredPrimaryId) {
         const idx = sorted.findIndex((id) => id.id === preferredPrimaryId);
@@ -109,6 +170,12 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
       toast.error(message);
     }
   }, [client, syncIdentities]);
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshIdentities();
+    }
+  }, [isOpen, refreshIdentities]);
 
   // Focus trap with Escape handling
   const modalRef = useFocusTrap({
@@ -140,17 +207,63 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
   }, [isOpen, onClose, modalRef, confirmDialogProps.isOpen]);
 
   const handleCreate = useCallback(async (data: IdentityFormData) => {
-    if (!client) return;
-
     try {
-      await client.createIdentity(
-        data.name,
-        data.email,
-        data.replyTo,
-        data.bcc,
-        data.textSignature,
-        data.htmlSignature
-      );
+      const googleStatus = await getGoogleStatus().catch(() => ({ connected: false, accounts: [] }));
+      const googleAccounts = googleStatus.accounts || [];
+      const isGoogleEmail = googleAccounts.some((a) => a.email.toLowerCase() === data.email.toLowerCase());
+
+      if (isGoogleEmail) {
+        const googleMatch = googleAccounts.find((a) => a.email.toLowerCase() === data.email.toLowerCase());
+        const newIdentity: Identity = {
+          id: `custom:${generateUUID()}`,
+          name: data.name,
+          email: data.email,
+          replyTo: data.replyTo ?? undefined,
+          bcc: data.bcc ?? undefined,
+          textSignature: data.textSignature ?? undefined,
+          htmlSignature: data.htmlSignature ?? undefined,
+          mayDelete: true,
+          localAccountId: googleMatch ? `google:${googleMatch.id}` : undefined,
+          accountName: googleMatch ? (googleMatch.name ? `${googleMatch.name} (Google)` : `Google (${googleMatch.email})`) : undefined,
+        };
+        useIdentityStore.getState().addCustomIdentity(newIdentity);
+      } else if (client && identityManagementEnabled) {
+        try {
+          await client.createIdentity(
+            data.name,
+            data.email,
+            data.replyTo,
+            data.bcc,
+            data.textSignature,
+            data.htmlSignature
+          );
+        } catch {
+          // If server rejects custom identity, store as local custom identity
+          const newIdentity: Identity = {
+            id: `custom:${generateUUID()}`,
+            name: data.name,
+            email: data.email,
+            replyTo: data.replyTo ?? undefined,
+            bcc: data.bcc ?? undefined,
+            textSignature: data.textSignature ?? undefined,
+            htmlSignature: data.htmlSignature ?? undefined,
+            mayDelete: true,
+          };
+          useIdentityStore.getState().addCustomIdentity(newIdentity);
+        }
+      } else {
+        const newIdentity: Identity = {
+          id: `custom:${generateUUID()}`,
+          name: data.name,
+          email: data.email,
+          replyTo: data.replyTo ?? undefined,
+          bcc: data.bcc ?? undefined,
+          textSignature: data.textSignature ?? undefined,
+          htmlSignature: data.htmlSignature ?? undefined,
+          mayDelete: true,
+        };
+        useIdentityStore.getState().addCustomIdentity(newIdentity);
+      }
 
       await refreshIdentities();
       setIsCreating(false);
@@ -160,19 +273,36 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
       toast.error(tNotif('identity_create_failed', { error: message }));
       throw error;
     }
-  }, [client, refreshIdentities, t, tNotif]);
+  }, [client, identityManagementEnabled, refreshIdentities, t, tNotif]);
 
   const handleUpdate = useCallback(async (identity: Identity, data: IdentityFormData) => {
-    if (!client) return;
-
     try {
-      await client.updateIdentity(identity.id, {
-        name: data.name,
-        replyTo: data.replyTo,
-        bcc: data.bcc,
-        textSignature: data.textSignature,
-        htmlSignature: data.htmlSignature,
-      });
+      if (identity.id.startsWith('custom:')) {
+        useIdentityStore.getState().updateCustomIdentity(identity.id, {
+          name: data.name,
+          email: data.email,
+          replyTo: data.replyTo ?? undefined,
+          bcc: data.bcc ?? undefined,
+          textSignature: data.textSignature ?? undefined,
+          htmlSignature: data.htmlSignature ?? undefined,
+        });
+      } else if (identity.id.startsWith('google-default:')) {
+        useIdentityStore.getState().updateIdentityLocal(identity.id, {
+          name: data.name,
+          replyTo: data.replyTo ?? undefined,
+          bcc: data.bcc ?? undefined,
+          textSignature: data.textSignature ?? undefined,
+          htmlSignature: data.htmlSignature ?? undefined,
+        });
+      } else if (client) {
+        await client.updateIdentity(identity.id, {
+          name: data.name,
+          replyTo: data.replyTo,
+          bcc: data.bcc,
+          textSignature: data.textSignature,
+          htmlSignature: data.htmlSignature,
+        });
+      }
 
       await refreshIdentities();
       setEditingId(null);
@@ -185,7 +315,6 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
   }, [client, refreshIdentities, t, tNotif]);
 
   const handleDelete = useCallback(async (identity: Identity) => {
-    if (!client) return;
     if (!identity.mayDelete) {
       toast.error(t('cannot_delete'));
       return;
@@ -202,7 +331,11 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
     setDeletingId(identity.id);
 
     try {
-      await client.deleteIdentity(identity.id);
+      if (identity.id.startsWith('custom:')) {
+        useIdentityStore.getState().removeCustomIdentity(identity.id);
+      } else if (client) {
+        await client.deleteIdentity(identity.id);
+      }
       await refreshIdentities();
       toast.success(tNotif('identity_deleted'));
     } catch (error) {
@@ -273,6 +406,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
             <div className="mb-6 p-4 border border-border rounded-lg bg-muted/30">
               <h3 className="text-sm font-semibold mb-4">{t('create_new')}</h3>
               <IdentityForm
+                availableEmails={effectiveAvailableEmails}
                 onSave={handleCreate}
                 onCancel={() => setIsCreating(false)}
               />
@@ -304,6 +438,7 @@ export function IdentityManagerModal({ isOpen, onClose }: IdentityManagerModalPr
                     </h3>
                     <IdentityForm
                       identity={identity}
+                      availableEmails={effectiveAvailableEmails}
                       onSave={(data) => handleUpdate(identity, data)}
                       onCancel={() => setEditingId(null)}
                     />

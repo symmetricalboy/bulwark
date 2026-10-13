@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settings-store";
 import { buildKeywordTree, type KeywordNode } from "@/lib/keyword-nesting";
 import { useKeywordFormat } from "@/hooks/use-keyword-format";
+import { isGmailStarLabel } from "@/lib/google/gmail-stars";
 
 /** Below this many tags a filter box costs more room than it saves. */
 const SEARCH_THRESHOLD = 10;
@@ -58,7 +59,7 @@ export function TagPicker({
   const unknownIds = useMemo(
     () =>
       [...selectedIds, ...partialIds]
-        .filter((id) => !keywords.some((keyword) => keyword.id === id))
+        .filter((id) => !keywords.some((keyword) => keyword.id === id) && !isGmailStarLabel(id))
         .sort((a, b) => tagName(a).localeCompare(tagName(b))),
     // `tagName` is rebuilt whenever the definitions or the nesting setting change.
     [selectedIds, partialIds, keywords, tagName],

@@ -20,6 +20,7 @@ import { TasksSidebar } from './tasks-sidebar';
 import { TaskItemRow } from './task-item-row';
 import { TaskDetailPanel } from './task-detail-panel';
 import { NavigationRail } from '@/components/layout/navigation-rail';
+import { AppNavRail } from '@/components/layout/app-layout';
 import { SidebarAppsModal } from '@/components/layout/sidebar-apps-modal';
 import { InlineAppView } from '@/components/layout/inline-app-view';
 import { AppTopBannerSlot } from '@/components/plugins/app-top-banner-slot';
@@ -236,18 +237,15 @@ export function TasksApp({ linkSegments = [] }: TasksAppProps) {
       <div className={cn("flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col")}>
         {/* Navigation Rail - desktop only (hidden when embedded in Pro shell) */}
         {!isMobile && !isEmbedded && (
-          <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-            <NavigationRail
-              collapsed
-              quota={quota}
-              isPushConnected={isPushConnected}
-              onLogout={logout}
-              onManageApps={handleManageApps}
-              onInlineApp={handleInlineApp}
-              onCloseInlineApp={closeInlineApp}
-              activeAppId={inlineApp?.id ?? null}
-            />
-          </div>
+          <AppNavRail
+            quota={quota}
+            isPushConnected={isPushConnected}
+            onLogout={logout}
+            onManageApps={handleManageApps}
+            onInlineApp={handleInlineApp}
+            onCloseInlineApp={closeInlineApp}
+            activeAppId={inlineApp?.id ?? null}
+          />
         )}
 
         {inlineApp && (

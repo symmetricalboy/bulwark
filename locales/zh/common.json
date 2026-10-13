@@ -117,7 +117,9 @@
       "starred": "已加星标",
       "all_mail": "所有邮件",
       "spam": "垃圾邮件",
-      "important": "重要"
+      "important": "重要",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "统一收件箱",
     "unified_sent": "所有已发送",
@@ -169,7 +171,9 @@
     "mv_next_day": "后一天",
     "mv_add_another_account": "添加其他账户",
     "mv_manage_account": "管理您的账户",
-    "mv_storage_used": "已使用 {total} 中的 {percent}%"
+    "mv_storage_used": "已使用 {total} 中的 {percent}%",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "默认应用",
@@ -465,7 +469,9 @@
       "compose": "撰写邮件 (c)",
       "previous": "上一封邮件",
       "next": "下一封邮件",
-      "edit_draft": "编辑草稿"
+      "edit_draft": "编辑草稿",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "举报垃圾邮件",
@@ -625,7 +631,12 @@
       "copied": "验证码已复制",
       "copy_failed": "无法复制验证码"
     },
-    "mv_position": "第 {index} 封，共 {total} 封"
+    "mv_position": "第 {index} 封，共 {total} 封",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "最小化",
@@ -1286,7 +1297,10 @@
         "add_all": "全部添加（{count}）",
         "partial": "仅扫描了 {total} 封邮件中最新的 {scanned} 封。仅用于较旧邮件的标签可能会遗漏。",
         "error": "无法扫描邮件中的标签。"
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "测试通知声音",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "左上",
         "corner_top-right": "右上",
         "corner_bottom-left": "左下",
-        "corner_bottom-right": "右下"
+        "corner_bottom-right": "右下",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "默认邮件应用",
@@ -2137,7 +2152,18 @@
       "error_delete": "删除文件夹失败",
       "error_delete_has_children": "无法删除文件夹：其中仍包含子文件夹。请先删除或移动它们。",
       "error_delete_has_email": "无法删除文件夹：其中仍包含邮件。请先移动或删除这些邮件。",
-      "error_role": "无法更新文件夹角色"
+      "error_role": "无法更新文件夹角色",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "高级",

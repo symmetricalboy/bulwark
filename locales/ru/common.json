@@ -117,7 +117,9 @@
       "starred": "Помечённые",
       "all_mail": "Вся почта",
       "spam": "Спам",
-      "important": "Важные"
+      "important": "Важные",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Общие входящие",
     "unified_sent": "Все отправленные",
@@ -169,7 +171,9 @@
     "mv_next_day": "Следующий день",
     "mv_add_another_account": "Добавить другой аккаунт",
     "mv_manage_account": "Управление аккаунтом",
-    "mv_storage_used": "Использовано {percent}% из {total}"
+    "mv_storage_used": "Использовано {percent}% из {total}",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Приложения по умолчанию",
@@ -465,7 +469,9 @@
       "compose": "Создать (c)",
       "previous": "Предыдущее письмо",
       "next": "Следующее письмо",
-      "edit_draft": "Редактировать черновик"
+      "edit_draft": "Редактировать черновик",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Пожаловаться на спам",
@@ -625,7 +631,12 @@
       "copied": "Код скопирован",
       "copy_failed": "Не удалось скопировать код"
     },
-    "mv_position": "{index} из {total}"
+    "mv_position": "{index} из {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Свернуть",
@@ -1286,7 +1297,10 @@
         "add_all": "Добавить все ({count})",
         "partial": "Просканированы только {scanned} последних писем из {total}. Теги, встречающиеся только в более старых письмах, могут отсутствовать.",
         "error": "Не удалось просканировать почту на наличие тегов."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Проверить звук уведомления",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Вверху слева",
         "corner_top-right": "Вверху справа",
         "corner_bottom-left": "Внизу слева",
-        "corner_bottom-right": "Внизу справа"
+        "corner_bottom-right": "Внизу справа",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Почтовая программа по умолчанию",
@@ -2137,7 +2152,18 @@
       "error_delete": "Не удалось удалить папку",
       "error_delete_has_children": "Невозможно удалить папку: она содержит подпапки. Сначала удалите или переместите их.",
       "error_delete_has_email": "Невозможно удалить папку: она содержит письма. Сначала переместите или удалите их.",
-      "error_role": "Не удалось обновить роль папки"
+      "error_role": "Не удалось обновить роль папки",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Дополнительно",

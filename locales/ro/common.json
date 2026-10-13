@@ -117,7 +117,9 @@
       "starred": "Cu stea",
       "all_mail": "Toate mesajele",
       "spam": "Spam",
-      "important": "Important"
+      "important": "Important",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Căsuță de intrare unificată",
     "unified_sent": "Toate mesajele trimise",
@@ -169,7 +171,9 @@
     "mv_next_day": "Ziua următoare",
     "mv_add_another_account": "Adaugă alt cont",
     "mv_manage_account": "Gestionează contul",
-    "mv_storage_used": "{percent}% din {total} folosit"
+    "mv_storage_used": "{percent}% din {total} folosit",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Aplicații implicite",
@@ -490,7 +494,9 @@
       "compose": "Compune (c)",
       "previous": "E-mailul anterior",
       "next": "Următorul e-mail",
-      "edit_draft": "Editează schița"
+      "edit_draft": "Editează schița",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Raportează spamul",
@@ -625,7 +631,12 @@
       "copied": "Cod copiat",
       "copy_failed": "Codul nu a putut fi copiat"
     },
-    "mv_position": "{index} din {total}"
+    "mv_position": "{index} din {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimizează",
@@ -1289,7 +1300,10 @@
         "add_all": "Adăugați toate cele {count}",
         "partial": "Au fost scanate doar cele mai recente {scanned} din {total} e-mailuri. Etichetele folosite doar pe mesaje mai vechi pot lipsi.",
         "error": "Corespondența nu a putut fi scanată pentru etichete."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Testați sunetul de notificare",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Stânga sus",
         "corner_top-right": "Colțul din dreapta sus",
         "corner_bottom-left": "Stânga jos",
-        "corner_bottom-right": "În partea dreaptă jos"
+        "corner_bottom-right": "În partea dreaptă jos",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Programul de e-mail implicit",
@@ -2144,7 +2159,18 @@
       "error_delete": "Nu s-a putut șterge folderul",
       "error_delete_has_children": "Nu se poate șterge folderul: acesta conține încă subfoldere. Ștergeți-le sau mutați-le mai întâi.",
       "error_delete_has_email": "Nu se poate șterge folderul: acesta conține încă e-mailuri. Mutați-le sau ștergeți-le mai întâi.",
-      "error_role": "Nu s-a putut actualiza rolul folderului"
+      "error_role": "Nu s-a putut actualiza rolul folderului",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Nivel avansat",

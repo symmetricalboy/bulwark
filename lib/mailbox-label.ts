@@ -19,9 +19,14 @@ const ROLE_TRANSLATION_KEY: Record<string, string> = {
   trash: "trash",
   archive: "archive",
   junk: "spam",
+  spam: "spam",
   important: "important",
   flagged: "starred",
+  starred: "starred",
+  unread: "unread",
   all: "all_mail",
+  all_mail: "all_mail",
+  scheduled: "scheduled",
 };
 
 /**

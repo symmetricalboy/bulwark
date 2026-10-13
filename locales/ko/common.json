@@ -117,7 +117,9 @@
       "starred": "별표 편지함",
       "all_mail": "모든 메일",
       "spam": "스팸함",
-      "important": "중요 편지함"
+      "important": "중요 편지함",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "통합 받은편지함",
     "unified_sent": "모든 보낸편지함",
@@ -169,7 +171,9 @@
     "mv_next_day": "다음 날",
     "mv_add_another_account": "다른 계정 추가",
     "mv_manage_account": "계정 관리",
-    "mv_storage_used": "{total} 중 {percent}% 사용"
+    "mv_storage_used": "{total} 중 {percent}% 사용",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "기본 앱",
@@ -465,7 +469,9 @@
       "compose": "메일 쓰기 (c)",
       "previous": "이전 메일",
       "next": "다음 메일",
-      "edit_draft": "임시보관 메일 수정"
+      "edit_draft": "임시보관 메일 수정",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "스팸 신고",
@@ -625,7 +631,12 @@
       "copied": "코드를 복사했습니다",
       "copy_failed": "코드를 복사할 수 없습니다"
     },
-    "mv_position": "{index} / {total}"
+    "mv_position": "{index} / {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "최소화",
@@ -1286,7 +1297,10 @@
         "add_all": "{count}개 모두 추가",
         "partial": "{total}개 중 최근 {scanned}개만 검색했어요. 오래된 메일에만 쓰인 태그는 빠져 있을 수 있어요.",
         "error": "메일에서 태그를 검색하지 못했어요."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "알림음 테스트",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "왼쪽 위",
         "corner_top-right": "오른쪽 위",
         "corner_bottom-left": "왼쪽 아래",
-        "corner_bottom-right": "오른쪽 아래"
+        "corner_bottom-right": "오른쪽 아래",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "기본 메일 프로그램 설정",
@@ -2137,7 +2152,18 @@
       "error_delete": "폴더를 삭제하지 못했어요",
       "error_delete_has_children": "안에 하위 폴더가 있어서 삭제할 수 없어요. 먼저 이동하거나 삭제해 주세요.",
       "error_delete_has_email": "안에 메일이 있어서 삭제할 수 없어요. 메일을 이동하거나 삭제해 주세요.",
-      "error_role": "폴더 역할을 업데이트하지 못했어요"
+      "error_role": "폴더 역할을 업데이트하지 못했어요",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "고급 설정",

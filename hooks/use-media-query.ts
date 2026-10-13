@@ -8,7 +8,7 @@ import { usePaneSize } from "@/hooks/use-pane-size";
 const BREAKPOINTS = {
   sm: 640,
   md: 768,
-  lg: 1024,
+  lg: 1200,
   xl: 1280,
   "2xl": 1536,
 } as const;
@@ -59,7 +59,7 @@ function classifyPane(paneWidth: number | null) {
 
 /**
  * Hook to detect device type and sync with UI store
- * Uses Tailwind breakpoints: mobile < 768px, tablet 768-1024px, desktop > 1024px
+ * Uses Tailwind breakpoints: mobile < 768px, tablet 768-1200px, desktop >= 1200px
  *
  * When invoked inside a Pro pane, the returned values reflect the pane's
  * width instead of the window's. The global UI store is NOT updated in that

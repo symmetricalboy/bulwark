@@ -117,7 +117,9 @@
       "starred": "Mit Stern",
       "all_mail": "Alle E-Mails",
       "spam": "Spam",
-      "important": "Wichtig"
+      "important": "Wichtig",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Gemeinsamer Posteingang",
     "unified_sent": "Alle Gesendet",
@@ -169,7 +171,9 @@
     "mv_next_day": "Nächster Tag",
     "mv_add_another_account": "Weiteres Konto hinzufügen",
     "mv_manage_account": "Konto verwalten",
-    "mv_storage_used": "{percent} % von {total} belegt"
+    "mv_storage_used": "{percent} % von {total} belegt",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Standard-Apps",
@@ -463,7 +467,9 @@
       "compose": "Verfassen (c)",
       "previous": "Vorherige E-Mail",
       "next": "Nächste E-Mail",
-      "edit_draft": "Entwurf bearbeiten"
+      "edit_draft": "Entwurf bearbeiten",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Spam melden",
@@ -625,7 +631,12 @@
       "copied": "Code kopiert",
       "copy_failed": "Code konnte nicht kopiert werden"
     },
-    "mv_position": "{index} von {total}"
+    "mv_position": "{index} von {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimieren",
@@ -1286,7 +1297,10 @@
         "add_all": "Alle {count} hinzufügen",
         "partial": "Es wurden nur die {scanned} neuesten von {total} E-Mails durchsucht. Labels, die nur in älteren E-Mails vorkommen, fehlen möglicherweise.",
         "error": "Ihre E-Mails konnten nicht nach Labels durchsucht werden."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Benachrichtigungston testen",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Oben links",
         "corner_top-right": "Oben rechts",
         "corner_bottom-left": "Unten links",
-        "corner_bottom-right": "Unten rechts"
+        "corner_bottom-right": "Unten rechts",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Standard-E-Mail-Programm",
@@ -2098,7 +2113,7 @@
       "role_drafts": "Entwürfe",
       "role_sent": "Gesendet",
       "role_trash": "Papierkorb",
-      "role_junk": "Spam / Junk",
+      "role_junk": "Spam",
       "role_archive": "Archiv",
       "role_scheduled": "Geplant",
       "role_snoozed": "Zurückgestellt",
@@ -2137,7 +2152,18 @@
       "error_delete": "Ordner konnte nicht gelöscht werden",
       "error_delete_has_children": "Ordner kann nicht gelöscht werden: Er enthält noch Unterordner. Löschen oder verschieben Sie diese zuerst.",
       "error_delete_has_email": "Ordner kann nicht gelöscht werden: Er enthält noch E-Mails. Verschieben oder löschen Sie diese zuerst.",
-      "error_role": "Ordnerrolle konnte nicht aktualisiert werden"
+      "error_role": "Ordnerrolle konnte nicht aktualisiert werden",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Erweitert",

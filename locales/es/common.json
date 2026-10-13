@@ -117,7 +117,9 @@
       "starred": "Destacados",
       "all_mail": "Todo el correo",
       "spam": "Spam",
-      "important": "Importante"
+      "important": "Importante",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Bandeja unificada",
     "unified_sent": "Todos los enviados",
@@ -169,7 +171,9 @@
     "mv_next_day": "Día siguiente",
     "mv_add_another_account": "Añadir otra cuenta",
     "mv_manage_account": "Gestionar tu cuenta",
-    "mv_storage_used": "{percent}% de {total} usado"
+    "mv_storage_used": "{percent}% de {total} usado",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Aplicaciones predeterminadas",
@@ -463,7 +467,9 @@
       "compose": "Redactar (c)",
       "previous": "Correo anterior",
       "next": "Correo siguiente",
-      "edit_draft": "Editar borrador"
+      "edit_draft": "Editar borrador",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Reportar spam",
@@ -625,7 +631,12 @@
       "copied": "Código copiado",
       "copy_failed": "No se pudo copiar el código"
     },
-    "mv_position": "{index} de {total}"
+    "mv_position": "{index} de {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimizar",
@@ -1286,7 +1297,10 @@
         "add_all": "Añadir las {count}",
         "partial": "Solo se analizaron los {scanned} correos más recientes de {total}. Puede que falten etiquetas usadas únicamente en correos más antiguos.",
         "error": "No se pudo analizar tu correo en busca de etiquetas."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Probar sonido de notificación",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Arriba izquierda",
         "corner_top-right": "Arriba derecha",
         "corner_bottom-left": "Abajo izquierda",
-        "corner_bottom-right": "Abajo derecha"
+        "corner_bottom-right": "Abajo derecha",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Programa de correo predeterminado",
@@ -2137,7 +2152,18 @@
       "error_delete": "Error al eliminar la carpeta",
       "error_delete_has_children": "No se puede eliminar la carpeta: aún contiene subcarpetas. Elimínelas o muévalas primero.",
       "error_delete_has_email": "No se puede eliminar la carpeta: aún contiene correos. Muévalos o elimínelos primero.",
-      "error_role": "Error al actualizar el rol de la carpeta"
+      "error_role": "Error al actualizar el rol de la carpeta",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Avanzado",

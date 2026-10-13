@@ -117,7 +117,9 @@
       "starred": "Com Estrela",
       "all_mail": "Todos os E-mails",
       "spam": "Spam",
-      "important": "Importante"
+      "important": "Importante",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Caixa de entrada unificada",
     "unified_sent": "Todos os enviados",
@@ -169,7 +171,9 @@
     "mv_next_day": "Dia seguinte",
     "mv_add_another_account": "Adicionar outra conta",
     "mv_manage_account": "Gerir a sua conta",
-    "mv_storage_used": "{percent}% de {total} utilizado"
+    "mv_storage_used": "{percent}% de {total} utilizado",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Aplicativos padrão",
@@ -463,7 +467,9 @@
       "compose": "Compor (c)",
       "previous": "E-mail anterior",
       "next": "Próximo e-mail",
-      "edit_draft": "Editar rascunho"
+      "edit_draft": "Editar rascunho",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Reportar spam",
@@ -625,7 +631,12 @@
       "copied": "Código copiado",
       "copy_failed": "Não foi possível copiar o código"
     },
-    "mv_position": "{index} de {total}"
+    "mv_position": "{index} de {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimizar",
@@ -1286,7 +1297,10 @@
         "add_all": "Adicionar todas ({count})",
         "partial": "Apenas os {scanned} e-mails mais recentes de {total} foram analisados. Podem faltar etiquetas usadas apenas em correio mais antigo.",
         "error": "Não foi possível analisar o seu correio à procura de etiquetas."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Testar som de notificação",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Superior esquerdo",
         "corner_top-right": "Superior direito",
         "corner_bottom-left": "Inferior esquerdo",
-        "corner_bottom-right": "Inferior direito"
+        "corner_bottom-right": "Inferior direito",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Programa de e-mail padrão",
@@ -2137,7 +2152,18 @@
       "error_delete": "Falha ao excluir a pasta",
       "error_delete_has_children": "Não é possível excluir a pasta: ela ainda contém subpastas. Exclua ou mova-as primeiro.",
       "error_delete_has_email": "Não é possível excluir a pasta: ela ainda contém e-mails. Mova ou exclua-os primeiro.",
-      "error_role": "Falha ao atualizar a função da pasta"
+      "error_role": "Falha ao atualizar a função da pasta",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Avançado",

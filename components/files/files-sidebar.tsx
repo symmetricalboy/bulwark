@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator } from "@/components/ui/context-menu";
 import { useContextMenu } from "@/hooks/use-context-menu";
+import { AppSidebarHeader } from "@/components/layout/app-layout";
 import { cn } from "@/lib/utils";
 import type { FileResource } from "@/stores/file-store";
 import { getFileIconByName } from "@/components/files/file-icons";
@@ -30,9 +31,9 @@ const ROW_STYLE = { paddingBlock: "var(--density-sidebar-py, 4px)", minHeight: "
 
 function rowClass(active: boolean, dropTarget: boolean) {
   return cn(
-    "group w-full flex items-center gap-2 pe-3 text-sm transition-colors text-start",
+    "group flex items-center gap-2 pe-3 text-sm transition-colors text-start mx-2 w-[calc(100%-16px)] rounded-md px-2.5",
     active
-      ? "bg-accent text-accent-foreground font-medium"
+      ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
       : dropTarget
         ? "bg-primary/10 text-foreground ring-1 ring-inset ring-primary/40"
         : "text-foreground/80 hover:bg-muted",
@@ -77,6 +78,8 @@ export interface FilesSidebarProps {
   onRevealRecent: (id: string) => void;
   onDownloadRecent: (id: string) => void;
   onRemoveRecent: (id: string) => void;
+  /** Storage & account dropdown slot placed immediately below the title bar. */
+  storagePickerSlot?: React.ReactNode;
 }
 
 export function FilesSidebar({
@@ -103,6 +106,7 @@ export function FilesSidebar({
   onRevealRecent,
   onDownloadRecent,
   onRemoveRecent,
+  storagePickerSlot,
 }: FilesSidebarProps) {
   const t = useTranslations("files");
   const newMenu = useContextMenu<null>();
@@ -258,31 +262,33 @@ export function FilesSidebar({
 
   return (
     <div className="flex flex-col h-full bg-secondary">
-      <div
-        className="px-3 border-b border-border flex items-center justify-between flex-shrink-0"
-        style={{ paddingBlock: "var(--density-header-py)" }}
-      >
-        <span className="text-sm font-semibold truncate">{t("title")}</span>
-        {canCreate && (
-          <Button
-            ref={newButtonRef}
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 flex-shrink-0"
-            aria-label={t("new")}
-            title={t("new")}
-            aria-haspopup="menu"
-            aria-expanded={newMenu.contextMenu.isOpen}
-            onMouseDown={(e) => { if (newMenu.contextMenu.isOpen) e.stopPropagation(); }}
-            onClick={(e) => {
-              if (newMenu.contextMenu.isOpen) newMenu.closeContextMenu();
-              else newMenu.openContextMenu(anchorEvent(e.currentTarget, "end"), null);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
+      <AppSidebarHeader
+        icon={HardDrive}
+        title={t("title")}
+        actions={
+          canCreate && (
+            <Button
+              ref={newButtonRef}
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 flex-shrink-0"
+              aria-label={t("new")}
+              title={t("new")}
+              aria-haspopup="menu"
+              aria-expanded={newMenu.contextMenu.isOpen}
+              onMouseDown={(e) => { if (newMenu.contextMenu.isOpen) e.stopPropagation(); }}
+              onClick={(e) => {
+                if (newMenu.contextMenu.isOpen) newMenu.closeContextMenu();
+                else newMenu.openContextMenu(anchorEvent(e.currentTarget, "end"), null);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          )
+        }
+      />
+
+      {storagePickerSlot}
 
       <nav className="flex-1 overflow-y-auto py-1" aria-label={t("folders")}>
         <div role="tree" aria-label={t("my_files")}>
@@ -309,7 +315,7 @@ export function FilesSidebar({
               onClick={() => onNavigate("/", null)}
               className="flex items-center gap-2 flex-1 min-w-0 text-start"
             >
-              <HardDrive className="w-4 h-4 shrink-0" />
+              <HardDrive className={cn("w-4 h-4 shrink-0", currentPath === "/" && currentParentId === null ? "text-current" : "text-muted-foreground")} />
               <span className="truncate">{t("my_files")}</span>
             </button>
           </div>

@@ -7,6 +7,8 @@ import {
   googleLabelToMailbox,
   googleMessageToEmail,
   parseEmailAddresses,
+  ensureGoogleSystemMailboxes,
+  isGoogleSystemFolder,
 } from '../gmail-mapper';
 import type { GmailLabel, GmailMessage } from '../types';
 
@@ -184,6 +186,86 @@ describe('gmail-mapper', () => {
 
       const email = googleMessageToEmail(msg, 'bob@gmail.com');
       expect(email.keywords.$seen).toBeUndefined();
+    });
+  });
+
+  describe('ensureGoogleSystemMailboxes', () => {
+    it('creates all 11 symmetrical system folders when starting from empty list', () => {
+      const mailboxes = ensureGoogleSystemMailboxes([], 'user@gmail.com');
+      expect(mailboxes).toHaveLength(11);
+      const roles = mailboxes.map((m) => m.role);
+      expect(roles).toEqual([
+        'inbox',
+        'starred',
+        'unread',
+        'important',
+        'drafts',
+        'scheduled',
+        'sent',
+        'archive',
+        'junk',
+        'trash',
+        'all',
+      ]);
+      expect(mailboxes[0].name).toBe('Inbox');
+      expect(mailboxes[1].name).toBe('Starred');
+      expect(mailboxes[2].name).toBe('Unread');
+      expect(mailboxes[3].name).toBe('Important');
+      expect(mailboxes[4].name).toBe('Drafts');
+      expect(mailboxes[5].name).toBe('Scheduled');
+      expect(mailboxes[6].name).toBe('Sent');
+      expect(mailboxes[7].name).toBe('Archive');
+      expect(mailboxes[8].name).toBe('Spam');
+      expect(mailboxes[9].name).toBe('Trash');
+      expect(mailboxes[10].name).toBe('All Mail');
+    });
+
+    it('preserves existing discovered mailboxes and unread counts while injecting missing system folders', () => {
+      const existing = [
+        {
+          id: 'google:user@gmail.com::INBOX',
+          originalId: 'INBOX',
+          name: 'Inbox',
+          role: 'inbox',
+          sortOrder: 1,
+          unreadEmails: 5,
+          totalEmails: 10,
+        },
+        {
+          id: 'google:user@gmail.com::Label_custom',
+          originalId: 'Label_custom',
+          name: 'My Custom Label',
+          sortOrder: 50,
+          unreadEmails: 1,
+          totalEmails: 2,
+        },
+      ];
+
+      const mailboxes = ensureGoogleSystemMailboxes(existing as never, 'user@gmail.com');
+      expect(mailboxes).toHaveLength(12); // 11 system + 1 custom
+      const inbox = mailboxes.find((m) => m.role === 'inbox');
+      expect(inbox?.unreadEmails).toBe(5);
+      expect(inbox?.totalEmails).toBe(10);
+
+      const custom = mailboxes.find((m) => m.id === 'google:user@gmail.com::Label_custom');
+      expect(custom).toBeDefined();
+      expect(custom?.name).toBe('My Custom Label');
+    });
+  });
+
+  describe('isGoogleSystemFolder', () => {
+    it('identifies all 11 system roles as google system folders', () => {
+      const systemRoles = [
+        'inbox', 'starred', 'unread', 'important', 'drafts', 'scheduled',
+        'sent', 'archive', 'junk', 'trash', 'all', 'all_mail',
+      ];
+      for (const role of systemRoles) {
+        expect(isGoogleSystemFolder({ id: 'mb-1', role } as never)).toBe(true);
+      }
+    });
+
+    it('returns false for custom user folders', () => {
+      expect(isGoogleSystemFolder({ id: 'google:user@gmail.com::Label_custom', name: 'Work' } as never)).toBe(false);
     });
   });
 });

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useEmailStore } from '@/stores/email-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { useSettingsStore } from '@/stores/settings-store';
+import { useSettingsStore, isMailboxHidden } from '@/stores/settings-store';
 import { usePolicyStore } from '@/stores/policy-store';
 import { toast } from '@/stores/toast-store';
 import { SettingsSection, SettingItem, Select } from './settings-section';
@@ -12,11 +12,13 @@ import {
   Plus, Pencil, Trash2, Check, X, FolderPlus, Folder,
   Inbox, Send, FileText, Trash, ShieldAlert, Archive,
   Star, Heart, Bookmark, Tag, Flag, Briefcase, Users,
-  Bell, Zap, Globe, Lock, Eye, MessageSquare, Mail,
-  AlertTriangle, NotebookPen, CalendarClock, BellOff, CheckSquare, Square,
+  Bell, Zap, Globe, Lock, Eye, EyeOff, MessageSquare, Mail,
+  AlertTriangle, DoubleExclamation, NotebookPen, CalendarClock, BellOff, CheckSquare, Square,
+  Layers,
   type AppIcon,
 } from '@/components/icons';
-import { cn, buildMailboxTree, flattenMailboxTree, type MailboxNode } from '@/lib/utils';
+import type { Mailbox } from '@/lib/jmap/types';
+import { cn, buildMailboxTree, flattenMailboxTree, applyCustomOrder, type MailboxNode } from '@/lib/utils';
 import {
   flattenVisibleTree, removeSubtree, getProjection, getDropPlan,
   type FlatFolder,
@@ -32,28 +34,46 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { SCHEDULED_MAILBOX_ID } from '@/lib/deep-links';
+import { isGmailStarLabel } from '@/lib/google/gmail-stars';
 
 // Must match the per-level indentation used in the row styles below: dragging
 // a folder this many pixels right/left targets one nesting level deeper/higher.
 const INDENTATION_WIDTH = 16;
 
-const STANDARD_ROLES = ['inbox', 'drafts', 'sent', 'trash', 'junk', 'archive'] as const;
+const STANDARD_ROLES = [
+  'inbox',
+  'drafts',
+  'scheduled',
+  'sent',
+  'archive',
+  'junk',
+  'trash',
+  'starred',
+  'unread',
+  'important',
+  'all',
+] as const;
 
 // "Move to" value for the root of the folder tree.
 const TOP_LEVEL = '__top__';
 
 const ROLE_ICONS: Record<string, AppIcon> = {
   inbox: Inbox,
+  starred: Star,
+  unread: Mail,
+  important: DoubleExclamation,
   drafts: FileText,
   sent: Send,
   trash: Trash,
   junk: ShieldAlert,
   archive: Archive,
   shared: Users,
-  important: AlertTriangle,
   memos: NotebookPen,
   scheduled: CalendarClock,
   snoozed: BellOff,
+  all: Layers,
+  all_mail: Layers,
 };
 
 const ICON_CHOICES: { name: string; icon: AppIcon }[] = [
@@ -75,6 +95,9 @@ const ICON_CHOICES: { name: string; icon: AppIcon }[] = [
   { name: 'Inbox', icon: Inbox },
   { name: 'Archive', icon: Archive },
   { name: 'FileText', icon: FileText },
+  { name: 'AlertTriangle', icon: AlertTriangle },
+  { name: 'DoubleExclamation', icon: DoubleExclamation },
+  { name: 'Layers', icon: Layers },
 ];
 
 function IconPicker({ currentIcon, onSelect, onClose }: {
@@ -138,7 +161,7 @@ function SortableFolderRow({ id, title, children }: { id: string; title: string;
     position: isDragging ? 'relative' : undefined,
   };
   return (
-    <div ref={setNodeRef} style={style} className="flex items-stretch">
+    <div ref={setNodeRef} style={style} className="flex items-stretch" data-folder-id={id}>
       <button
         type="button"
         {...attributes}
@@ -164,7 +187,20 @@ export function FolderSettings() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const { folderIcons, setFolderIcon } = useSettingsStore();
+  const {
+    folderIcons,
+    setFolderIcon,
+    scheduledFolderName,
+    setScheduledFolderName,
+    hideScheduledFolder,
+    setHideScheduledFolder,
+    hiddenFolderIds,
+    toggleFolderHidden,
+    sidebarCustomOrder,
+    setSidebarCustomOrder,
+    customFolderRoles,
+    setCustomFolderRole,
+  } = useSettingsStore();
   const { isFeatureEnabled } = usePolicyStore();
   const folderIconsAllowed = isFeatureEnabled('folderIconsEnabled');
 
@@ -199,8 +235,57 @@ export function FolderSettings() {
   const [moveTarget, setMoveTarget] = useState('');
   const [isMoving, setIsMoving] = useState(false);
 
-  const ownMailboxes = mailboxes.filter(mb => !mb.isShared);
-  const folderTree = buildMailboxTree(ownMailboxes);
+  const scheduledDisplayName = scheduledFolderName?.trim() || t('role_scheduled');
+  const scheduledMailbox: Mailbox = {
+    id: SCHEDULED_MAILBOX_ID,
+    name: scheduledDisplayName,
+    role: 'scheduled',
+    parentId: undefined,
+    sortOrder: (() => {
+      const drafts = mailboxes.find((m) => m.role === 'drafts');
+      if (drafts && typeof drafts.sortOrder === 'number' && drafts.sortOrder > 0) {
+        return drafts.sortOrder + 0.5;
+      }
+      return 0;
+    })(),
+    totalEmails: 0,
+    unreadEmails: 0,
+    totalThreads: 0,
+    unreadThreads: 0,
+    myRights: {
+      mayReadItems: true,
+      mayAddItems: false,
+      mayRemoveItems: true,
+      maySetSeen: true,
+      maySetKeywords: true,
+      mayCreateChild: false,
+      mayRename: true,
+      mayDelete: false,
+      maySubmit: false,
+    },
+    isSubscribed: true,
+    isShared: false,
+  };
+
+  const ownMailboxes = (() => {
+    const list = mailboxes.filter(mb => !mb.isShared && !isGmailStarLabel(mb));
+    if (!list.some(mb => mb.role === 'scheduled' || mb.id === SCHEDULED_MAILBOX_ID)) {
+      const draftsIdx = list.findIndex(mb => mb.role === 'drafts');
+      if (draftsIdx !== -1) {
+        return [...list.slice(0, draftsIdx + 1), scheduledMailbox, ...list.slice(draftsIdx + 1)];
+      }
+      return [...list, scheduledMailbox];
+    }
+    return list;
+  })();
+  const rawFolderTree = buildMailboxTree(ownMailboxes);
+  const folderTree = useMemo(() => {
+    return applyCustomOrder(
+      rawFolderTree,
+      sidebarCustomOrder?.items?.['comail:primary:folders'],
+      (n) => n.id
+    );
+  }, [rawFolderTree, sidebarCustomOrder?.items]);
 
   const visibleItems = flattenVisibleTree(folderTree, expandedFolders);
   // While dragging, the folder's subtree travels with it: hide it from the
@@ -246,11 +331,27 @@ export function FolderSettings() {
     const plan = getDropPlan(items, activeId, String(over.id), projection);
     if (!plan) return;
 
+    if (activeId === SCHEDULED_MAILBOX_ID && plan.parentChanged) {
+      return;
+    }
+
     if (!plan.parentChanged) {
       if (active.id === over.id) return; // dropped back where it started
-      reorderMailboxes(client, plan.orderedSiblingIds).catch(() => {
-        toast.error(t('reorder_error'));
-      });
+      const serverIds = plan.orderedSiblingIds.filter((id) => id !== SCHEDULED_MAILBOX_ID);
+      if (serverIds.length > 0) {
+        reorderMailboxes(client, serverIds).catch(() => {
+          toast.error(t('reorder_error'));
+        });
+      }
+      if (!plan.parentId) {
+        setSidebarCustomOrder((prev) => ({
+          ...prev,
+          items: {
+            ...(prev?.items || {}),
+            ['comail:primary:folders']: plan.orderedSiblingIds,
+          },
+        }));
+      }
       return;
     }
 
@@ -267,6 +368,27 @@ export function FolderSettings() {
       || expandedFolders.has(newParent.id);
     if (newParent) {
       setExpandedFolders(prev => new Set(prev).add(newParent.id));
+    }
+    if (!plan.parentId) {
+      setSidebarCustomOrder((prev) => ({
+        ...prev,
+        items: {
+          ...(prev?.items || {}),
+          ['comail:primary:folders']: plan.orderedSiblingIds,
+        },
+      }));
+    } else {
+      setSidebarCustomOrder((prev) => {
+        const currentTop = prev?.items?.['comail:primary:folders'];
+        if (!currentTop || !currentTop.includes(activeId)) return prev;
+        return {
+          ...prev,
+          items: {
+            ...(prev?.items || {}),
+            ['comail:primary:folders']: currentTop.filter((id) => id !== activeId),
+          },
+        };
+      });
     }
     moveMailbox(client, activeId, plan.parentId, siblingsVisible ? plan.orderedSiblingIds : undefined).catch(() => {
       toast.error(t('move_error'));
@@ -366,7 +488,23 @@ export function FolderSettings() {
   };
 
   const getRoleMailboxId = (role: string): string => {
-    const mb = ownMailboxes.find(m => m.role === role);
+    if (role === 'scheduled' && hideScheduledFolder) {
+      return '';
+    }
+    const custom = customFolderRoles || {};
+    if (custom[role]) return custom[role];
+    if (role === 'starred' && custom['flagged']) return custom['flagged'];
+    if (role === 'flagged' && custom['starred']) return custom['starred'];
+    if (role === 'all' && custom['all_mail']) return custom['all_mail'];
+    if (role === 'all_mail' && custom['all']) return custom['all'];
+
+    const mb = ownMailboxes.find(m =>
+      m.role === role ||
+      (role === 'starred' && m.role === 'flagged') ||
+      (role === 'flagged' && m.role === 'starred') ||
+      (role === 'all' && m.role === 'all_mail') ||
+      (role === 'all_mail' && m.role === 'all')
+    );
     return mb?.id ?? '';
   };
 
@@ -427,7 +565,15 @@ export function FolderSettings() {
   };
 
   const handleRename = async (mailboxId: string) => {
-    if (!client || !editingName.trim()) return;
+    if (!editingName.trim()) return;
+    if (mailboxId === SCHEDULED_MAILBOX_ID) {
+      setScheduledFolderName(editingName.trim());
+      setEditingId(null);
+      setEditingName('');
+      toast.success(t('folder_renamed'));
+      return;
+    }
+    if (!client) return;
     setIsLoading(true);
     try {
       await renameMailbox(client, mailboxId, editingName.trim());
@@ -466,13 +612,32 @@ export function FolderSettings() {
   };
 
   const handleRoleChange = async (role: string, mailboxId: string) => {
+    if (role === 'scheduled') {
+      setHideScheduledFolder(mailboxId === '');
+    }
     if (!client) return;
     setIsLoading(true);
     try {
-      if (mailboxId === '') {
-        const current = ownMailboxes.find(m => m.role === role);
+      if (mailboxId === '' || mailboxId === SCHEDULED_MAILBOX_ID) {
+        const current = ownMailboxes.find(m =>
+          (m.role === role ||
+            (role === 'starred' && m.role === 'flagged') ||
+            (role === 'flagged' && m.role === 'starred') ||
+            (role === 'all' && m.role === 'all_mail') ||
+            (role === 'all_mail' && m.role === 'all')) &&
+          m.id !== SCHEDULED_MAILBOX_ID
+        );
         if (current) {
           await setMailboxRole(client, current.id, null);
+        }
+        if (customFolderRoles?.[role]) {
+          setCustomFolderRole(role, null);
+        }
+        if (role === 'starred' && customFolderRoles?.['flagged']) {
+          setCustomFolderRole('flagged', null);
+        }
+        if (role === 'all' && customFolderRoles?.['all_mail']) {
+          setCustomFolderRole('all_mail', null);
         }
       } else {
         await setMailboxRole(client, mailboxId, role);
@@ -554,6 +719,7 @@ export function FolderSettings() {
     const hasChildren = mb.children.length > 0;
     const isExpanded = expandedFolders.has(item.id);
     const isSelected = selectedIds.has(item.id);
+    const isHidden = isMailboxHidden(mb.id, hiddenFolderIds, hideScheduledFolder);
     // The dragged row previews its projected nesting depth, so a horizontal
     // drag shows which parent the folder will land under.
     const depth = activeDragId === item.id && projected ? projected.depth : item.depth;
@@ -633,7 +799,7 @@ export function FolderSettings() {
           style={{ paddingLeft: 12 + depth * 16 }}
         >
           <div className="flex items-center gap-2.5 min-w-0">
-            {mb.myRights?.mayRename ? (
+            {mb.myRights?.mayRename && mb.id !== SCHEDULED_MAILBOX_ID ? (
               <button
                 type="button"
                 role="checkbox"
@@ -706,19 +872,39 @@ export function FolderSettings() {
                 />
               )}
             </div>
-            <span className="text-sm text-foreground truncate">{mb.name}</span>
+            <span className={cn("text-sm text-foreground truncate", isHidden && "opacity-60")}>
+              {mb.name}
+            </span>
             {mb.role && (
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex-shrink-0">
                 {t(`role_${mb.role}`)}
               </span>
             )}
-            {mb.unreadEmails > 0 && (
-              <span className="text-xs tabular-nums px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-medium flex-shrink-0">
-                {mb.unreadEmails}
+            {isHidden && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium flex-shrink-0">
+                {t('hidden')}
               </span>
             )}
-          </div>
-          <div className="flex items-center gap-0.5">
+          {mb.unreadEmails > 0 && (
+            <span className="text-xs tabular-nums px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-medium flex-shrink-0">
+              {mb.unreadEmails}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => toggleFolderHidden(mb.id)}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+            title={isMailboxHidden(mb.id, hiddenFolderIds, hideScheduledFolder) ? t('show_folder') : t('hide_folder')}
+            aria-label={isMailboxHidden(mb.id, hiddenFolderIds, hideScheduledFolder) ? t('show_folder') : t('hide_folder')}
+          >
+            {isMailboxHidden(mb.id, hiddenFolderIds, hideScheduledFolder) ? (
+              <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+            ) : (
+              <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+          </button>
             {mb.myRights?.mayCreateChild && (
               <button
                 onClick={() => startCreateSubfolder(mb.id)}
@@ -819,13 +1005,32 @@ export function FolderSettings() {
         {/* Create top-level folder */}
         {renderCreateInline(null, 0)}
         {!isCreating && (
-          <button
-            onClick={() => { setIsCreating(true); setCreatingParentId(null); setNewFolderName(''); }}
-            className="flex items-center gap-2 mt-3 px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors w-full border border-dashed border-primary/30 hover:border-primary/50"
-          >
-            <Plus className="w-4 h-4" />
-            {t('create_folder')}
-          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-3">
+            <button
+              onClick={() => { setIsCreating(true); setCreatingParentId(null); setNewFolderName(''); }}
+              className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition-colors flex-1 border border-dashed border-primary/30 hover:border-primary/50"
+            >
+              <Plus className="w-4 h-4" />
+              {t('create_folder')}
+            </button>
+            {Boolean(sidebarCustomOrder?.items?.['comail:primary:folders']?.length) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSidebarCustomOrder((prev) => {
+                    const next = { ...prev, items: { ...(prev?.items || {}) } };
+                    delete next.items['comail:primary:folders'];
+                    return next;
+                  });
+                  toast.success(t('order_reset_success'));
+                }}
+                className="px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors border border-border"
+                title={t('reset_order_description')}
+              >
+                {t('reset_order')}
+              </button>
+            )}
+          </div>
         )}
       </SettingsSection>
 
@@ -835,7 +1040,10 @@ export function FolderSettings() {
           // Offer the folders in sidebar order (the built tree: role priority,
           // then name, children under their parent) rather than raw server
           // order, so the dropdown reads like the folder list. (#984)
-          const orderedMailboxes = flattenMailboxTree(folderTree);
+          const allMailboxes = flattenMailboxTree(folderTree);
+          const orderedMailboxes = role === 'scheduled'
+            ? allMailboxes
+            : allMailboxes.filter((mb) => mb.id !== SCHEDULED_MAILBOX_ID);
           // Disambiguate duplicate folder names by appending parent path
           const nameCounts = new Map<string, number>();
           orderedMailboxes.forEach(mb => nameCounts.set(mb.name, (nameCounts.get(mb.name) || 0) + 1));

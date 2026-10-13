@@ -117,7 +117,9 @@
       "starred": "Stjernemerket",
       "all_mail": "All e-post",
       "spam": "Søppelpost",
-      "important": "Viktig"
+      "important": "Viktig",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Samlet innboks",
     "unified_sent": "Alle sendte meldinger",
@@ -169,7 +171,9 @@
     "mv_next_day": "Neste dag",
     "mv_add_another_account": "Legg til en annen konto",
     "mv_manage_account": "Administrer kontoen",
-    "mv_storage_used": "{percent} % av {total} brukt"
+    "mv_storage_used": "{percent} % av {total} brukt",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Standardapper",
@@ -490,7 +494,9 @@
       "compose": "Skriv (c)",
       "previous": "Forrige e-post",
       "next": "Neste e-post",
-      "edit_draft": "Rediger utkast"
+      "edit_draft": "Rediger utkast",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Rapporter som søppelpost",
@@ -625,7 +631,12 @@
       "copied": "Kode kopiert",
       "copy_failed": "Kunne ikke kopiere koden"
     },
-    "mv_position": "{index} av {total}"
+    "mv_position": "{index} av {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimer",
@@ -1289,7 +1300,10 @@
         "add_all": "Legg til alle {count}",
         "partial": "Bare de {scanned} siste av {total} meldingene ble skannet. Etiketter som bare brukes på eldre e-poster, kan mangle.",
         "error": "Kunne ikke søke gjennom meldingene etter etiketter."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Test varslingslyden",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Øverst til venstre",
         "corner_top-right": "Øverst til høyre",
         "corner_bottom-left": "Nederst til venstre",
-        "corner_bottom-right": "Nederst til høyre"
+        "corner_bottom-right": "Nederst til høyre",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Standard e-postprogram",
@@ -2144,7 +2159,18 @@
       "error_delete": "Kunne ikke slette mappen",
       "error_delete_has_children": "Kan ikke slette mappen: den inneholder fortsatt undermapper. Slett eller flytt dem først.",
       "error_delete_has_email": "Kan ikke slette mappen: den inneholder fortsatt e-poster. Flytt eller slett dem først.",
-      "error_role": "Kunne ikke oppdatere mapperollen"
+      "error_role": "Kunne ikke oppdatere mapperollen",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Avansert",

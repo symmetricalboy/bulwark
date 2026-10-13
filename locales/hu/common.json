@@ -117,7 +117,9 @@
       "starred": "Csillagozott",
       "all_mail": "Minden levél",
       "spam": "Spam",
-      "important": "Fontos"
+      "important": "Fontos",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Egységes beérkező",
     "unified_sent": "Összes elküldött",
@@ -169,7 +171,9 @@
     "mv_next_day": "Következő nap",
     "mv_add_another_account": "Másik fiók hozzáadása",
     "mv_manage_account": "Fiók kezelése",
-    "mv_storage_used": "{total} {percent}%-a foglalt"
+    "mv_storage_used": "{total} {percent}%-a foglalt",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Alapértelmezett alkalmazások",
@@ -490,7 +494,9 @@
       "compose": "Új levél (c)",
       "previous": "Előző e-mail",
       "next": "Következő e-mail",
-      "edit_draft": "Piszkozat szerkesztése"
+      "edit_draft": "Piszkozat szerkesztése",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Spam jelentése",
@@ -625,7 +631,12 @@
       "copied": "Kód másolva",
       "copy_failed": "Nem sikerült másolni a kódot"
     },
-    "mv_position": "{index} / {total}"
+    "mv_position": "{index} / {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Kis méret",
@@ -1289,7 +1300,10 @@
         "add_all": "Mind a(z) {count} hozzáadása",
         "partial": "A(z) {total} e-mailből csak a {scanned} legutóbbi lett átvizsgálva. A csak régebbi leveleken használt címkék hiányozhatnak.",
         "error": "Nem sikerült átvizsgálni a leveleket címkék után."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Értesítési hang tesztelése",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "Bal felső",
         "corner_top-right": "Jobb felső",
         "corner_bottom-left": "Bal alsó",
-        "corner_bottom-right": "Jobb alsó"
+        "corner_bottom-right": "Jobb alsó",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Alapértelmezett levelezőprogram",
@@ -2140,7 +2155,18 @@
       "error_delete": "Nem sikerült törölni a mappát",
       "error_delete_has_children": "Nem törölhető a mappa: almappákat tartalmaz. Előbb töröld vagy helyezd át azokat.",
       "error_delete_has_email": "Nem törölhető a mappa: e-maileket tartalmaz. Előbb helyezd át vagy töröld azokat.",
-      "error_role": "Nem sikerült frissíteni a mappa szerepkört"
+      "error_role": "Nem sikerült frissíteni a mappa szerepkört",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Speciális",

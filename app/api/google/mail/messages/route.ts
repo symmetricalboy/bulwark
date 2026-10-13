@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const rawMailboxId = url.searchParams.get('mailboxId');
   const query = url.searchParams.get('q') || undefined;
   const pageToken = url.searchParams.get('pageToken') || undefined;
-  const maxResults = Math.min(parseInt(url.searchParams.get('maxResults') || '25', 10), 50);
+  const maxResults = Math.min(Math.max(1, parseInt(url.searchParams.get('maxResults') || '50', 10)), 100);
 
   let googleAccountId =
     url.searchParams.get('googleAccountId') ||
@@ -42,11 +42,30 @@ export async function GET(request: NextRequest) {
 
   try {
     const accountEmail = session.tokens.email || session.account?.email || 'google';
-    const labelIds = labelId && labelId !== 'ALL' ? [labelId] : undefined;
+    let labelIds: string[] | undefined = undefined;
+    let q = query;
+
+    const upperLabel = labelId?.toUpperCase();
+    if (labelId?.startsWith('star:')) {
+      const starId = labelId.slice('star:'.length);
+      const starFilter = `has:${starId}`;
+      q = q ? `${q} ${starFilter}` : starFilter;
+      labelIds = undefined;
+    } else if (upperLabel === 'ARCHIVE') {
+      const archiveFilter = '-in:inbox -in:sent -in:spam -in:trash -in:draft';
+      q = q ? `${q} ${archiveFilter}` : archiveFilter;
+      labelIds = undefined;
+    } else if (upperLabel === 'ALL' || upperLabel === 'ALL_MAIL') {
+      labelIds = undefined;
+    } else if (upperLabel === 'UNREAD') {
+      labelIds = ['UNREAD'];
+    } else if (labelId) {
+      labelIds = [labelId];
+    }
 
     const listRes = await listGmailMessages(session.accessToken, {
       labelIds,
-      q: query,
+      q,
       pageToken,
       maxResults,
     });

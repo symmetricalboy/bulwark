@@ -117,7 +117,9 @@
       "starred": "S hvězdičkou",
       "all_mail": "Všechny zprávy",
       "spam": "Spam",
-      "important": "Důležité"
+      "important": "Důležité",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "Sjednocená doručená pošta",
     "unified_sent": "Všechny odeslané",
@@ -169,7 +171,9 @@
     "mv_next_day": "Následující den",
     "mv_add_another_account": "Přidat další účet",
     "mv_manage_account": "Spravovat účet",
-    "mv_storage_used": "Využito {percent} % z {total}"
+    "mv_storage_used": "Využito {percent} % z {total}",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "Výchozí aplikace",
@@ -465,7 +469,9 @@
       "compose": "Napsat (c)",
       "previous": "Předchozí zpráva",
       "next": "Další zpráva",
-      "edit_draft": "Upravit koncept"
+      "edit_draft": "Upravit koncept",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "Nahlásit spam",
@@ -625,7 +631,12 @@
       "copied": "Kód zkopírován",
       "copy_failed": "Kód se nepodařilo zkopírovat"
     },
-    "mv_position": "{index} z {total}"
+    "mv_position": "{index} z {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "Minimalizovat",
@@ -1286,7 +1297,10 @@
         "add_all": "Přidat všech {count}",
         "partial": "Prohledáno bylo jen {scanned} nejnovějších zpráv z {total}. Štítky použité pouze ve starší poště mohou chybět.",
         "error": "Poštu se nepodařilo prohledat na štítky."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "Otestovat zvuk oznámení",
@@ -1605,7 +1619,8 @@
         "corner_top-left": "Levý horní roh",
         "corner_top-right": "Pravý horní roh",
         "corner_bottom-left": "Levý dolní roh",
-        "corner_bottom-right": "Pravý dolní roh"
+        "corner_bottom-right": "Pravý dolní roh",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "Výchozí poštovní program",
@@ -2137,7 +2152,18 @@
       "error_delete": "Složku se nepodařilo odstranit",
       "error_delete_has_children": "Složku nelze odstranit: stále obsahuje podsložky. Nejprve je odstraňte nebo přesuňte.",
       "error_delete_has_email": "Složku nelze odstranit: stále obsahuje zprávy. Nejprve je přesuňte nebo odstraňte.",
-      "error_role": "Roli složky se nepodařilo aktualizovat"
+      "error_role": "Roli složky se nepodařilo aktualizovat",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "Pokročilé",

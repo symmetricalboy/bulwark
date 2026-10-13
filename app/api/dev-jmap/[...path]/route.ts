@@ -69,17 +69,50 @@ function nextState(): string {
 
 const mailboxes: MockMailbox[] = [
   { id: 'mb-inbox', name: 'Inbox', role: 'inbox', sortOrder: 1, totalEmails: 5, unreadEmails: 2 },
-  { id: 'mb-drafts', name: 'Drafts', role: 'drafts', sortOrder: 2, totalEmails: 1, unreadEmails: 0 },
-  { id: 'mb-sent', name: 'Sent', role: 'sent', sortOrder: 3, totalEmails: 3, unreadEmails: 0 },
-  { id: 'mb-junk', name: 'Junk', role: 'junk', sortOrder: 4, totalEmails: 1, unreadEmails: 1 },
-  { id: 'mb-trash', name: 'Trash', role: 'trash', sortOrder: 5, totalEmails: 0, unreadEmails: 0 },
-  { id: 'mb-archive', name: 'Archive', role: 'archive', sortOrder: 6, totalEmails: 2, unreadEmails: 0 },
+  { id: 'mb-starred', name: 'Starred', role: 'starred', sortOrder: 2, totalEmails: 0, unreadEmails: 0 },
+  { id: 'mb-unread', name: 'Unread', role: 'unread', sortOrder: 3, totalEmails: 0, unreadEmails: 0 },
+  { id: 'mb-important', name: 'Important', role: 'important', sortOrder: 4, totalEmails: 0, unreadEmails: 0 },
+  { id: 'mb-drafts', name: 'Drafts', role: 'drafts', sortOrder: 5, totalEmails: 1, unreadEmails: 0 },
+  { id: 'mb-scheduled', name: 'Scheduled', role: 'scheduled', sortOrder: 6, totalEmails: 0, unreadEmails: 0 },
+  { id: 'mb-sent', name: 'Sent', role: 'sent', sortOrder: 7, totalEmails: 3, unreadEmails: 0 },
+  { id: 'mb-archive', name: 'Archive', role: 'archive', sortOrder: 8, totalEmails: 2, unreadEmails: 0 },
+  { id: 'mb-junk', name: 'Spam', role: 'junk', sortOrder: 9, totalEmails: 1, unreadEmails: 1 },
+  { id: 'mb-trash', name: 'Trash', role: 'trash', sortOrder: 10, totalEmails: 0, unreadEmails: 0 },
+  { id: 'mb-all', name: 'All Mail', role: 'all', sortOrder: 11, totalEmails: 0, unreadEmails: 0 },
+  { id: 'mb-red-circle', name: 'Red circle', role: null, sortOrder: 50, totalEmails: 1, unreadEmails: 0 },
+  { id: 'mb-blue-star', name: 'Blue star', role: null, sortOrder: 51, totalEmails: 1, unreadEmails: 0 },
+  { id: 'mb-green-circle', name: 'Green circle', role: null, sortOrder: 52, totalEmails: 1, unreadEmails: 0 },
+  { id: 'mb-purple-circle', name: 'Purple circle', role: null, sortOrder: 53, totalEmails: 1, unreadEmails: 0 },
 ];
 
 function recomputeMailboxCounts(): void {
+  const impBook = addressBooks.find(b => b.name === 'Important');
+  const impContacts = impBook ? contacts.filter(c => (c.addressBookIds as unknown as Record<string, boolean> | undefined)?.[impBook.id]) : [];
+  const impEmails = new Set(
+    impContacts.flatMap(c => Object.values(c.emails || {}).map(ea => ((ea as { address?: string }).address || '').toLowerCase().trim()))
+  );
+
   for (const mb of mailboxes) {
-    mb.totalEmails = emails.filter((e) => e.mailboxIds[mb.id]).length;
-    mb.unreadEmails = emails.filter((e) => e.mailboxIds[mb.id] && !e.keywords.$seen).length;
+    if (mb.id === 'mb-starred') {
+      const matching = emails.filter((e) => e.keywords.$flagged && !e.mailboxIds['mb-trash']);
+      mb.totalEmails = matching.length;
+      mb.unreadEmails = matching.filter((e) => !e.keywords.$seen).length;
+    } else if (mb.id === 'mb-unread') {
+      const matching = emails.filter((e) => !e.keywords.$seen && !e.mailboxIds['mb-trash']);
+      mb.totalEmails = matching.length;
+      mb.unreadEmails = matching.length;
+    } else if (mb.id === 'mb-important') {
+      const matching = emails.filter((e) => (e.keywords.$important || (e.from?.[0]?.email && impEmails.has(e.from[0].email.toLowerCase().trim()))) && !e.mailboxIds['mb-trash']);
+      mb.totalEmails = matching.length;
+      mb.unreadEmails = matching.filter((e) => !e.keywords.$seen).length;
+    } else if (mb.id === 'mb-all') {
+      const matching = emails.filter((e) => !e.mailboxIds['mb-trash']);
+      mb.totalEmails = matching.length;
+      mb.unreadEmails = matching.filter((e) => !e.keywords.$seen).length;
+    } else {
+      mb.totalEmails = emails.filter((e) => e.mailboxIds[mb.id]).length;
+      mb.unreadEmails = emails.filter((e) => e.mailboxIds[mb.id] && !e.keywords.$seen).length;
+    }
   }
 }
 
@@ -155,7 +188,7 @@ const emails: MockEmail[] = [
     ],
   },
   {
-    id: 'email-003', threadId: 'thread-003', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 2400, receivedAt: daysAgo(2),
+    id: 'email-003', threadId: 'thread-003', mailboxIds: { 'mb-inbox': true, 'mb-red-circle': true }, keywords: { $seen: true, $flagged: true, 'Red circle': true }, size: 2400, receivedAt: daysAgo(2),
     from: [{ name: 'Chiara Rossi', email: 'chiara@rossi.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
     subject: 'Lunch tomorrow?',
@@ -169,7 +202,7 @@ const emails: MockEmail[] = [
     },
   },
   {
-    id: 'email-004', threadId: 'thread-004', mailboxIds: { 'mb-inbox': true }, keywords: { '$label:work/clients': true, '$label:receipts': true }, size: 6200, receivedAt: daysAgo(0),
+    id: 'email-004', threadId: 'thread-004', mailboxIds: { 'mb-inbox': true, 'mb-blue-star': true }, keywords: { $important: true, $flagged: true, 'Blue star': true, '$label:work/clients': true, '$label:receipts': true }, size: 6200, receivedAt: daysAgo(0),
     from: [{ name: 'GitHub', email: 'notifications@github.example' }],
     to: [{ name: 'Dev User', email: 'dev@localhost' }], cc: [],
     subject: '[bulwark-webmail] Theme choice is ignored after an OS theme change (#42)',
@@ -183,7 +216,7 @@ const emails: MockEmail[] = [
     },
   },
   {
-    id: 'email-005', threadId: 'thread-005', mailboxIds: { 'mb-inbox': true }, keywords: { $seen: true }, size: 3300, receivedAt: daysAgo(4),
+    id: 'email-005', threadId: 'thread-005', mailboxIds: { 'mb-inbox': true, 'mb-green-circle': true }, keywords: { $seen: true, $flagged: true, 'Green circle': true }, size: 3300, receivedAt: daysAgo(4),
     from: [{ name: 'Bram Kuipers', email: 'bram@ietf-lists.example' }],
     to: [{ name: 'jmap', email: 'jmap@ietf-lists.example' }], cc: [],
     subject: 'Re: [jmap] $seen on a shared mailbox: per account or per message?',
@@ -984,6 +1017,7 @@ const IDENTITIES: MockIdentity[] = [
 const addressBooks: Array<Record<string, unknown> & { id: string; name: string }> = [
   { id: 'ab-1', name: 'Personal', isDefault: true },
   { id: 'ab-2', name: 'Work', isDefault: false },
+  { id: 'ab-important', name: 'Important', isDefault: false },
 ];
 
 // Profile photos served straight from randomuser.me's CDN; the API at
@@ -993,6 +1027,12 @@ const addressBooks: Array<Record<string, unknown> & { id: string; name: string }
 const PORTRAIT = (gender: 'men' | 'women', n: number) => `https://randomuser.me/api/portraits/${gender}/${n}.jpg`;
 
 const contacts = [
+  // --- Important address book ---
+  { id: 'contact-imp-1', uid: 'urn:uuid:c0000099-0000-0000-0000-000000000099', addressBookIds: { 'ab-important': true }, kind: 'individual',
+    name: { components: [{ kind: 'given', value: 'Sophie' }, { kind: 'surname', value: 'Müller' }] },
+    emails: { e1: { address: 'sophie@eurotech.example' } },
+    organizations: { o1: { name: 'EuroTech GmbH' } },
+  },
   // --- Personal address book ---
   { id: 'contact-001', uid: 'urn:uuid:c0000001-0000-0000-0000-000000000001', addressBookIds: { 'ab-1': true }, kind: 'individual',
     name: { components: [{ kind: 'given', value: 'Sophie' }, { kind: 'surname', value: 'Müller' }] },
@@ -1609,7 +1649,25 @@ function handleEmailQuery(args: MethodArgs, callId: string): MethodResult {
       return result;
     }
     if (f.inMailbox) {
-      result = result.filter((e) => e.mailboxIds[f.inMailbox as string]);
+      const mbId = f.inMailbox as string;
+      if (mbId === 'mb-starred') {
+        result = result.filter((e) => e.keywords.$flagged && !e.mailboxIds['mb-trash']);
+      } else if (mbId === 'mb-unread') {
+        result = result.filter((e) => !e.keywords.$seen && !e.mailboxIds['mb-trash']);
+      } else if (mbId === 'mb-important') {
+        const impBook = addressBooks.find(b => b.name === 'Important');
+        const impContacts = impBook ? contacts.filter(c => (c.addressBookIds as unknown as Record<string, boolean> | undefined)?.[impBook.id]) : [];
+        const impEmails = new Set(
+          impContacts.flatMap(c => Object.values(c.emails || {}).map(ea => ((ea as { address?: string }).address || '').toLowerCase().trim()))
+        );
+        result = result.filter(
+          (e) => (e.keywords.$important || (e.from?.[0]?.email && impEmails.has(e.from[0].email.toLowerCase().trim()))) && !e.mailboxIds['mb-trash']
+        );
+      } else if (mbId === 'mb-all') {
+        result = result.filter((e) => !e.mailboxIds['mb-trash']);
+      } else {
+        result = result.filter((e) => e.mailboxIds[mbId]);
+      }
     }
     if (f.text) {
       const q = (f.text as string).toLowerCase();

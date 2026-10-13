@@ -45,25 +45,27 @@ interface IdentityFormData {
 
 interface IdentityFormProps {
   identity?: Identity;
+  availableEmails?: string[];
   onSave: (data: IdentityFormData) => Promise<void>;
   onCancel: () => void;
 }
 
-export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) {
+export function IdentityForm({ identity, availableEmails, onSave, onCancel }: IdentityFormProps) {
   const t = useTranslations('identities.form');
   const tValidation = useTranslations('identities.validation_errors');
   const tDisplay = useTranslations('identities.display');
   const isEditing = !!identity;
-  // When identity management is disabled (comail prod, chainlink #1790) the
-  // From-address is constrained to the relay-provisioned alias set: the email
-  // field is locked in BOTH create and edit modes so a member cannot mint an
-  // arbitrary From-identity. Display name + signature stay editable.
+  // Default identities (Comail default and Google default) cannot have their From-address changed.
+  // Custom identities recycling an available address may change their recycled email.
+  // When identity management is disabled (comail prod, chainlink #1790), email is locked.
   const { identityManagementEnabled } = useConfig();
-  const emailLocked = isEditing || !identityManagementEnabled;
+  const emailLocked = (isEditing && !identity?.mayDelete) || !identityManagementEnabled;
+
+  const defaultEmail = identity?.email || (availableEmails && availableEmails.length > 0 ? availableEmails[0] : '');
 
   const [formData, setFormData] = useState<IdentityFormData>({
     name: identity?.name || '',
-    email: identity?.email || '',
+    email: defaultEmail,
     replyTo: identity?.replyTo,
     bcc: identity?.bcc,
     textSignature: identity?.textSignature || '',
@@ -183,18 +185,38 @@ export function IdentityForm({ identity, onSave, onCancel }: IdentityFormProps) 
         <label htmlFor="identity-email" className="block text-sm font-medium mb-1">
           {t('email_label')} <span className="text-destructive">*</span>
         </label>
-        <Input
-          id="identity-email"
-          type="email"
-          maxLength={254}
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          placeholder={t('email_placeholder')}
-          disabled={isSubmitting || emailLocked}
-          className={errors.email ? 'border-destructive' : ''}
-          aria-describedby={errors.email ? 'email-error' : undefined}
-          aria-invalid={!!errors.email}
-        />
+        {availableEmails && availableEmails.length > 0 && !emailLocked ? (
+          <select
+            id="identity-email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            disabled={isSubmitting || emailLocked}
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={t('email_label')}
+            aria-describedby={errors.email ? 'email-error' : undefined}
+            aria-invalid={!!errors.email}
+          >
+            {!formData.email && <option value="">{t('email_placeholder')}</option>}
+            {availableEmails.map((email) => (
+              <option key={email} value={email}>
+                {email}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <Input
+            id="identity-email"
+            type="email"
+            maxLength={254}
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder={t('email_placeholder')}
+            disabled={isSubmitting || emailLocked}
+            className={errors.email ? 'border-destructive' : ''}
+            aria-describedby={errors.email ? 'email-error' : undefined}
+            aria-invalid={!!errors.email}
+          />
+        )}
         {emailLocked && (
           <p className="text-sm text-muted-foreground mt-1">
             {t('email_immutable')}

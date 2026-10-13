@@ -117,7 +117,9 @@
       "starred": "已加星號",
       "all_mail": "所有郵件",
       "spam": "垃圾郵件",
-      "important": "重要"
+      "important": "重要",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "整合收件匣",
     "unified_sent": "所有寄件備份",
@@ -169,7 +171,9 @@
     "mv_next_day": "後一天",
     "mv_add_another_account": "新增其他帳戶",
     "mv_manage_account": "管理您的帳戶",
-    "mv_storage_used": "已使用 {total} 中的 {percent}%"
+    "mv_storage_used": "已使用 {total} 中的 {percent}%",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "預設應用程式",
@@ -490,7 +494,9 @@
       "compose": "撰寫郵件 (c)",
       "previous": "上一封郵件",
       "next": "下一封郵件",
-      "edit_draft": "編輯草稿"
+      "edit_draft": "編輯草稿",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "回報垃圾郵件",
@@ -625,7 +631,12 @@
       "copied": "驗證碼已複製",
       "copy_failed": "無法複製驗證碼"
     },
-    "mv_position": "第 {index} 封，共 {total} 封"
+    "mv_position": "第 {index} 封，共 {total} 封",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "最小化",
@@ -1289,7 +1300,10 @@
         "add_all": "全部新增（{count}）",
         "partial": "僅掃描 {total} 封郵件中最新的 {scanned} 封。只出現在較舊郵件的標籤可能遺漏。",
         "error": "無法掃描郵件中的標籤。"
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "測試通知聲音",
@@ -1608,7 +1622,8 @@
         "corner_top-left": "左上",
         "corner_top-right": "右上",
         "corner_bottom-left": "左下",
-        "corner_bottom-right": "右下"
+        "corner_bottom-right": "右下",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "預設郵件應用程式",
@@ -2144,7 +2159,18 @@
       "error_delete": "無法刪除信件匣",
       "error_delete_has_children": "無法刪除信件匣：其中仍有子信件匣。請先刪除或移動它們。",
       "error_delete_has_email": "無法刪除信件匣：其中仍有郵件。請先移動或刪除這些郵件。",
-      "error_role": "無法更新信件匣角色"
+      "error_role": "無法更新信件匣角色",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "進階",

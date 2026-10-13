@@ -53,7 +53,41 @@ describe('FolderSettings role label for the Scheduled mailbox (#495)', () => {
 
   it('renders the role badge through the role_scheduled key', () => {
     render(<FolderSettings />);
-    // The test i18n mock echoes the key, so the badge shows the key itself.
-    expect(screen.getByText('role_scheduled')).toBeInTheDocument();
+    // The test i18n mock echoes the key, so the badge and standard role label show the key.
+    const elements = screen.getAllByText('role_scheduled');
+    expect(elements.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders the junk/spam role badge through the role_junk key', () => {
+    useEmailStore.setState({
+      mailboxes: [
+        makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
+        makeMailbox({ id: 'spam', name: 'Spam', role: 'junk' }),
+      ],
+      fetchMailboxes: vi.fn(),
+    } as never);
+
+    render(<FolderSettings />);
+    const elements = screen.getAllByText('role_junk');
+    expect(elements.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('renders standard roles for starred, unread, important, and all', () => {
+    useEmailStore.setState({
+      mailboxes: [
+        makeMailbox({ id: 'inbox', name: 'Inbox', role: 'inbox' }),
+        makeMailbox({ id: 'starred', name: 'Starred', role: 'starred' }),
+        makeMailbox({ id: 'unread', name: 'Unread', role: 'unread' }),
+        makeMailbox({ id: 'important', name: 'Important', role: 'important' }),
+        makeMailbox({ id: 'all', name: 'All Mail', role: 'all' }),
+      ],
+      fetchMailboxes: vi.fn(),
+    } as never);
+
+    render(<FolderSettings />);
+    expect(screen.getAllByText('role_starred').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('role_unread').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('role_important').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('role_all').length).toBeGreaterThanOrEqual(1);
   });
 });

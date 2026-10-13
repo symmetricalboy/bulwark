@@ -117,7 +117,9 @@
       "starred": "ستاره‌دار",
       "all_mail": "همه ایمیل‌ها",
       "spam": "هرزنامه",
-      "important": "مهم"
+      "important": "مهم",
+      "unread": "Unread",
+      "scheduled": "Scheduled"
     },
     "unified_inbox": "صندوق ورودی یکپارچه",
     "unified_sent": "همه ارسال‌ها",
@@ -169,7 +171,9 @@
     "mv_next_day": "روز بعد",
     "mv_add_another_account": "افزودن حساب دیگر",
     "mv_manage_account": "مدیریت حساب",
-    "mv_storage_used": "{percent}٪ از {total} استفاده شده"
+    "mv_storage_used": "{percent}٪ از {total} استفاده شده",
+    "all_inboxes": "All Inboxes",
+    "categories": "Categories"
   },
   "protocol_handlers": {
     "title": "برنامه‌های پیش‌فرض",
@@ -490,7 +494,9 @@
       "compose": "ایمیل جدید (c)",
       "previous": "ایمیل قبلی",
       "next": "ایمیل بعدی",
-      "edit_draft": "ویرایش پیش‌نویس"
+      "edit_draft": "ویرایش پیش‌نویس",
+      "important": "Mark as important",
+      "unimportant": "Mark as not important"
     },
     "spam": {
       "button_title": "گزارش هرزنامه",
@@ -625,7 +631,12 @@
       "copied": "کد کپی شد",
       "copy_failed": "کپی کد ممکن نشد"
     },
-    "mv_position": "{index} از {total}"
+    "mv_position": "{index} از {total}",
+    "mark_important": "Mark as important",
+    "mark_not_important": "Mark as not important",
+    "important_sender": "Important Sender",
+    "mark_sender_important": "Mark sender as important",
+    "remove_sender_important": "Remove sender from important"
   },
   "email_composer": {
     "minimize": "کوچک کردن",
@@ -1289,7 +1300,10 @@
         "add_all": "افزودن همه ({count})",
         "partial": "فقط {scanned} ایمیل جدیدتر از مجموع {total} بررسی شد. برچسب‌هایی که تنها در ایمیل‌های قدیمی‌تر به کار رفته‌اند ممکن است نمایش داده نشوند.",
         "error": "بررسی ایمیل‌ها برای یافتن برچسب‌ها ناموفق بود."
-      }
+      },
+      "hide_tag": "Hide from sidebar",
+      "show_tag": "Show in sidebar",
+      "hidden": "Hidden"
     },
     "notifications": {
       "test_sound": "تست صدای اعلان",
@@ -1608,7 +1622,8 @@
         "corner_top-right": "بالا راست",
         "corner_bottom-left": "پایین چپ",
         "corner_bottom-right": "پایین راست",
-        "not_spam": "هرزنامه نیست"
+        "not_spam": "هرزنامه نیست",
+        "important": "Mark Important / Unimportant"
       },
       "default_mail_program": {
         "label": "برنامه ایمیل پیش‌فرض",
@@ -2144,7 +2159,18 @@
       "error_delete": "حذف پوشه ناموفق بود",
       "error_delete_has_children": "نمی‌توان پوشه را حذف کرد: همچنان زیرپوشه دارد. ابتدا آنها را حذف یا منتقل کنید.",
       "error_delete_has_email": "نمی‌توان پوشه را حذف کرد: همچنان حاوی ایمیل است. ابتدا آنها را منتقل یا حذف کنید.",
-      "error_role": "به‌روزرسانی نقش پوشه ناموفق بود"
+      "error_role": "به‌روزرسانی نقش پوشه ناموفق بود",
+      "reset_order": "Reset folder order",
+      "reset_order_description": "Restore the default folder ordering",
+      "order_reset_success": "Folder order reset to default",
+      "hide_folder": "Hide from sidebar",
+      "show_folder": "Show in sidebar",
+      "hidden": "Hidden",
+      "role_starred": "Starred",
+      "role_unread": "Unread",
+      "role_important": "Important",
+      "role_all": "All Mail",
+      "role_all_mail": "All Mail"
     },
     "advanced": {
       "title": "پیشرفته",

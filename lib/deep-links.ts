@@ -46,6 +46,11 @@ export function parseScheduledMailboxId(mailboxId: string): { isScheduled: boole
   if (mailboxId.startsWith(`${SCHEDULED_MAILBOX_ID}:`)) {
     return { isScheduled: true, accountId: mailboxId.slice(SCHEDULED_MAILBOX_ID.length + 1) || null };
   }
+  if (mailboxId.startsWith('google:') && mailboxId.toUpperCase().endsWith('::SCHEDULED')) {
+    const withoutPrefix = mailboxId.slice(7);
+    const accountEmail = withoutPrefix.split('::')[0];
+    return { isScheduled: true, accountId: `google:${accountEmail}` };
+  }
   return { isScheduled: false, accountId: null };
 }
 

@@ -323,7 +323,7 @@ export function CalendarSidebarPanel({
           data-account={cal.accountName ?? ''}
           data-visible={isVisible}
           className={cn(
-            "flex items-center gap-2 w-full ps-5 pe-3 text-sm text-foreground/80 transition-colors duration-150",
+            "mx-2 w-[calc(100%-16px)] rounded-md flex items-center gap-2 ps-3.5 pe-3 text-sm text-foreground/80 transition-colors duration-150",
             "hover:bg-muted",
             hasMenu && "pe-9"
           )}

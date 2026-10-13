@@ -27,6 +27,7 @@ import { usePolicyStore } from "@/stores/policy-store";
 import { toast } from "@/stores/toast-store";
 import { cn, generateUUID } from "@/lib/utils";
 import { NavigationRail } from "@/components/layout/navigation-rail";
+import { AppNavRail } from "@/components/layout/app-layout";
 import { SidebarAppsModal } from "@/components/layout/sidebar-apps-modal";
 import { InlineAppView } from "@/components/layout/inline-app-view";
 import { useSidebarApps } from "@/hooks/use-sidebar-apps";
@@ -34,7 +35,6 @@ import { useIsEmbedded } from "@/hooks/use-is-embedded";
 import { useIsFocusedProTab } from "@/hooks/use-pane-context";
 import { useProMultiAccountContacts } from "@/hooks/use-pro-multi-account-contacts";
 import { useConfig } from "@/hooks/use-config";
-import { ResizeHandle } from "@/components/layout/resize-handle";
 import { useIsDesktop, useIsMobile } from "@/hooks/use-media-query";
 import { useRefreshGesture } from "@/hooks/use-refresh-gesture";
 import type { ContactCard, AddressBook, AddressBookRights } from "@/lib/jmap/types";
@@ -147,19 +147,7 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
 
-  // Panel resize state - sidebar (categories)
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    try { const v = localStorage.getItem("contacts-sidebar-width"); return v ? Number(v) : 256; } catch { return 256; }
-  });
-  const [isSidebarResizing, setIsSidebarResizing] = useState(false);
-  const sidebarDragStartWidth = useRef(256);
-
-  // Panel resize state - contact list
-  const [listWidth, setListWidth] = useState(() => {
-    try { const v = localStorage.getItem("contacts-list-width"); return v ? Number(v) : 384; } catch { return 384; }
-  });
-  const [isListResizing, setIsListResizing] = useState(false);
-  const listDragStartWidth = useRef(384);
+  const CONTACT_LIST_FIXED_WIDTH = 368;
 
   // Check auth on mount – skip when already authenticated so that navigating
   // between routes doesn't retrigger checkAuth's transient `{ client: null,
@@ -924,18 +912,15 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
       <div data-mv-card={mvShell ? "" : undefined} className={cn("flex flex-1 min-h-0 overflow-hidden", isMobile && "flex-col", mvShell && "mb-4 mx-4")}>
       {/* Navigation Rail - desktop only (hidden when embedded in Pro shell) */}
       {!isMobile && !isEmbedded && !mvShell && (
-        <div className="w-14 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-          <NavigationRail
-            collapsed
-            quota={quota}
-            isPushConnected={isPushConnected}
-            onLogout={logout}
-            onManageApps={handleManageApps}
-            onInlineApp={handleInlineApp}
-            onCloseInlineApp={closeInlineApp}
-            activeAppId={inlineApp?.id ?? null}
-          />
-        </div>
+        <AppNavRail
+          quota={quota}
+          isPushConnected={isPushConnected}
+          onLogout={logout}
+          onManageApps={handleManageApps}
+          onInlineApp={handleInlineApp}
+          onCloseInlineApp={closeInlineApp}
+          activeAppId={inlineApp?.id ?? null}
+        />
       )}
 
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
@@ -957,19 +942,17 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
             <>
               {/* Panel 1: Categories sidebar (in-flow on desktop, overlay on narrow) */}
               {(!isMobile || isNarrow) && (
-                <>
-                  <div
-                    className={cn(
-                      "border-e border-border flex flex-col flex-shrink-0 bg-background",
-                      !isSidebarResizing && "transition-[width] duration-300",
-                      isNarrow && cn(
-                        "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
-                        "transform transition-transform duration-300 ease-in-out",
-                        !narrowSidebarOpen && "-translate-x-full"
-                      )
-                    )}
-                    style={isNarrow ? undefined : { width: `${sidebarWidth}px` }}
-                  >
+                <div
+                  className={cn(
+                    "border-e border-border flex flex-col flex-shrink-0 bg-secondary",
+                    isNarrow && cn(
+                      "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+                      "transform transition-transform duration-300 ease-in-out",
+                      !narrowSidebarOpen && "-translate-x-full"
+                    )
+                  )}
+                  style={isNarrow ? undefined : { width: "272px" }}
+                >
                     <ContactsSidebar
                       groups={groups}
                       individuals={individuals}
@@ -1026,29 +1009,16 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                       multiAccountMode={multiAccountEnabled && accountClients.length > 1}
                     />
                   </div>
-                  {!isNarrow && (
-                    <ResizeHandle
-                      onResizeStart={() => { sidebarDragStartWidth.current = sidebarWidth; setIsSidebarResizing(true); }}
-                      onResize={(delta) => setSidebarWidth(Math.max(180, Math.min(400, sidebarDragStartWidth.current + delta)))}
-                      onResizeEnd={() => {
-                        setIsSidebarResizing(false);
-                        localStorage.setItem("contacts-sidebar-width", String(sidebarWidth));
-                      }}
-                      onDoubleClick={() => { setSidebarWidth(256); localStorage.setItem("contacts-sidebar-width", "256"); }}
-                    />
-                  )}
-                </>
               )}
 
-              {/* Panel 2: Contact list */}
+              {/* Panel 2: Contact list (fixed width 368px matching Mail) */}
               <div
                 data-tour="contacts-list"
                 className={cn(
                   "border-e border-border bg-background flex flex-col flex-shrink-0",
-                  isMobile ? "w-full" : "",
-                  !isListResizing && !isMobile && "transition-[width] duration-300"
+                  isMobile ? "w-full" : "w-[368px]"
                 )}
-                style={!isMobile ? { width: `${listWidth}px` } : undefined}
+                style={!isMobile ? { width: `${CONTACT_LIST_FIXED_WIDTH}px` } : undefined}
               >
                 <ContactList
                   contacts={displayedContacts}
@@ -1073,18 +1043,6 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                   isLoading={supportsSync && !contactsLoaded}
                 />
               </div>
-
-              {!isMobile && (
-                <ResizeHandle
-                  onResizeStart={() => { listDragStartWidth.current = listWidth; setIsListResizing(true); }}
-                  onResize={(delta) => setListWidth(Math.max(220, Math.min(500, listDragStartWidth.current + delta)))}
-                  onResizeEnd={() => {
-                    setIsListResizing(false);
-                    localStorage.setItem("contacts-list-width", String(listWidth));
-                  }}
-                  onDoubleClick={() => { setListWidth(384); localStorage.setItem("contacts-list-width", "384"); }}
-                />
-              )}
             </>
           )}
 

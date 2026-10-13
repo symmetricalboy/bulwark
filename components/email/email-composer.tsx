@@ -388,6 +388,41 @@ export function EmailComposer({
     ? multiAccountIdentities.groups
     : [];
   const primaryIdentity = activeIdentities[0] ?? null;
+
+  const computedGroups = useMemo(() => {
+    if (identityGroups.length > 0) return identityGroups;
+
+    const hasGoogle = identities.some(i => i.id.startsWith('google') || i.email.includes('@gmail.com'));
+    if (!hasGoogle) return [];
+
+    const comailIds = identities.filter(i => !i.id.startsWith('google') && !i.email.includes('@gmail.com'));
+    const googleIds = identities.filter(i => i.id.startsWith('google') || i.email.includes('@gmail.com'));
+
+    const groups: { localAccountId: string; accountLabel: string; identities: typeof identities }[] = [];
+    if (comailIds.length > 0) {
+      groups.push({
+        localAccountId: 'comail',
+        accountLabel: `Comail (${comailIds[0]?.email})`,
+        identities: comailIds,
+      });
+    }
+    if (googleIds.length > 0) {
+      const byGoogleEmail = new Map<string, typeof identities>();
+      for (const gid of googleIds) {
+        const list = byGoogleEmail.get(gid.email) || [];
+        list.push(gid);
+        byGoogleEmail.set(gid.email, list);
+      }
+      for (const [email, list] of byGoogleEmail.entries()) {
+        groups.push({
+          localAccountId: `google:${email}`,
+          accountLabel: `Google (${email})`,
+          identities: list,
+        });
+      }
+    }
+    return groups;
+  }, [identityGroups, identities]);
   // The account this composer belongs to (see composerAccountIdRef above).
   const activeAccountId = composerAccountIdRef.current;
   // Automatic selection stays on the account that holds the original message:
@@ -723,9 +758,6 @@ export function EmailComposer({
   const [shakeField, setShakeField] = useState<string | null>(null);
   const [selectedIdentityId, setSelectedIdentityId] = useState<string | null>(initialData?.selectedIdentityId ?? null);
   const [subAddressTag, setSubAddressTag] = useState<string>(initialData?.subAddressTag ?? '');
-  const [fromOverrideEnabled, setFromOverrideEnabled] = useState<boolean>(initialData?.fromOverrideEnabled ?? false);
-  const [fromOverrideEmail, setFromOverrideEmail] = useState<string>(initialData?.fromOverrideEmail ?? '');
-  const [fromOverrideName, setFromOverrideName] = useState<string>(initialData?.fromOverrideName ?? '');
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   // The Files account being browsed for attachments, fixed when the picker
   // opens so the picked blobs are tagged with the login that owns them.
@@ -861,16 +893,6 @@ export function EmailComposer({
     }
     return null;
   }, [mode, replyTo, initialData?.inReplyTo, initialData?.references]);
-  // A From override is asked for as the envelope MAIL FROM too, but a server
-  // may only accept the identity's own address there (Stalwart does), which
-  // then shows in the Return-Path. Unless one of the account's identities owns
-  // the override address - the send goes through that one - say so (#1009).
-  const overrideAddress = fromOverrideEnabled ? fromOverrideEmail.trim().toLowerCase() : '';
-  const overrideEnvelopeFallback = overrideAddress && currentIdentity?.email
-    && !identities.some((identity) => identity.email.toLowerCase() === overrideAddress
-      && stripCrossAccountIdentityPrefix(identity.id).localAccountId === currentIdentityParts.localAccountId)
-    ? currentIdentity.email
-    : null;
   // Alias identities often lack a configured signature - fall back to the primary
   // identity's signature so replies (which auto-select a matching alias) still
   // populate the user's signature.
@@ -1027,11 +1049,6 @@ export function EmailComposer({
       const resolved = resolveReplyFrom(sourceAccountIdentities, recipients, replyIdentityMatch);
       if (resolved) {
         setSelectedIdentityId(resolved.identityId);
-        if (resolved.overrideEmail && !fromOverrideEnabled) {
-          setFromOverrideEnabled(true);
-          setFromOverrideEmail(resolved.overrideEmail);
-          if (resolved.overrideName) setFromOverrideName(resolved.overrideName);
-        }
         return;
       }
     }
@@ -1051,7 +1068,6 @@ export function EmailComposer({
     autoSelectReplyIdentity,
     replyIdentityMatch,
     composeFromAccountEmail,
-    fromOverrideEnabled,
     identities,
     sourceAccountIdentities,
     sourceAccountId,
@@ -1253,8 +1269,8 @@ export function EmailComposer({
     }));
 
   // Keep a ref to current state for the unmount save
-  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode });
-  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, fromOverrideEnabled, fromOverrideEmail, fromOverrideName, attachments: snapshotAttachments(), plainTextMode };
+  const stateRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, attachments: snapshotAttachments(), plainTextMode });
+  stateRef.current = { to: toStr, cc: ccStr, bcc: bccStr, subject, body, showCc, showBcc, selectedIdentityId, subAddressTag, draftId, attachments: snapshotAttachments(), plainTextMode };
 
   // Track initial values for dirty detection (captured once on first render)
   const initialValuesRef = useRef({ to: toStr, cc: ccStr, bcc: bccStr, subject, body, attachmentCount: attachments.length });
@@ -2136,12 +2152,8 @@ export function EmailComposer({
         ? generateSubAddress(currentIdentity.email, subAddressTag, subAddressDelimiter)
         : currentIdentity.email
       : undefined;
-    const fromEmail = (fromOverrideEnabled && fromOverrideEmail.trim())
-      ? fromOverrideEmail.trim()
-      : identityFromEmail;
-    const fromName = (fromOverrideEnabled && fromOverrideEmail.trim())
-      ? (fromOverrideName.trim() || undefined)
-      : (currentIdentity?.name || undefined);
+    const fromEmail = identityFromEmail;
+    const fromName = currentIdentity?.name || undefined;
 
     try {
       const previousDraftId = draftIdRef.current;
@@ -2579,12 +2591,9 @@ export function EmailComposer({
     // envelope MAIL FROM too, so the Return-Path doesn't reveal the identity's
     // address (#1009). A server that only accepts the identity's own address
     // there gets that instead; the From row says so before sending.
-    const overrideActive = fromOverrideEnabled && fromOverrideEmail.trim().length > 0;
-    const fromEmail = overrideActive ? fromOverrideEmail.trim() : identityFromEmail;
-    const fromName = overrideActive
-      ? (fromOverrideName.trim() || undefined)
-      : (currentIdentity?.name || undefined);
-    const envelopeMailFrom = overrideActive ? fromEmail : undefined;
+    const fromEmail = identityFromEmail;
+    const fromName = currentIdentity?.name || undefined;
+    const envelopeMailFrom = undefined;
 
     // Body is already HTML from the rich text editor (or plain text in plain
     // text mode). Where the signature is already part of it (compose mode,
@@ -2805,7 +2814,7 @@ export function EmailComposer({
       setScheduleValue('');
       setScheduleError('');
       // Clear ref so unmount effect doesn't re-save
-      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+      stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, attachments: [], plainTextMode };
       // The host closes the composer from onSend or onScheduledSendCreated;
       // a send the plugin made itself reaches neither (#1207).
       if (sendHandledByPlugin && !effectiveDelayedUntil) cleanClose();
@@ -2885,7 +2894,7 @@ export function EmailComposer({
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, attachments: [], plainTextMode };
     emitClose();
   };
 
@@ -2910,7 +2919,7 @@ export function EmailComposer({
         toast.error(t('save_failed'));
         explicitCloseRef.current = false;
       } else {
-        stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+        stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, attachments: [], plainTextMode };
       }
     } finally {
       emitClose();
@@ -2927,7 +2936,7 @@ export function EmailComposer({
     if (draftId && onDiscardDraft) {
       onDiscardDraft(draftId);
     }
-    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, fromOverrideEnabled: false, fromOverrideEmail: '', fromOverrideName: '', attachments: [], plainTextMode };
+    stateRef.current = { to: '', cc: '', bcc: '', subject: '', body: '', showCc: false, showBcc: false, selectedIdentityId: null, subAddressTag: '', draftId: null, attachments: [], plainTextMode };
     emitClose();
   };
 
@@ -3219,36 +3228,18 @@ export function EmailComposer({
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50">
             <span className="text-sm text-muted-foreground w-12 md:w-16 shrink-0">{t('from')}:</span>
             <div className="flex-1 flex items-center gap-1 min-w-0">
-              {fromOverrideEnabled ? (
-                <div className="flex-1 flex items-center gap-1 min-w-0">
-                  <Input
-                    value={fromOverrideName}
-                    onChange={(e) => setFromOverrideName(e.target.value)}
-                    placeholder={t('from_override.name_placeholder')}
-                    className="h-7 text-sm w-32 md:w-40 shrink-0"
-                    aria-label={t('from_override.name_label')}
-                  />
-                  <Input
-                    value={fromOverrideEmail}
-                    onChange={(e) => setFromOverrideEmail(e.target.value)}
-                    placeholder={t('from_override.email_placeholder')}
-                    type="email"
-                    className="h-7 text-sm flex-1 min-w-0 font-mono"
-                    aria-label={t('from_override.email_label')}
-                  />
-                </div>
-              ) : identities.length > 1 ? (
+              {identities.length > 1 ? (
                 <select
                   data-testid="composer-from"
                   value={selectedIdentityId || primaryIdentity?.id || ''}
                   onChange={(e) => setSelectedIdentityId(e.target.value)}
                   className="flex-1 bg-transparent text-sm text-foreground outline-none cursor-pointer hover:text-muted-foreground transition-colors min-w-0 truncate"
                 >
-                  {identityGroups.length > 0
-                    ? identityGroups.map((group) => (
+                  {computedGroups.length > 0
+                    ? computedGroups.map((group) => (
                         <optgroup key={group.localAccountId} label={toUnicodeEmail(group.accountLabel)}>
                           {group.identities.map((identity) => {
-                            const displayEmail = toUnicodeEmail(subAddressTag
+                            const displayEmail = toUnicodeEmail(subAddressTag && identity.id === (selectedIdentityId || primaryIdentity?.id)
                               ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
                               : identity.email);
                             return (
@@ -3260,7 +3251,7 @@ export function EmailComposer({
                         </optgroup>
                       ))
                     : identities.map((identity) => {
-                        const displayEmail = toUnicodeEmail(subAddressTag
+                        const displayEmail = toUnicodeEmail(subAddressTag && identity.id === (selectedIdentityId || primaryIdentity?.id)
                           ? generateSubAddress(identity.email, subAddressTag, subAddressDelimiter)
                           : identity.email);
                         return (
@@ -3285,18 +3276,16 @@ export function EmailComposer({
                   )}
                 </span>
               )}
-              {!fromOverrideEnabled && (
-                <SubAddressHelper
-                  baseEmail={
-                    (selectedIdentityId
-                      ? identities.find(id => id.id === selectedIdentityId)?.email
-                      : primaryIdentity?.email) || ''
-                  }
-                  recipientEmails={withInput(to, toInput).map(r => r.email)}
-                  onSelectTag={setSubAddressTag}
-                />
-              )}
-              {!fromOverrideEnabled && subAddressTag && (
+              <SubAddressHelper
+                baseEmail={
+                  (selectedIdentityId
+                    ? identities.find(id => id.id === selectedIdentityId)?.email
+                    : primaryIdentity?.email) || ''
+                }
+                recipientEmails={withInput(to, toInput).map(r => r.email)}
+                onSelectTag={setSubAddressTag}
+              />
+              {subAddressTag && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -3308,35 +3297,8 @@ export function EmailComposer({
                   <X className="w-3 h-3" />
                 </Button>
               )}
-              <Button
-                type="button"
-                variant={fromOverrideEnabled ? 'outline' : 'ghost'}
-                size="sm"
-                onClick={() => {
-                  if (fromOverrideEnabled) {
-                    setFromOverrideEnabled(false);
-                  } else {
-                    setFromOverrideEnabled(true);
-                    if (!fromOverrideEmail && currentIdentity?.email) {
-                      setFromOverrideEmail(currentIdentity.email);
-                    }
-                    if (!fromOverrideName && currentIdentity?.name) {
-                      setFromOverrideName(currentIdentity.name);
-                    }
-                  }
-                }}
-                className="h-6 px-2 text-xs shrink-0"
-                title={t('from_override.toggle_tooltip')}
-              >
-                {fromOverrideEnabled ? t('from_override.toggle_on') : t('from_override.toggle_off')}
-              </Button>
             </div>
           </div>
-          {overrideEnvelopeFallback && (
-            <p className="ps-[4.5rem] md:ps-[5.5rem] pe-4 py-1.5 text-xs text-muted-foreground border-b border-border/50">
-              {t('from_override.envelope_notice', { identity: overrideEnvelopeFallback })}
-            </p>
-          )}
 
           {/* To field */}
           <div data-testid="composer-to" className={cn("flex items-center gap-2 px-4 py-2.5 border-b border-border/50 relative", shakeField === 'to' && "animate-shake")}>

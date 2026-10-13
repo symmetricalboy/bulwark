@@ -12,6 +12,7 @@ import { toast } from "@/stores/toast-store";
 import { useProTabStore, registerProTabCloseInterceptor, type ProComposeTabData } from "@/stores/pro-tab-store";
 import { debug } from "@/lib/debug";
 import { threadKeyFor } from "@/lib/thread-utils";
+import { sendGoogleEmail, isGoogleSender } from "@/lib/google/google-mail-client";
 
 interface ProComposeTabBodyProps {
   tabId: string;
@@ -64,9 +65,61 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
     const sendClient = sendData.localAccountId
       ? (useAuthStore.getState().getClientForAccount(sendData.localAccountId) ?? client)
       : client;
-    // See the inline composer's handleEmailSend: a resolved onSend tells the
-    // composer the message is gone and it clears itself, so a genuine send
-    // failure has to propagate rather than be logged away (#702).
+    // Check if sending as a connected Google Account
+    if (isGoogleSender(sendData.fromEmail, sendData.localAccountId, sendData.identityId)) {
+      try {
+        let googleAttachments: Array<{ filename: string; contentType: string; contentBase64: string; cid?: string }> | undefined;
+        if (sendData.attachments && sendData.attachments.length > 0) {
+          googleAttachments = [];
+          for (const att of sendData.attachments) {
+            if (att.blobId && client) {
+              try {
+                const buffer = await client.fetchBlobArrayBuffer(att.blobId, att.name, att.type);
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                  binary += String.fromCharCode(bytes[i]);
+                }
+                googleAttachments.push({
+                  filename: att.name,
+                  contentType: att.type || 'application/octet-stream',
+                  contentBase64: btoa(binary),
+                  cid: att.cid,
+                });
+              } catch (err) {
+                debug.error('Failed to fetch blob for Google email send:', err);
+              }
+            }
+          }
+        }
+
+        await sendGoogleEmail({
+          to: sendData.to,
+          cc: sendData.cc,
+          bcc: sendData.bcc,
+          subject: sendData.subject,
+          body: sendData.body,
+          htmlBody: sendData.htmlBody,
+          fromEmail: sendData.fromEmail,
+          fromName: sendData.fromName,
+          inReplyTo: sendData.inReplyTo?.[0],
+          references: sendData.references,
+          attachments: googleAttachments,
+        });
+
+        if (sendData.draftId && client) {
+          client.deleteEmail(sendData.draftId).catch(() => {});
+        }
+        toast.success(t('notifications.email_sent'));
+        closeTab(tabIdRef.current);
+        return;
+      } catch (err) {
+        debug.error('Failed to send email via Google:', err);
+        toast.error(t('notifications.error_sending'));
+        throw err;
+      }
+    }
+
     let submitted = false;
     try {
       const result = await sendEmail(

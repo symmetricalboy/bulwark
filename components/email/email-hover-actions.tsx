@@ -6,16 +6,21 @@ import { Email } from "@/lib/jmap/types";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { HoverAction } from "@/stores/settings-store";
 import { cn } from "@/lib/utils";
-import { Trash2, Star, Mail, MailOpen, Archive, Tag, ShieldAlert, ShieldCheck } from "@/components/icons";
+import { Trash2, Star, Mail, MailOpen, Archive, Tag, ShieldAlert, ShieldCheck, AlertTriangle } from "@/components/icons";
 import { useTranslations } from "next-intl";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { TagPicker } from "@/components/email/tag-picker";
 import { getEmailTagIds } from "@/lib/thread-utils";
+import { useContactStore } from "@/stores/contact-store";
+import type { GmailStarDefinition } from "@/lib/google/gmail-stars";
+import { withBasePath } from "@/lib/browser-navigation";
 
 interface EmailHoverActionsProps {
   email: Email;
   backgroundClassName?: string;
+  starInfo?: GmailStarDefinition | null;
   onToggleStar?: () => void;
+  onToggleImportant?: () => void;
   onMarkAsRead?: (read: boolean) => void;
   onDelete?: () => void;
   onArchive?: () => void;
@@ -64,6 +69,11 @@ const ACTION_CONFIG: Record<HoverAction, {
     titleKey: "spam",
     className: "hover:text-orange-600 dark:hover:text-orange-400",
   },
+  important: {
+    icon: AlertTriangle,
+    titleKey: "important",
+    className: "hover:text-pink-500 dark:hover:text-pink-400",
+  },
 };
 
 /** The quick actions as shipped, before the user reorders them. */
@@ -97,6 +107,7 @@ export function EmailHoverActions({
   email,
   backgroundClassName = "bg-muted",
   onToggleStar,
+  onToggleImportant,
   onMarkAsRead,
   onDelete,
   onArchive,
@@ -105,6 +116,7 @@ export function EmailHoverActions({
   isInJunk = false,
   onUndoSpam,
   spamApplicable = true,
+  starInfo,
 }: EmailHoverActionsProps) {
   const configuredHoverActions = useSettingsStore((state) => state.hoverActions);
   const mountainView = useSettingsStore((state) => state.interfaceLayout === 'mountain-view');
@@ -155,6 +167,9 @@ export function EmailHoverActions({
 
   const isUnread = !email.keywords?.$seen;
   const isStarred = email.keywords?.$flagged;
+  const senderEmail = email.from?.[0]?.email;
+  const isSenderImportant = useContactStore((s) => senderEmail ? s.isImportantSender(senderEmail) : false);
+  const isImportant = Boolean(email.keywords?.$important) || isSenderImportant;
   const currentTagIds = getEmailTagIds(email.keywords);
   const hoverBackgroundClassName = backgroundClassName;
 
@@ -170,6 +185,9 @@ export function EmailHoverActions({
         break;
       case "star":
         onToggleStar?.();
+        break;
+      case "important":
+        onToggleImportant?.();
         break;
       case "markRead":
         onMarkAsRead?.(isUnread);
@@ -221,7 +239,7 @@ export function EmailHoverActions({
         : isNotSpam
           ? ShieldCheck
           : Icon;
-    const title = isNotSpam ? t("not_spam") : t(config.titleKey);
+    const title = isNotSpam ? t("not_spam") : (actionId === "star" && isStarred && starInfo ? starInfo.name : t(config.titleKey));
     const className = isNotSpam
       ? "hover:text-green-600 dark:hover:text-green-400"
       : config.className;
@@ -242,12 +260,21 @@ export function EmailHoverActions({
           mountainView ? "p-2 rounded-full hover:text-foreground" : cn("p-1.5 rounded-md", className),
         )}
       >
-        <DisplayIcon
-          className={cn(
-            mountainView ? "w-5 h-5" : "w-4 h-4",
-            actionId === "star" && isStarred && "fill-amber-400 text-amber-400",
-          )}
-        />
+        {actionId === "star" && isStarred && starInfo ? (
+          <img
+            src={withBasePath(starInfo.iconPath)}
+            alt={starInfo.name}
+            className={cn(mountainView ? "w-5 h-5" : "w-4 h-4", "object-contain shrink-0")}
+          />
+        ) : (
+          <DisplayIcon
+            className={cn(
+              mountainView ? "w-5 h-5" : "w-4 h-4",
+              actionId === "star" && isStarred && "fill-amber-400 text-amber-400",
+              actionId === "important" && isImportant && "fill-pink-500/20 text-pink-500 dark:text-pink-400",
+            )}
+          />
+        )}
       </button>
     );
   });

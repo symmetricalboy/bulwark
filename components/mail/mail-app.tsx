@@ -43,6 +43,8 @@ import { ShareNotificationToaster } from "@/components/layout/share-notification
 import { CalendarEventNotificationToaster } from "@/components/layout/calendar-event-notification-toaster";
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useSettingsStore } from "@/stores/settings-store";
+import { sendGoogleEmail, isGoogleSender } from "@/lib/google/google-mail-client";
+import { syncGoogleIdentities } from "@/stores/identity-store";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useContactStore } from "@/stores/contact-store";
 import { useIdentityStore } from "@/stores/identity-store";
@@ -81,6 +83,7 @@ import { peekListAttachments, requestListAttachments, type ListAttachmentSource,
 import { useSearchHistoryStore } from "@/stores/search-history-store";
 import { WelcomeBanner } from "@/components/ui/welcome-banner";
 import { NavigationRail } from "@/components/layout/navigation-rail";
+import { AppNavRail, AppSidebar, AppSidebarHeader } from "@/components/layout/app-layout";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { MvSearchForm } from "@/components/search/mv-search-form";
 import { MvSidePanel } from "@/components/layout/mv-side-panel";
@@ -132,7 +135,6 @@ import {
   type MailDeepLink,
 } from "@/lib/deep-links";
 import { consumePendingDeepLink, subscribePendingDeepLink } from "@/lib/deep-link-handoff";
-import { withBasePath } from "@/lib/browser-navigation";
 import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import type { QuoteHeader } from "@/lib/plugin-types";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
@@ -268,6 +270,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   }, [trustedSendersAddressBook, client, trustedSendersLoaded, loadTrustedSendersBook]);
 
+  // Sync connected Google accounts' default identities
+  useEffect(() => {
+    syncGoogleIdentities().catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!isRateLimited || !rateLimitUntil) {
       setRateLimitSecondsLeft(null);
@@ -382,9 +389,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const mvShell = interfaceLayout === 'mountain-view' && !isMobile && !isTablet && !isEmbedded;
   const mvMobile = interfaceLayout === 'mountain-view' && isMobile && !isEmbedded;
   const isDesktopMail = !isMobile && !isTablet && !isEmbedded && !mvShell;
-  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
-  const activeThemeId = useThemeStore((s) => s.activeThemeId);
-  const isDarkSidebar = resolvedTheme === 'dark' || !activeThemeId || activeThemeId === 'builtin-comail';
   // Pane hosting (Pro shell). When this app renders inside a Pro pane, the
   // pane publishes its width and id; `isMobile` above is then pane-based,
   // and layout that would use viewport-fixed positioning must scope itself
@@ -396,9 +400,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   // Persisted column widths are viewport-sized; inside a (possibly split)
   // pane they must never exceed the pane, or the layout stays "squeezed"
   // after a split closes and reopens at a different size.
+  // Fixed width for message list: 400px
+  const EMAIL_LIST_FIXED_WIDTH = 400;
   const clampEmailListWidth = (width: number) =>
     paneWidth !== null ? Math.min(width, Math.max(220, Math.floor(paneWidth * 0.55))) : width;
-  const { activeView, sidebarOpen, setSidebarOpen, setActiveView, tabletListVisible, setTabletListVisible, emailListWidth, emailListHeight, setEmailListWidth, setEmailListHeight, persistColumnWidths, sidebarCollapsed, resetEmailListWidth, resetEmailListHeight } = useUIStore();
+  const { activeView, sidebarOpen, setSidebarOpen, setActiveView, tabletListVisible, setTabletListVisible, emailListHeight, setEmailListHeight, persistColumnWidths, sidebarCollapsed, resetEmailListHeight } = useUIStore();
   const {
     emails,
     mailboxes,
@@ -420,6 +426,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     deleteEmail,
     markAsRead,
     toggleStar,
+    toggleImportant,
     patchEmailKeywords,
     moveToMailbox,
     moveToMailboxCrossAware,
@@ -517,6 +524,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   useProMultiAccountMailboxes();
 
   const enableUnifiedMailbox = useSettingsStore((s) => s.enableUnifiedMailbox);
+  const scheduledFolderName = useSettingsStore((s) => s.scheduledFolderName);
   const delayedSendSupported = client?.hasDelayedSend() ?? true;
 
   // Cross-account "All accounts" views: a sub-feature of the unified mailbox, so
@@ -1154,7 +1162,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       const stored = localStorage.getItem("column-widths");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.emailListWidth) setEmailListWidth(parsed.emailListWidth);
         if (parsed.emailListHeight) setEmailListHeight(parsed.emailListHeight);
       }
     } catch { /* ignore parse errors */ }
@@ -1889,6 +1896,80 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     // the user's message without so much as a toast (#702).
     let submitted = false;
 
+    // Check if sending as a connected Google Account
+    if (isGoogleSender(data.fromEmail, data.localAccountId, data.identityId)) {
+      try {
+        const effectiveMode = pendingDraft?.mode ?? composerMode;
+        const originalEmailId = selectedEmail?.id;
+
+        let googleAttachments: Array<{ filename: string; contentType: string; contentBase64: string; cid?: string }> | undefined;
+        if (data.attachments && data.attachments.length > 0) {
+          googleAttachments = [];
+          for (const att of data.attachments) {
+            if (att.blobId && client) {
+              try {
+                const buffer = await client.fetchBlobArrayBuffer(att.blobId, att.name, att.type);
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                  binary += String.fromCharCode(bytes[i]);
+                }
+                googleAttachments.push({
+                  filename: att.name,
+                  contentType: att.type || 'application/octet-stream',
+                  contentBase64: btoa(binary),
+                  cid: att.cid,
+                });
+              } catch (err) {
+                debug.error('Failed to fetch blob for Google email send:', err);
+              }
+            }
+          }
+        }
+
+        await sendGoogleEmail({
+          to: data.to,
+          cc: data.cc,
+          bcc: data.bcc,
+          subject: data.subject,
+          body: data.body,
+          htmlBody: data.htmlBody,
+          fromEmail: data.fromEmail,
+          fromName: data.fromName,
+          inReplyTo: data.inReplyTo?.[0],
+          references: data.references,
+          attachments: googleAttachments,
+        });
+
+        submitted = true;
+        setShowComposer(false);
+
+        if (data.draftId && client) {
+          client.deleteEmail(data.draftId).catch(() => {});
+        }
+        if (selectedEmail && (selectedEmail.id === data.draftId || selectedEmail.id === pendingDraft?.draftId)) {
+          selectEmail(null);
+        }
+        if (isMobile && !useEmailStore.getState().selectedEmail) setActiveView('list');
+
+        if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
+          const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
+          try {
+            await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword);
+          } catch (e) {
+            debug.error(`Failed to set ${keyword} keyword:`, e);
+          }
+        }
+
+        toast.success(t('notifications.email_sent'));
+        return;
+      } catch (err) {
+        debug.error('Failed to send email via Google:', err);
+        toast.error(t('notifications.error_sending'));
+        throw err;
+      }
+    }
+
     try {
       const effectiveMode = pendingDraft?.mode ?? composerMode;
       const originalEmailId = selectedEmail?.id;
@@ -2562,6 +2643,17 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       await toggleStar(client, selectedEmail.id);
     } catch (error) {
       console.error("Failed to toggle star:", error);
+      toast.error(t('notifications.error_updating'));
+    }
+  };
+
+  const handleToggleImportant = async (emailToToggle: Email | null = selectedEmail) => {
+    if (!client || !emailToToggle) return;
+
+    try {
+      await toggleImportant(client, emailToToggle.id);
+    } catch (error) {
+      console.error("Failed to toggle important:", error);
       toast.error(t('notifications.error_updating'));
     }
   };
@@ -3641,7 +3733,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
 
   // Get current mailbox name for mobile header
   const currentMailboxName = isScheduledView
-    ? t('sidebar.scheduled')
+    ? (scheduledFolderName?.trim() || t('sidebar.scheduled'))
     : (() => {
         const mb = mailboxes.find(m => m.id === selectedMailbox);
         return mb
@@ -4046,17 +4138,28 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           />
         )}
         <div className="flex flex-1 overflow-hidden">
-        {/* Desktop Navigation Rail (hidden when embedded inside Pro shell, and
-            under Mountain View, whose header carries the app grid instead) */}
-        {/* Desktop Left Column: Unified Heading above Navigation Rail & Sidebar */}
+        {/* Desktop Left Column: Navigation Rail & Sidebar */}
         {isDesktopMail && (
           inlineApp ? (
-            <div className="w-16 bg-secondary flex flex-col flex-shrink-0" style={{ borderRight: '1px solid rgba(128, 128, 128, 0.3)' }}>
-              <NavigationRail
-                collapsed
-                size="spacious"
-                hideLogo
-                hideAlphaBadge
+            <AppNavRail
+              quota={quota}
+              isPushConnected={isPushConnected}
+              onLogout={handleLogout}
+              onShowShortcuts={() => setShowShortcutsModal(true)}
+              onManageApps={handleManageApps}
+              onInlineApp={handleInlineApp}
+              onCloseInlineApp={closeInlineApp}
+              activeAppId={inlineApp?.id ?? null}
+            />
+          ) : (
+            <div
+              className={cn(
+                "flex flex-shrink-0 h-full z-50 select-none",
+                fullscreenReading && "hidden"
+              )}
+            >
+              {/* Navigation Rail (w-16) with Comail icon in top corner */}
+              <AppNavRail
                 quota={quota}
                 isPushConnected={isPushConnected}
                 onLogout={handleLogout}
@@ -4064,73 +4167,21 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 onManageApps={handleManageApps}
                 onInlineApp={handleInlineApp}
                 onCloseInlineApp={closeInlineApp}
-                activeAppId={inlineApp?.id ?? null}
+                activeAppId={null}
               />
-            </div>
-          ) : (
-            <div
-              className={cn(
-                "w-[336px] flex flex-col flex-shrink-0 h-full z-50 bg-secondary border-e border-border select-none",
-                fullscreenReading && "hidden"
-              )}
-            >
-              {/* Unified Heading above both Navigation Rail and Sidebar */}
-              <div className="relative h-14 border-b border-border flex items-center px-3.5 flex-shrink-0 bg-secondary">
-                {/* Comail brand: Cammie Mark + Wordmark (functions as refresh button) */}
-                <button
-                  type="button"
-                  onClick={() => window.location.reload()}
-                  className="relative z-10 flex items-center gap-2 hover:opacity-80 active:scale-98 transition-all cursor-pointer text-start focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
-                  title="Reload Comail"
-                  aria-label="Comail - Reload"
-                >
-                  <img
-                    src={withBasePath("/branding/comail/cammie-mark.png")}
-                    alt="Comail"
-                    className="w-7 h-7 object-contain"
-                  />
-                  <img
-                    src={withBasePath(isDarkSidebar ? "/branding/comail/wordmark-light.svg" : "/branding/comail/wordmark-dark.svg")}
-                    alt="comail"
-                    className="h-5 w-auto object-contain"
-                  />
-                </button>
 
-                {/* App title with icon: centered with sidebar dimensions (start-16 to end-0 = 272px), enlarged to fill the space, offset by half icon width for optical balance */}
-                <div className="absolute inset-y-0 start-16 end-0 flex items-center justify-center pointer-events-none">
-                  <div className="flex items-center gap-2.5 select-none pointer-events-auto -translate-x-3.5 rtl:translate-x-3.5">
-                    <Mail className="w-7 h-7 text-foreground/90 flex-shrink-0" />
-                    <span className="text-2xl font-bold tracking-tight text-foreground">
-                      {t('sidebar.mail') || 'Mail'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Lower body: Left is Navigation Rail (w-16), Right is Sidebar (w-[272px] flex-1) */}
-              <div className="flex flex-1 min-h-0 overflow-hidden">
-                <div className="w-16 flex flex-col flex-shrink-0 border-e border-border/40 bg-secondary">
-                  <NavigationRail
-                    collapsed
-                    size="spacious"
-                    hideLogo
-                    hideAlphaBadge
-                    quota={quota}
-                    isPushConnected={isPushConnected}
-                    onLogout={handleLogout}
-                    onShowShortcuts={() => setShowShortcutsModal(true)}
-                    onManageApps={handleManageApps}
-                    onInlineApp={handleInlineApp}
-                    onCloseInlineApp={closeInlineApp}
-                    activeAppId={null}
+              {/* Sidebar Column (w-[300px]) */}
+              <AppSidebar
+                id={sidebarId}
+                ref={sidebarContainerRef}
+                className="w-[300px]"
+                header={
+                  <AppSidebarHeader
+                    icon={Mail}
+                    title={t('sidebar.mail') || 'Mail'}
                   />
-                </div>
-
-                <div
-                  id={sidebarId}
-                  ref={sidebarContainerRef}
-                  className="flex-1 min-w-0 overflow-hidden h-full"
-                >
+                }
+              >
                   <ErrorBoundary fallback={SidebarErrorFallback}>
                     <Sidebar
                       hideHeader
@@ -4174,8 +4225,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       onAccountMailboxSelect={handleAccountMailboxSelect}
                     />
                   </ErrorBoundary>
-                </div>
-              </div>
+              </AppSidebar>
             </div>
           )
         )}
@@ -4193,7 +4243,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
           <div
             className={cn(
               "inset-0 bg-black/50 z-40",
-              isEmbedded ? "absolute" : "fixed lg:hidden"
+              isEmbedded ? "absolute" : "fixed"
             )}
             onClick={() => setSidebarOpen(false)}
           />
@@ -4221,27 +4271,28 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
               isEmbedded
                 ? (isMobile || isTablet
                     ? cn(
-                        "absolute inset-y-0 start-0 w-72 pt-[env(safe-area-inset-top)]",
+                        "absolute inset-y-0 start-0 w-[300px] pt-[env(safe-area-inset-top)]",
                         "transform transition-transform duration-300 ease-in-out",
                         // translate-x is physical, so RTL needs the opposite
                         // sign or the drawer slides off the wrong edge.
                         !sidebarOpen && "-translate-x-full rtl:translate-x-full"
                       )
                     : "relative translate-x-0")
-                : cn(
-                    // Mobile/Tablet: fixed overlay
-                    // start-0 rather than left-0: in RTL the drawer belongs on
-                    // the right, matching the hamburger that opens it.
-                    "max-lg:fixed max-lg:inset-y-0 max-lg:start-0 max-lg:w-72 max-lg:pt-[env(safe-area-inset-top)]",
-                    "max-lg:transform max-lg:transition-transform max-lg:duration-300 max-lg:ease-in-out",
-                    !sidebarOpen && "max-lg:-translate-x-full max-lg:rtl:translate-x-full",
-                    // Desktop: normal flow
-                    "lg:relative lg:translate-x-0"
+                : (isMobile || isTablet
+                    ? cn(
+                        // Mobile/Tablet: fixed overlay
+                        // start-0 rather than left-0: in RTL the drawer belongs on
+                        // the right, matching the hamburger that opens it.
+                        "fixed inset-y-0 start-0 w-[300px] pt-[env(safe-area-inset-top)]",
+                        "transform transition-transform duration-300 ease-in-out",
+                        !sidebarOpen && "-translate-x-full rtl:translate-x-full"
+                      )
+                    : "relative translate-x-0"
                   ),
               inlineApp && "hidden",
               fullscreenReading && "hidden"
             )}
-            style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : 272 } : undefined}
+            style={!isMobile && !isTablet ? { width: sidebarCollapsed ? (mvShell ? 72 : 48) : 300 } : undefined}
           >
             <ErrorBoundary fallback={SidebarErrorFallback}>
               <Sidebar
@@ -4328,7 +4379,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                 ? undefined
                 : isHorizontalMailLayout
                   ? (!shouldHideHorizontalViewerPane ? { height: emailListHeight } : undefined)
-                  : (!shouldCollapseListPane && !shouldHideViewerPane ? { width: clampEmailListWidth(emailListWidth) } : undefined)
+                  : (!shouldCollapseListPane && !shouldHideViewerPane ? { width: clampEmailListWidth(EMAIL_LIST_FIXED_WIDTH) } : undefined)
             }
           >
             {/* Mobile Header for List View */}
@@ -4753,6 +4804,11 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     await toggleStar(client, email.id);
                   }
                 }}
+                onToggleImportant={async (email) => {
+                  if (client) {
+                    await toggleImportant(client, email.id);
+                  }
+                }}
                 onTogglePinned={async (email) => {
                   await handleTogglePinned(email);
                 }}
@@ -4808,19 +4864,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
             </Button>}
           </div>
 
-          {/* Email list resize handle (desktop only) */}
-          {!isMobile && !isTablet && !isFocusedMailLayout && !isHorizontalMailLayout && !shouldHideViewerPane && !fullscreenReading && (
-            <ResizeHandle
-              value={emailListWidth}
-              valueMin={240}
-              valueMax={600}
-              valueText={`Email list width ${Math.round(emailListWidth)} pixels`}
-              onResizeStart={() => { dragStartWidth.current = emailListWidth; setIsResizing(true); }}
-              onResize={(delta) => setEmailListWidth(dragStartWidth.current + delta)}
-              onResizeEnd={() => { setIsResizing(false); persistColumnWidths(); }}
-              onDoubleClick={resetEmailListWidth}
-            />
-          )}
+
           {!isMobile && !isTablet && isHorizontalMailLayout && !shouldHideHorizontalViewerPane && !fullscreenReading && (
             <ResizeHandle
               orientation="horizontal"
@@ -4929,6 +4973,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                     }}
                     onArchive={() => handleArchive()}
                     onToggleStar={handleToggleStar}
+                    onToggleImportant={() => handleToggleImportant()}
                     onSetTag={handleSetTag}
                     onMarkAsSpam={() => handleMarkAsSpam()}
                     onUndoSpam={() => handleUndoSpam()}

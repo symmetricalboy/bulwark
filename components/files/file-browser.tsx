@@ -24,7 +24,6 @@ import { FilesHeader, type Crumb, type SortDir, type SortKey, type ViewMode } fr
 import { FileGridView, FileListView, type FileItemHandlers } from "@/components/files/file-views";
 import { FileDetailsPanel } from "@/components/files/file-details-panel";
 import { INTERNAL_DRAG_TYPE, anchorEvent, isInternalDrag, readDraggedNames } from "@/components/files/file-item-parts";
-import { ResizeHandle } from "@/components/layout/resize-handle";
 import { getDroppedFilesAndFolders } from "@/lib/webdav/drop-utils";
 import { useFileStore, type FileResource } from "@/stores/file-store";
 import { toast } from "@/stores/toast-store";
@@ -107,6 +106,8 @@ interface FileBrowserProps {
   sharingEnabled?: boolean;
   /** Add/update/remove a principal's share on a node. Set null rights to revoke. */
   onShare?: (id: string, principalId: string, rights: FileNodeRights | null) => Promise<void>;
+  /** Storage & account dropdown slot placed immediately below the title bar in the sidebar. */
+  storagePickerSlot?: React.ReactNode;
 }
 
 function isPreviewable(name: string): boolean {
@@ -114,8 +115,6 @@ function isPreviewable(name: string): boolean {
 }
 
 type MenuData = { kind: "item"; resource: FileResource } | { kind: "empty" } | { kind: "new" };
-
-const SIDEBAR_DEFAULT_WIDTH = 256;
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -173,6 +172,7 @@ export function FileBrowser({
   ownAccountId,
   sharingEnabled,
   onShare,
+  storagePickerSlot,
 }: FileBrowserProps) {
   const t = useTranslations("files");
   const fileNameRules = useMemo(() => client?.getFileNameRules?.() ?? null, [client]);
@@ -235,15 +235,6 @@ export function FileBrowser({
   const [narrowSidebarOpen, setNarrowSidebarOpen] = useState(false);
   useEffect(() => { if (!isNarrow) setNarrowSidebarOpen(false); }, [isNarrow]);
   useEffect(() => { setNarrowSidebarOpen(false); }, [currentPath]);
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = Number(localStorage.getItem("files-sidebar-width"));
-      if (saved) return Math.max(180, Math.min(400, saved));
-    }
-    return SIDEBAR_DEFAULT_WIDTH;
-  });
-  const [isResizing, setIsResizing] = useState(false);
-  const dragStartWidth = useRef(SIDEBAR_DEFAULT_WIDTH);
   const [showDetails, setShowDetails] = useState(() => {
     try { return localStorage.getItem("files-show-details") === "1"; } catch { return false; }
   });
@@ -868,6 +859,7 @@ export function FileBrowser({
       onRevealRecent={(id) => void onRevealNode(id)}
       onDownloadRecent={(id) => void onDownloadNode(id)}
       onRemoveRecent={onRemoveRecent}
+      storagePickerSlot={storagePickerSlot}
     />
   );
 
@@ -1002,7 +994,7 @@ export function FileBrowser({
       {sidebar && (isNarrow ? (
         <div
           className={cn(
-            "absolute inset-y-0 start-0 z-50 w-72 border-e border-border",
+            "absolute inset-y-0 start-0 z-50 w-[272px] border-e border-border bg-secondary",
             "transform transition-transform duration-300 ease-in-out",
             !narrowSidebarOpen && "-translate-x-full rtl:translate-x-full",
           )}
@@ -1011,23 +1003,9 @@ export function FileBrowser({
           {sidebar}
         </div>
       ) : (
-        <>
-          <div
-            className={cn("border-e border-border flex-shrink-0", !isResizing && "transition-[width] duration-300")}
-            style={{ width: `${sidebarWidth}px` }}
-          >
-            {sidebar}
-          </div>
-          <ResizeHandle
-            onResizeStart={() => { dragStartWidth.current = sidebarWidth; setIsResizing(true); }}
-            onResize={(delta) => setSidebarWidth(Math.max(180, Math.min(400, dragStartWidth.current + delta)))}
-            onResizeEnd={() => {
-              setIsResizing(false);
-              localStorage.setItem("files-sidebar-width", String(sidebarWidth));
-            }}
-            onDoubleClick={() => { setSidebarWidth(SIDEBAR_DEFAULT_WIDTH); localStorage.setItem("files-sidebar-width", String(SIDEBAR_DEFAULT_WIDTH)); }}
-          />
-        </>
+        <div className="w-[272px] border-e border-border flex-shrink-0 bg-secondary">
+          {sidebar}
+        </div>
       ))}
 
       <div className="flex flex-col flex-1 min-w-0">

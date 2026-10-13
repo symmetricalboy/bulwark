@@ -43,6 +43,25 @@ export async function getGmailLabels(accessToken: string): Promise<GmailLabel[]>
   return labelsWithCounts;
 }
 
+export async function createGmailLabel(accessToken: string, name: string): Promise<GmailLabel> {
+  const res = await fetch(`${GMAIL_API_BASE}/labels`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    logger.error('Failed to create Gmail label', { status: res.status, errorText });
+    throw new Error(`Gmail API error creating label: ${res.status}`);
+  }
+
+  return (await res.json()) as GmailLabel;
+}
+
 export async function listGmailMessages(
   accessToken: string,
   options?: {
@@ -178,16 +197,21 @@ export async function deleteGmailMessage(
 
 export async function sendGmailMessage(
   accessToken: string,
-  rawMimeBase64Url: string
+  rawMimeBase64Url: string,
+  threadId?: string
 ): Promise<GmailMessage> {
   const url = `${GMAIL_API_BASE}/messages/send`;
+  const payload: { raw: string; threadId?: string } = { raw: rawMimeBase64Url };
+  if (threadId) {
+    payload.threadId = threadId;
+  }
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ raw: rawMimeBase64Url }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
