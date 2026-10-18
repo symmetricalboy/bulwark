@@ -326,10 +326,12 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family:
-    -apple-system,
-    BlinkMacSystemFont,
+    var(--comail-font-body, "Atkinson Hyperlegible"),
+    "Charter",
+    "Georgia",
     "Segoe UI",
-    Roboto,
+    system-ui,
+    -apple-system,
     "Helvetica Neue",
     Arial,
     "Noto Sans Thai",
@@ -339,6 +341,17 @@ body {
   font-feature-settings:
     "rlig" 1,
     "calt" 1;
+}
+
+/* Section headings + the login "Sign in" title use the warm display serif. */
+h1,
+h2,
+h3,
+.masthead,
+.section h2 {
+  font-family: var(--comail-font-display, "Young Serif"), "Iowan Old Style",
+    "Palatino Linotype", Palatino, serif;
+  letter-spacing: -0.01em;
 }
 
 /* Native <select> option lists are painted by the browser, not by the

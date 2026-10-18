@@ -13,7 +13,7 @@ import {
   Inbox, Send, FileText, Trash, ShieldAlert, Archive,
   Star, Heart, Bookmark, Tag, Flag, Briefcase, Users,
   Bell, Zap, Globe, Lock, Eye, EyeOff, MessageSquare, Mail,
-  AlertTriangle, DoubleExclamation, NotebookPen, CalendarClock, BellOff, CheckSquare, Square,
+  AlertTriangle, LabelImportant, NotebookPen, CalendarClock, BellOff, CheckSquare, Square,
   Layers,
   type AppIcon,
 } from '@/components/icons';
@@ -62,7 +62,7 @@ const ROLE_ICONS: Record<string, AppIcon> = {
   inbox: Inbox,
   starred: Star,
   unread: Mail,
-  important: DoubleExclamation,
+  important: LabelImportant,
   drafts: FileText,
   sent: Send,
   trash: Trash,
@@ -96,7 +96,7 @@ const ICON_CHOICES: { name: string; icon: AppIcon }[] = [
   { name: 'Archive', icon: Archive },
   { name: 'FileText', icon: FileText },
   { name: 'AlertTriangle', icon: AlertTriangle },
-  { name: 'DoubleExclamation', icon: DoubleExclamation },
+  { name: 'LabelImportant', icon: LabelImportant },
   { name: 'Layers', icon: Layers },
 ];
 

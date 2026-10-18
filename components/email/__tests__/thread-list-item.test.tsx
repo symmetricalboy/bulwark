@@ -188,17 +188,21 @@ describe('ThreadListItem multi-message thread', () => {
     expect(screen.getAllByText('Red')).toHaveLength(1);
   });
 
-  it('shows each message its own tags once the thread is expanded', () => {
-    renderThread(
-      [
-        makeEmail({ id: 'e1', threadId: 't1', keywords: { '$label:red': true } }),
-        makeEmail({ id: 'e2', threadId: 't1', keywords: { '$label:blue': true } }),
-      ],
-      true,
+  it('selects the latest email without unfolding inline when clicked', () => {
+    const onEmailSelect = vi.fn();
+    const e1 = makeEmail({ id: 'e1', threadId: 't1', receivedAt: '2024-01-15T10:00:00Z' });
+    const e2 = makeEmail({ id: 'e2', threadId: 't1', receivedAt: '2024-01-15T11:00:00Z' });
+    const [thread] = groupEmailsByThread([e1, e2]);
+    const { container } = render(
+      <ThreadListItem
+        thread={thread}
+        onEmailSelect={onEmailSelect}
+      />,
     );
 
-    // Once on the header and once on the message that carries it.
-    expect(screen.getAllByText('Red').length).toBeGreaterThan(1);
+    expect(container.querySelector('[data-expand-toggle]')).toBeNull();
+    fireEvent.click(screen.getByText('Test Subject'));
+    expect(onEmailSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'e2' }));
   });
 });
 

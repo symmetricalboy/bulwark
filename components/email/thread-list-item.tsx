@@ -10,7 +10,7 @@ import { VerificationCodeChip, useListVerificationCode } from "./verification-co
 import type { Attachment } from "@/lib/jmap/types";
 import type { LoadListAttachments } from "@/lib/list-attachments";
 import { SelectableAvatar } from "@/components/email/selectable-avatar";
-import { Paperclip, Star, Pin, Circle, ChevronRight, ChevronDown, Loader2, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "@/components/icons";
+import { Paperclip, Star, Pin, Circle, MessageSquare, CheckSquare, Square, Reply, Forward, CalendarClock, Folder, Archive, Trash2, MailOpen, ShieldAlert } from "@/components/icons";
 import type { AppIcon } from "@/components/icons";
 import { useSettingsStore, KEYWORD_PALETTE } from "@/stores/settings-store";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
@@ -26,7 +26,6 @@ import { useEmailDrag } from "@/hooks/use-email-drag";
 import { useLongPress } from "@/hooks/use-long-press";
 import { useSwipeActions } from "@/hooks/use-swipe-actions";
 import type { SwipeAction } from "@/stores/settings-store";
-import { ThreadEmailItem } from "./thread-email-item";
 import { EmailHoverActions } from "./email-hover-actions";
 import { SearchSnippetText } from "./search-snippet-text";
 import { useTranslations } from "next-intl";
@@ -255,11 +254,11 @@ function ThreadCountPill({ count, hasUnread, title }: { count: number; hasUnread
 
 interface ThreadListItemProps {
   thread: ThreadGroup;
-  isExpanded: boolean;
+  isExpanded?: boolean;
   selectedEmailId?: string;
   isLoading?: boolean;
   expandedEmails?: Email[];
-  onToggleExpand: () => void;
+  onToggleExpand?: () => void;
   onCollapseAllThreads?: () => void;
   onEmailSelect: (email: Email) => void;
   onEmailDoubleClick?: (email: Email) => void;
@@ -845,12 +844,7 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     onOpenAttachment,
     loadAttachments,
     thread,
-    isExpanded,
     selectedEmailId,
-    isLoading = false,
-    expandedEmails,
-    onToggleExpand,
-    onCollapseAllThreads,
     onEmailSelect,
     onEmailDoubleClick,
     onContextMenu,
@@ -940,7 +934,6 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
     const { variant: tagVariant, placement: tagPlacement } = useTagDisplay();
     const tintListRowsByTag = useSettingsStore((state) => state.tintListRowsByTag);
     const tintListRowsByAccount = useSettingsStore((state) => state.tintListRowsByAccount);
-    const conversationGrouping = useSettingsStore((state) => state.conversationGrouping);
     const isStarredFolder = isStarredMailbox(selectedMailbox, mailboxes, isUnifiedView, unifiedRole);
     const threadStarInfo = isStarredFolder
       ? thread.emails.map((e) => getStarForEmail(e, mailboxes)).find(Boolean) || null
@@ -986,8 +979,6 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
       );
     }
 
-    const emailsToShow = expandedEmails || thread.emails;
-
     // Toggle selection for all emails in this thread.
     const toggleThreadSelection = () => {
       const allSelected = thread.emails.every(em => selectedEmailKeys.has(emailKeyFor(em)));
@@ -1029,25 +1020,8 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
         return;
       }
 
-      // Mountain View and Combined mode open the conversation in the reading pane, as Gmail
-      // does, rather than unfolding it inside the list.
-      if (mvRow || conversationGrouping === 'combined') {
-        if (selectedEmailKeys.size > 0) clearSelection();
-        onEmailSelect(latestEmail);
-        return;
-      }
-
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-expand-toggle]')) {
-        onToggleExpand();
-      } else {
-        if (selectedEmailKeys.size > 0) clearSelection();
-        if (!isExpanded) {
-          onCollapseAllThreads?.();
-          onToggleExpand();
-        }
-        onEmailSelect(latestEmail);
-      }
+      if (selectedEmailKeys.size > 0) clearSelection();
+      onEmailSelect(latestEmail);
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
@@ -1082,7 +1056,6 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             !rowTint && (isSelected || isChecked) && "hover:bg-accent hover:shadow-sm",
             rowTint && "hover:brightness-95 dark:hover:brightness-110",
             hasUnread && !rowTint && !isSelected && !mvRow && !mvMobileRow && "bg-accent/30",
-            isExpanded && "border-b border-border/50",
             isChecked && "ring-2 ring-primary/20",
             isChecked && !rowTint && "bg-accent/40",
             isThreadPressed && "scale-[0.98] ring-2 ring-primary/30",
@@ -1151,33 +1124,6 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
                   selectLabel={tBatch('select')}
                 />
                 {hasUnread && <UnreadDot besideAvatar />}
-                {!isMobile && conversationGrouping !== 'combined' && (
-                  <button
-                    data-expand-toggle
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleExpand();
-                    }}
-                    className={cn(
-                      "absolute -bottom-2.5 left-1/2 -translate-x-1/2 p-0.5 rounded-full",
-                      "transition-all duration-200",
-                      "hover:bg-muted/50 hover:scale-110",
-                      "active:scale-95",
-                      "text-muted-foreground hover:text-foreground",
-                      "bg-background border border-border"
-                    )}
-                    aria-expanded={isExpanded}
-                    aria-label={t('toggle_thread')}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : isExpanded ? (
-                      <ChevronDown className="w-3 h-3" />
-                    ) : (
-                      <ChevronRight className="w-3 h-3" />
-                    )}
-                  </button>
-                )}
               </div>
             )}
 
@@ -1464,29 +1410,6 @@ export const ThreadListItem = React.forwardRef<HTMLDivElement, ThreadListItemPro
             />
           )}
         </div>
-
-        {isExpanded && !isMobile && conversationGrouping !== 'combined' && (
-          <div className="bg-muted/20 animate-in slide-in-from-top-2 duration-200">
-            {isLoading ? (
-              <div className="py-4 flex items-center justify-center text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin me-2" />
-                {t('loading')}
-              </div>
-            ) : (
-              emailsToShow.map((email, index) => (
-                <ThreadEmailItem
-                  key={email.id}
-                  email={email}
-                  selected={email.id === selectedEmailId}
-                  isLast={index === emailsToShow.length - 1}
-                  onClick={() => onEmailSelect(email)}
-                  onDoubleClick={onEmailDoubleClick ? () => onEmailDoubleClick(email) : undefined}
-                  onContextMenu={onContextMenu}
-                />
-              ))
-            )}
-          </div>
-        )}
       </div>
     );
   }

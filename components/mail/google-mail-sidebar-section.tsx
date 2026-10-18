@@ -14,7 +14,7 @@ import {
   ChevronRight,
   GoogleIcon,
   Mail,
-  DoubleExclamation,
+  LabelImportant,
   CalendarClock,
   Archive,
   Layers,
@@ -67,28 +67,29 @@ export function GoogleMailSidebarSection({
 
     switch (mb.role) {
       case 'inbox':
-        return <Inbox className={iconClass("text-blue-600/80 dark:text-blue-400/80")} />;
+        return <Inbox className={iconClass("text-blue-500")} />;
       case 'starred':
-        return <Star className={iconClass("text-yellow-500 dark:text-yellow-400")} />;
+        return <Star className={iconClass("text-yellow-500")} />;
       case 'unread':
-        return <Mail className={iconClass("text-lime-500 dark:text-lime-400")} />;
+        return <Mail className={iconClass("text-lime-500")} />;
       case 'important':
-        return <DoubleExclamation className={iconClass("text-pink-500 dark:text-pink-400")} />;
+        return <LabelImportant className={iconClass("text-pink-500")} />;
       case 'drafts':
-        return <File className={iconClass("text-violet-600/80 dark:text-violet-400/80")} />;
+        return <File className={iconClass("text-purple-500")} />;
       case 'scheduled':
-        return <CalendarClock className={iconClass("text-sky-600/80 dark:text-sky-400/80")} />;
+        return <CalendarClock className={iconClass("text-cyan-500")} />;
       case 'sent':
-        return <Send className={iconClass("text-emerald-600/80 dark:text-emerald-400/80")} />;
+        return <Send className={iconClass("text-green-500")} />;
       case 'archive':
-        return <Archive className={iconClass("text-amber-600/80 dark:text-amber-400/80")} />;
+        return <Archive className={iconClass("text-orange-500")} />;
       case 'junk':
-        return <ShieldAlert className={iconClass("text-red-600/80 dark:text-red-400/80")} />;
+      case 'spam':
+        return <ShieldAlert className={iconClass("text-red-500")} />;
       case 'trash':
-        return <Trash2 className="w-4 h-4 flex-shrink-0 text-muted-foreground" />;
+        return <Trash2 className={iconClass("text-gray-500")} />;
       case 'all':
       case 'all_mail':
-        return <Layers className={iconClass("text-purple-400 dark:text-purple-300")} />;
+        return <Layers className={iconClass("text-indigo-500")} />;
       default:
         return <Tag className={cn("w-4 h-4 flex-shrink-0", isSelected ? "text-accent-foreground" : "text-muted-foreground")} />;
     }

@@ -29,7 +29,7 @@ import {
   PlayCircle,
   Loader2,
   AlertTriangle,
-  DoubleExclamation,
+  LabelImportant,
   NotebookPen,
   Pencil,
   Plus,
@@ -201,7 +201,7 @@ const getIconForMailbox = (role?: string, name?: string, hasChildren?: boolean, 
   if (role === "inbox" || lowerName.includes("inbox")) return Inbox;
   if (role === "starred" || lowerName.includes("star") || lowerName.includes("flag")) return Star;
   if (role === "unread" || lowerName.includes("unread")) return Mail;
-  if (role === "important" || lowerName.includes("important")) return DoubleExclamation;
+  if (role === "important" || lowerName.includes("important")) return LabelImportant;
   if (role === "sent" || lowerName.includes("sent")) return Send;
   if (role === "drafts" || lowerName.includes("draft")) return File;
   if (role === "trash" || lowerName.includes("trash") || lowerName.includes("deleted")) return Trash2;
@@ -221,22 +221,22 @@ const getIconForMailbox = (role?: string, name?: string, hasChildren?: boolean, 
 };
 
 const ROLE_ICON_COLOR: Record<string, string> = {
-  inbox: "text-blue-600/80 dark:text-blue-400/80",
-  starred: "text-yellow-500 dark:text-yellow-400",
-  unread: "text-lime-500 dark:text-lime-400",
-  important: "text-pink-500 dark:text-pink-400",
-  drafts: "text-violet-600/80 dark:text-violet-400/80",
-  scheduled: "text-sky-600/80 dark:text-sky-400/80",
-  sent: "text-emerald-600/80 dark:text-emerald-400/80",
-  archive: "text-amber-600/80 dark:text-amber-400/80",
-  junk: "text-red-600/80 dark:text-red-400/80",
-  spam: "text-red-600/80 dark:text-red-400/80",
-  trash: "text-muted-foreground",
-  all: "text-purple-400 dark:text-purple-300",
-  all_mail: "text-purple-400 dark:text-purple-300",
-  shared: "text-cyan-600/80 dark:text-cyan-400/80",
-  memos: "text-yellow-600/80 dark:text-yellow-400/80",
-  snoozed: "text-slate-500/80 dark:text-slate-400/80",
+  inbox: "text-blue-500",
+  starred: "text-yellow-500",
+  unread: "text-lime-500",
+  important: "text-pink-500",
+  drafts: "text-purple-500",
+  scheduled: "text-cyan-500",
+  sent: "text-green-500",
+  archive: "text-orange-500",
+  junk: "text-red-500",
+  spam: "text-red-500",
+  trash: "text-gray-500",
+  all: "text-indigo-500",
+  all_mail: "text-indigo-500",
+  shared: "text-cyan-500",
+  memos: "text-yellow-500",
+  snoozed: "text-slate-500",
 };
 
 function resolveRoleKey(role?: string, name?: string): string | undefined {
@@ -260,7 +260,6 @@ function resolveRoleKey(role?: string, name?: string): string | undefined {
 
 function getIconClass(isSelected: boolean, isVirtual: boolean, colorful: boolean, roleKey?: string) {
   const base = "w-4 h-4 flex-shrink-0 transition-colors";
-  if (roleKey === "trash") return cn(base, "text-muted-foreground");
   if (isVirtual) return cn(base, "text-muted-foreground");
   if (colorful && roleKey && ROLE_ICON_COLOR[roleKey]) {
     return cn(base, ROLE_ICON_COLOR[roleKey]);
@@ -1383,7 +1382,7 @@ export function Sidebar({
     return (
       <SidebarRow
         key={key}
-        icon={<CalendarClock className={cn("w-4 h-4 flex-shrink-0", mvShell ? "text-foreground/80" : "text-sky-600 dark:text-sky-400")} />}
+        icon={<CalendarClock className={getIconClass(!selectedKeyword && isScheduledSelected, false, colorfulSidebarIcons, 'scheduled')} />}
         label={scheduledName}
         depth={account?.depth ?? 0}
         isSelected={!selectedKeyword && isScheduledSelected}
@@ -2073,16 +2072,16 @@ export function Sidebar({
                   );
                 })}
                 {[
-                  { show: showCrossUnread, id: CROSS_VIEW_IDS.unread, Icon: MailOpen, label: t('unified_all_unread'), unread: crossUnreadCount },
-                  { show: showCrossStarred, id: CROSS_VIEW_IDS.starred, Icon: Star, label: t('unified_all_starred'), unread: undefined as number | undefined },
-                  { show: showCrossAll, id: CROSS_VIEW_IDS.all, Icon: Mails, label: t('unified_all_mail'), unread: crossUnreadCount },
-                ].map(({ show, id, Icon, label, unread }) => {
+                  { show: showCrossUnread, id: CROSS_VIEW_IDS.unread, Icon: MailOpen, label: t('unified_all_unread'), unread: crossUnreadCount, roleKey: 'unread' },
+                  { show: showCrossStarred, id: CROSS_VIEW_IDS.starred, Icon: Star, label: t('unified_all_starred'), unread: undefined as number | undefined, roleKey: 'starred' },
+                  { show: showCrossAll, id: CROSS_VIEW_IDS.all, Icon: Mails, label: t('unified_all_mail'), unread: crossUnreadCount, roleKey: 'all' },
+                ].map(({ show, id, Icon, label, unread, roleKey }) => {
                   if (!show) return null;
                   const isSelected = !selectedKeyword && selectedMailbox === id;
                   return (
                     <SidebarRow
                       key={id}
-                      icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons)} />}
+                      icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons, roleKey)} />}
                       label={label}
                       testName={id}
                       testMailboxId={id}
@@ -2118,7 +2117,7 @@ export function Sidebar({
                   {node.role === 'drafts' && renderScheduledRow('scheduled')}
                   {node.role === 'inbox' && onOpenStarred && (
                     <SidebarRow
-                      icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons)} />}
+                      icon={<Star className={getIconClass(!selectedKeyword && selectedMailbox === CROSS_VIEW_IDS.starred, false, colorfulSidebarIcons, 'starred')} />}
                       label={t("mailboxes.starred")}
                       testName="mv-starred"
                       depth={0}

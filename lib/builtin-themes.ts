@@ -426,14 +426,10 @@ const elasticCSS = `
 }`;
 
 // Component-level overrides that the colour tokens alone can't express:
-// Roboto typography and Elastic's signature dark "task menu" rail (which is
-// dark in both light and dark mode). Scoped under the skin body attribute so
-// it cleanly detaches when the theme is switched off.
+// Elastic's signature dark "task menu" rail (which is dark in both light and
+// dark mode). Scoped under the skin body attribute so it cleanly detaches when
+// the theme is switched off.
 const elasticSkin = `
-body[data-theme-skin="builtin-roundcube-elastic"] {
-  font-family: Roboto, "Helvetica Neue", "Segoe UI", Arial, "Noto Sans", sans-serif;
-}
-
 /* ── Task menu (left navigation rail) ─────────────────────────── */
 body[data-theme-skin="builtin-roundcube-elastic"] .w-14.bg-secondary {
   background-color: #2f3a3f !important;
@@ -740,11 +736,6 @@ const auroraCSS = `
 // canvas, luminous borders and glow that the colour tokens alone can't carry.
 // Scoped under the skin body attribute so it detaches cleanly on switch-off.
 const auroraSkin = `
-body[data-theme-skin="builtin-aurora-glass"] {
-  font-family: "Inter", "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
-  letter-spacing: -0.01em;
-}
-
 /* ── Gradient-mesh canvas ──────────────────────────────────────── */
 /* A multi-stop radial mesh painted onto the app-shell root (the unique
    .bg-background.overflow-hidden container) so the frosted panes have
@@ -1023,25 +1014,6 @@ const comailCSS = `
 // it is placed directly on whatever surface each spot uses — the teal sidebar,
 // the dark or light reading pane — with no cream-tile backing needed.
 const comailSkin = `
-/* ── Brand typography ──────────────────────────────────────────────── */
-/* Body sans = Atkinson Hyperlegible (matches atmosphere-mail globals.css);
-   falls back through the same chain the marketing site uses. Display serif
-   (Young Serif) is applied to headings/wordmark below via the alias var. */
-body[data-theme-skin="builtin-comail"] {
-  font-family: var(--comail-font-body, "Atkinson Hyperlegible"), "Charter",
-    "Georgia", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-}
-/* Section headings + the login "Sign in" title use the warm display serif. */
-body[data-theme-skin="builtin-comail"] h1,
-body[data-theme-skin="builtin-comail"] h2,
-body[data-theme-skin="builtin-comail"] h3,
-body[data-theme-skin="builtin-comail"] .masthead,
-body[data-theme-skin="builtin-comail"] .section h2 {
-  font-family: var(--comail-font-display, "Young Serif"), "Iowan Old Style",
-    "Palatino Linotype", Palatino, serif;
-  letter-spacing: -0.01em;
-}
-
 /* ── Primary action: darkestBlue fill, white bold label (mock "Continue") ── */
 /* 17.22:1 white on #012102. Hover deepens to pure black (still AAA). The
    default .bg-primary already carries text-primary-foreground (white) via the
@@ -1795,11 +1767,11 @@ export const BUILTIN_THEMES: InstalledTheme[] = [
     name: 'Roundcube Elastic',
     version: '1.0.0',
     author: 'Built-in',
-    description: 'Faithful recreation of Roundcube\'s Elastic skin - Roboto, the #37beff blue, and the dark task-menu rail',
+    description: 'Faithful recreation of Roundcube\'s Elastic skin - the #37beff blue and the dark task-menu rail',
     css: elasticCSS,
     skin: elasticSkin,
     variants: ['light', 'dark'],
-    typography: { fontSans: 'Roboto, "Helvetica Neue", Arial, sans-serif', baseFontSize: '14px' },
+    typography: { baseFontSize: '14px' },
     enabled: true,
     builtIn: true,
   },
@@ -1812,7 +1784,6 @@ export const BUILTIN_THEMES: InstalledTheme[] = [
     css: auroraCSS,
     skin: auroraSkin,
     variants: ['light', 'dark'],
-    typography: { fontSans: '"Inter", "SF Pro Display", "Segoe UI", system-ui, sans-serif' },
     enabled: true,
     builtIn: true,
   },

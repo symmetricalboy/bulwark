@@ -144,6 +144,7 @@ import {
   IconItalic,
   IconKey,
   IconKeyboard,
+  IconLabelImportant,
   IconLanguage,
   IconLayoutDashboard,
   IconLayoutGrid,
@@ -384,6 +385,7 @@ import {
   Menu as LucideMenu,
   MessageSquare as LucideMessageSquare,
   MessagesSquare as LucideMessagesSquare,
+  Milestone as LucideMilestone,
   Minimize2 as LucideMinimize2,
   Minus as LucideMinus,
   Monitor as LucideMonitor,
@@ -816,37 +818,5 @@ export const XCircle = createDynamicIcon(IconCircleX, LucideXCircle, 'cancel', '
 export const Zap = createDynamicIcon(IconBolt, LucideZap, 'bolt', 'Zap', false);
 export const ZoomIn = createDynamicIcon(IconZoomIn, LucideZoomIn, 'zoom_in', 'ZoomIn', false);
 export const ZoomOut = createDynamicIcon(IconZoomOut, LucideZoomOut, 'zoom_out', 'ZoomOut', false);
-
-export const DoubleExclamation = forwardRef<SVGSVGElement, IconProps>(function DoubleExclamation(props, ref) {
-  const iconColorPalette = useSettingsStore((s) => s.iconColorPalette);
-  const { inheritColor } = useIconContrast();
-  const { size, stroke, strokeWidth, color, className, style, ...rest } = props;
-  const effectiveColor = inheritColor
-    ? undefined
-    : getIconColor('DoubleExclamation', iconColorPalette, color, className);
-  const resolvedColor = effectiveColor || color;
-  const styleWithColor = effectiveColor ? { color: effectiveColor, ...style } : style;
-  const sw = strokeWidth ?? stroke ?? 2;
-  const effectiveSize = size ?? 24;
-
-  return (
-    <svg
-      ref={ref}
-      viewBox="0 0 24 24"
-      width={effectiveSize}
-      height={effectiveSize}
-      fill="none"
-      stroke={resolvedColor || 'currentColor'}
-      strokeWidth={sw}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn('tabler-icon shrink-0', className)}
-      style={styleWithColor}
-      aria-hidden="true"
-      {...rest}
-    >
-      <path d="M8.5 4v9M8.5 17h.01M15.5 4v9M15.5 17h.01" />
-    </svg>
-  );
-}) as unknown as TablerIcon;
-(DoubleExclamation as any).displayName = 'DoubleExclamation';
+export const LabelImportant = createDynamicIcon(IconLabelImportant, LucideMilestone, 'label_important', 'LabelImportant', false);
+export const DoubleExclamation = LabelImportant;

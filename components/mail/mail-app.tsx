@@ -179,7 +179,6 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
   const tQuote = useTranslations('quote_header');
   const mailLayout = useEffectiveMailLayout();
   const interfaceLayout = useSettingsStore((state) => state.interfaceLayout);
-  const conversationGrouping = useSettingsStore((state) => state.conversationGrouping);
   // Phones present search full-screen from the header field rather than
   // giving it a permanent second bar under the header.
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -3658,10 +3657,9 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
   };
 
-  // Mountain View and Combined conversation mode read a message inside its conversation,
-  // as Gmail does: load the rest of the thread (list properties only) whenever another opens.
-  const isConversationCombined = conversationGrouping === 'combined' || (mvShell && conversationGrouping !== 'separate' && conversationGrouping !== 'nested');
-  const shouldLoadMvConversation = isConversationCombined && !cursorOnly;
+  // Read a message inside its conversation, as Gmail does: load the rest of the
+  // thread (list properties only) whenever another opens.
+  const shouldLoadMvConversation = !cursorOnly;
   const mvConversationThreadId = shouldLoadMvConversation ? (selectedEmail?.threadId ?? null) : null;
   const mvConversationRef = shouldLoadMvConversation ? selectedEmail : null;
   useEffect(() => {
@@ -3742,8 +3740,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       })();
   const isFocusedMailLayout = mailLayout === 'focus';
   const isHorizontalMailLayout = mailLayout === 'horizontal' && !isMobile && !isTablet;
-  // Under Mountain View or Combined mode on desktop the composer can write replies in place.
-  const mvInlineReply = (mvShell || isConversationCombined) && showComposer && !isEmbedded && !mvReplyPoppedOut
+  // On desktop the composer writes replies in place under the conversation.
+  const mvInlineReply = showComposer && !isEmbedded && !mvReplyPoppedOut
     && (pendingDraft?.mode ?? composerMode) !== 'compose' && Boolean(selectedEmail);
   const floatingComposer = mvShell && showComposer && !isEmbedded && !mvInlineReply;
   const hasViewerContent = (showComposer && !floatingComposer) || Boolean(conversationThread)
@@ -4998,8 +4996,8 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
                       total: Math.max(activeEmails.length, mailboxes.find((mb) => mb.id === selectedMailbox)?.totalEmails ?? 0),
                     } : undefined}
                     mvFolderName={mvShell && !isScheduledView && !isUnifiedView ? currentMailboxName : undefined}
-                    mvConversation={(mvShell || isConversationCombined) ? mvConversation ?? undefined : undefined}
-                    onOpenConversationEmail={(mvShell || isConversationCombined) ? (e) => void handleEmailSelect(e) : undefined}
+                    mvConversation={mvConversation ?? undefined}
+                    onOpenConversationEmail={(e) => void handleEmailSelect(e)}
                     mvInlineComposer={mvInlineReply ? <MvComposeInline onPopOut={handleMvPopOut}>{composerNode}</MvComposeInline> : undefined}
                     onToggleFullscreen={!isEmbedded && !isMobile ? () => setFullscreenReading((v) => !v) : undefined}
                     isFullscreen={fullscreenReading}

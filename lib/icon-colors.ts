@@ -124,6 +124,7 @@ export const SEMANTIC_RAINBOW_MAP: Record<string, string> = {
   Ban: 'var(--icon-rainbow-red)',
   AlertCircle: 'var(--icon-rainbow-red)',
   AlertTriangle: 'var(--icon-rainbow-amber)',
+  LabelImportant: 'var(--icon-rainbow-pink)',
   DoubleExclamation: 'var(--icon-rainbow-pink)',
 
   // Notifications: Amber / Yellow

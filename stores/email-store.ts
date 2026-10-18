@@ -592,7 +592,7 @@ export interface ListHold {
  * list is not threaded - the same key EmailList groups by.
  */
 export function listRowKey(email: Email, isScheduledView: boolean): string {
-  return useSettingsStore.getState().disableThreading || isScheduledView ? email.id : threadKeyFor(email);
+  return isScheduledView ? email.id : threadKeyFor(email);
 }
 
 /** Delta-sync baseline of the plain folder list (see EmailStore.emailListSync). */

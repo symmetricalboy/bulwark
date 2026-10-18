@@ -62,6 +62,17 @@ describe('BUILTIN_THEMES', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it('decouples fonts from themes so all built-in themes use the global Comail font stack', () => {
+    for (const theme of BUILTIN_THEMES) {
+      expect(theme.css, `${theme.name} css`).not.toMatch(/font-family\s*:/);
+      if (theme.skin) {
+        expect(theme.skin, `${theme.name} skin`).not.toMatch(/font-family\s*:/);
+      }
+      expect(theme.typography?.fontSans, `${theme.name} typography.fontSans`).toBeUndefined();
+      expect(theme.typography?.fontDisplay, `${theme.name} typography.fontDisplay`).toBeUndefined();
+    }
+  });
+
   describe('WCAG accessibility & contrast compliance', () => {
     function hexToRgb(hex: string): [number, number, number, number] {
       const clean = hex.replace('#', '').trim();

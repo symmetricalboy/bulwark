@@ -121,14 +121,6 @@ export const flatFieldsCSS = `
 // [data-tour], [role], data-* state attributes, and Tailwind utilities.
 // Nothing here moves, hides or restructures a component.
 export const flatFieldsSkin = `
-/* ── Type: Hanken Grotesk (self-hosted by the root layout as --font-hanken,
-   defined on <body>), then a system stack for scripts it does not cover. ── */
-body[data-theme-skin="builtin-flat-fields"] {
-  font-family: var(--font-hanken, "Hanken Grotesk"), ui-sans-serif, system-ui,
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, "Noto Sans", "Noto Sans Thai", "Leelawadee UI", sans-serif;
-}
-
 body[data-theme-skin="builtin-flat-fields"] .font-bold {
   font-weight: 600;
 }
