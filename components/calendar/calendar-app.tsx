@@ -72,6 +72,7 @@ import { QuickCreatePopover, type QuickCreateDraft } from "@/components/calendar
 import { useTaskStore } from "@/stores/task-store";
 import { useTasksAppStore } from "@/stores/tasks-app-store";
 import { GOOGLE_TASKS_CALENDAR_ID, COMAIL_TASKS_CALENDAR_ID } from "@/lib/google/tasks-mapper";
+import { MICROSOFT_TASKS_CALENDAR_ID } from "@/lib/microsoft/tasks-mapper";
 import { useContactStore } from "@/stores/contact-store";
 import { cn, generateUUID } from "@/lib/utils";
 import type { Calendar, CalendarEvent, CalendarParticipant, CalendarRights, CalendarTask } from "@/lib/jmap/types";
@@ -1563,7 +1564,7 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
     if (!enableCalendarTasks || !showTasksOnCalendar) return undefined;
     return taskStore.tasks.filter((task) => {
       const ids = Object.keys(task.calendarIds ?? {});
-      if (ids.length === 0 || ids.includes(GOOGLE_TASKS_CALENDAR_ID) || ids.includes(COMAIL_TASKS_CALENDAR_ID) || ids.includes('tasks')) return true;
+      if (ids.length === 0 || ids.includes(GOOGLE_TASKS_CALENDAR_ID) || ids.includes(MICROSOFT_TASKS_CALENDAR_ID) || ids.includes(COMAIL_TASKS_CALENDAR_ID) || ids.includes('tasks')) return true;
       return ids.some((id) => selectedCalendarIds.includes(id));
     });
   }, [enableCalendarTasks, showTasksOnCalendar, taskStore.tasks, selectedCalendarIds]);

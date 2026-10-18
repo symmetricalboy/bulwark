@@ -1835,15 +1835,16 @@
       "linked_accounts": {
         "button": "Linked Accounts",
         "title": "Linked Accounts",
-        "description": "Connect external Google Accounts to sync Calendar, Tasks, Drive files, and Contacts with Comail.",
+        "description": "Connect external Google or Microsoft Accounts to sync Mail, Calendar, Tasks, Drive/OneDrive files, and Contacts with Comail.",
         "add_account": "Connect Google Account",
         "add_another": "Connect another Google Account",
+        "add_microsoft_account": "Connect Microsoft Account",
         "empty_title": "No external accounts linked yet",
-        "empty_description": "Connect your Google Account to populate your Google Calendar, Google Tasks, Google Drive files, and Google Contacts into Comail.",
-        "not_configured": "Google OAuth is not configured on this server. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable external accounts.",
+        "empty_description": "Connect your Google or Microsoft Account to populate your Mail, Calendar, Tasks, Drive/OneDrive files, and Contacts into Comail.",
+        "not_configured": "OAuth is not configured on this server. Set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET or MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET to enable external accounts.",
         "reconnect": "Reconnect",
         "remove": "Remove",
-        "remove_confirm_title": "Remove Google Account",
+        "remove_confirm_title": "Remove Linked Account",
         "remove_confirm_message": "Are you sure you want to disconnect {email}? Data from this account will no longer populate into Comail.",
         "connected_at": "Connected {time}",
         "apps_heading": "Apps populated into Comail",
@@ -1852,6 +1853,10 @@
           "subtitle": "Choose which services you want to connect to Comail. By default, all services are strictly opt-in and disabled until enabled.",
           "save_and_continue": "Save & Continue",
           "skip": "Keep Disabled"
+        },
+        "microsoft_onboarding": {
+          "title": "Set Up Microsoft Account",
+          "subtitle": "Choose how each Microsoft 365 / Outlook service should work with Comail. By default, all services are strictly opt-in and disabled until enabled."
         },
         "mode": {
           "dont_use": "Don't Use",
@@ -1871,7 +1876,17 @@
           "tasks": "Tasks",
           "tasks_desc": "Manage to-dos and task lists",
           "contacts": "Contacts",
-          "contacts_desc": "Manage contacts and address books"
+          "contacts_desc": "Manage contacts and address books",
+          "outlook": "Outlook Mail",
+          "outlook_desc": "Display your Outlook folders and messages in the Mail app",
+          "onedrive": "OneDrive",
+          "onedrive_desc": "Browse, upload, and manage your OneDrive files in Files",
+          "microsoft_calendar": "Outlook Calendar",
+          "microsoft_calendar_desc": "Manage Microsoft calendar events and schedules",
+          "microsoft_tasks": "Microsoft To Do",
+          "microsoft_tasks_desc": "Manage Microsoft To Do task lists and items",
+          "microsoft_contacts": "Outlook Contacts",
+          "microsoft_contacts_desc": "Manage Microsoft People and Contacts"
         }
       }
     },

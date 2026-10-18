@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { logger } from '@/lib/logger';
 import { JmapAuthVerificationError, resolveJmapIdentity } from '@/lib/auth/verify-jmap-auth';
-import { setStalwartAuthContext } from '@/lib/stalwart/auth-context';
+import { setStalwartAuthContext, stalwartAuthContextCookieName } from '@/lib/stalwart/auth-context';
+import { sessionCookieName } from '@/lib/auth/session-cookie';
+import { refreshTokenCookieName, refreshTokenServerCookieName } from '@/lib/oauth/tokens';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
-import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
+import { generateAccountId, generateAvatarColor, MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
+import { syncJmapSlotLoginToStorage } from '@/lib/linked-accounts-sync';
 
 function getSlot(request: NextRequest, bodySlot: unknown): number {
   if (typeof bodySlot === 'number' && bodySlot >= 0 && bodySlot < MAX_ACCOUNT_SLOTS) {
@@ -81,6 +85,35 @@ export async function POST(request: NextRequest) {
       authHeader,
       ...(accountName !== username ? { accountName } : {}),
     });
+
+    try {
+      const cookieStore = await cookies();
+      const sessionToken = cookieStore.get(sessionCookieName(slot))?.value;
+      const oauthRefreshToken = cookieStore.get(refreshTokenCookieName(slot))?.value;
+      const oauthServerId = cookieStore.get(refreshTokenServerCookieName(slot))?.value ?? null;
+      if (sessionToken || oauthRefreshToken) {
+        await syncJmapSlotLoginToStorage(cookieStore, {
+          id: generateAccountId(username, normalizedServerUrl),
+          username,
+          serverUrl: normalizedServerUrl,
+          label: username,
+          displayName: username,
+          email: username,
+          avatarColor: generateAvatarColor(username),
+          authMode: oauthRefreshToken ? 'oauth' : authHeader.startsWith('Bearer ') ? 'token' : 'basic',
+          rememberMe: true,
+          createdAt: Date.now(),
+          lastLoginAt: Date.now(),
+          sessionToken,
+          stalwartContextToken: cookieStore.get(stalwartAuthContextCookieName(slot))?.value,
+          oauthRefreshToken,
+          oauthServerId,
+          updatedAt: Date.now(),
+        });
+      }
+    } catch {
+      /* non-fatal */
+    }
 
     void recordLogin(username, normalizedServerUrl);
 

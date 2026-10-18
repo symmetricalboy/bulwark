@@ -495,8 +495,10 @@ export const useContactStore = create<ContactStore>()(
         try {
           const contacts = await client.getAllContacts();
           set((state) => {
-            const googleContacts = state.contacts.filter((c) => c.id.startsWith('google:'));
-            return { contacts: [...contacts, ...googleContacts], isLoading: false, contactsLoaded: true };
+            const externalContacts = state.contacts.filter(
+              (c) => c.id.startsWith('google:') || c.id.startsWith('microsoft:')
+            );
+            return { contacts: [...contacts, ...externalContacts], isLoading: false, contactsLoaded: true };
           });
         } catch (error) {
           console.error('Failed to fetch contacts:', error);
@@ -543,8 +545,10 @@ export const useContactStore = create<ContactStore>()(
             });
           }
           set((state) => {
-            const googleBooks = state.addressBooks.filter((b) => b.id.startsWith('google:'));
-            return { addressBooks: [...addressBooks, ...googleBooks] };
+            const externalBooks = state.addressBooks.filter(
+              (b) => b.id.startsWith('google:') || b.id.startsWith('microsoft:')
+            );
+            return { addressBooks: [...addressBooks, ...externalBooks] };
           });
         } catch (error) {
           console.error('Failed to fetch address books:', error);
@@ -567,8 +571,10 @@ export const useContactStore = create<ContactStore>()(
             }),
           );
           set((state) => {
-            const googleContacts = state.contacts.filter((c) => c.id.startsWith('google:'));
-            return { contacts: [...results.flat(), ...googleContacts], isLoading: false, contactsLoaded: true };
+            const externalContacts = state.contacts.filter(
+              (c) => c.id.startsWith('google:') || c.id.startsWith('microsoft:')
+            );
+            return { contacts: [...results.flat(), ...externalContacts], isLoading: false, contactsLoaded: true };
           });
         } catch (error) {
           console.error('Failed to fetch all-account contacts:', error);
@@ -603,8 +609,10 @@ export const useContactStore = create<ContactStore>()(
             }),
           );
           set((state) => {
-            const googleBooks = state.addressBooks.filter((b) => b.id.startsWith('google:'));
-            return { addressBooks: [...results.flat(), ...googleBooks] };
+            const externalBooks = state.addressBooks.filter(
+              (b) => b.id.startsWith('google:') || b.id.startsWith('microsoft:')
+            );
+            return { addressBooks: [...results.flat(), ...externalBooks] };
           });
         } catch (error) {
           console.error('Failed to fetch all-account address books:', error);
@@ -615,6 +623,29 @@ export const useContactStore = create<ContactStore>()(
       createContact: async (client, contact) => {
         set({ isLoading: true, error: null });
         try {
+          const targetBookIds = Object.entries(contact.addressBookIds ?? {})
+            .filter(([, included]) => included)
+            .map(([id]) => id);
+          if (targetBookIds[0]?.startsWith('google:')) {
+            const { createGoogleContact } = await import('@/lib/google/google-contacts-client');
+            const created = await createGoogleContact(contact);
+            set((state) => ({
+              contacts: [...state.contacts, created],
+              isLoading: false,
+            }));
+            return;
+          }
+          if (targetBookIds[0]?.startsWith('microsoft:')) {
+            const { microsoftContactsClient } = await import('@/lib/microsoft/microsoft-contacts-client');
+            const accountEmail = targetBookIds[0].split('::')[0].replace(/^microsoft:/, '');
+            const created = await microsoftContactsClient.createContact(accountEmail, contact);
+            set((state) => ({
+              contacts: [...state.contacts, created],
+              isLoading: false,
+            }));
+            return;
+          }
+
           // Determine target account from the selected address book. Also
           // pin the local account so we route through the right server's
           // client in multi-account Pro mode.
@@ -658,6 +689,23 @@ export const useContactStore = create<ContactStore>()(
       updateContact: async (client, id, updates) => {
         set({ error: null });
         try {
+          if (id.startsWith('google:')) {
+            const { updateGoogleContact } = await import('@/lib/google/google-contacts-client');
+            const updated = await updateGoogleContact(id, updates);
+            set((state) => ({
+              contacts: state.contacts.map(c => (c.id === id ? { ...c, ...updated } : c)),
+            }));
+            return;
+          }
+          if (id.startsWith('microsoft:')) {
+            const { microsoftContactsClient } = await import('@/lib/microsoft/microsoft-contacts-client');
+            const updated = await microsoftContactsClient.updateContact(id, updates);
+            set((state) => ({
+              contacts: state.contacts.map(c => (c.id === id ? { ...c, ...updated } : c)),
+            }));
+            return;
+          }
+
           const contact = get().contacts.find(c => c.id === id);
           const originalId = contact?.originalId || stripLocalAccountPrefix(id, contact?.localAccountId);
           const accountId = contact?.isShared ? contact.accountId : undefined;
@@ -688,6 +736,33 @@ export const useContactStore = create<ContactStore>()(
       deleteContact: async (client, id) => {
         set({ error: null });
         try {
+          if (id.startsWith('google:')) {
+            const { deleteGoogleContact } = await import('@/lib/google/google-contacts-client');
+            await deleteGoogleContact(id);
+            set((state) => {
+              const removedIds = new Set([id]);
+              const cleaned = cleanGroupMembers(state.contacts, removedIds);
+              return {
+                contacts: cleaned.filter(c => c.id !== id),
+                selectedContactId: state.selectedContactId === id ? null : state.selectedContactId,
+              };
+            });
+            return;
+          }
+          if (id.startsWith('microsoft:')) {
+            const { microsoftContactsClient } = await import('@/lib/microsoft/microsoft-contacts-client');
+            await microsoftContactsClient.deleteContact(id);
+            set((state) => {
+              const removedIds = new Set([id]);
+              const cleaned = cleanGroupMembers(state.contacts, removedIds);
+              return {
+                contacts: cleaned.filter(c => c.id !== id),
+                selectedContactId: state.selectedContactId === id ? null : state.selectedContactId,
+              };
+            });
+            return;
+          }
+
           const contact = get().contacts.find(c => c.id === id);
           const originalId = contact?.originalId || stripLocalAccountPrefix(id, contact?.localAccountId);
           const accountId = contact?.isShared ? contact.accountId : undefined;

@@ -45,6 +45,7 @@ export interface LinkedGoogleAccount {
   tokens: GoogleTokens;
   enabledApps: GoogleAccountAppToggles;
   connectedAt: number;
+  updatedAt?: number;
   /** Comail account identifier (AccountEntry.id) that owns this linked account */
   comailAccountId?: string;
   /** Comail account email that owns this linked account */

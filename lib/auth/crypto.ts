@@ -130,7 +130,11 @@ export type PayloadPurpose =
   /** The app password an impersonation handoff minted, kept for revocation. */
   | 'impersonation-grant'
   /** Google OAuth tokens (access_token, refresh_token, expiry, email). */
-  | 'google-tokens';
+  | 'google-tokens'
+  /** Microsoft OAuth tokens (access_token, refresh_token, expiry, email). */
+  | 'microsoft-tokens'
+  /** Microsoft OAuth state cookie. */
+  | 'microsoft-oauth-state';
 
 /**
  * Whether a blob minted before purposes were bound may be re-admitted for
@@ -151,6 +155,8 @@ const LEGACY_PAYLOAD_MARKERS: Record<PayloadPurpose, (payload: Record<string, un
   'wopi-token': (p) => p.t === 'wopi',
   'impersonation-grant': () => false,
   'google-tokens': () => false,
+  'microsoft-tokens': () => false,
+  'microsoft-oauth-state': () => false,
 };
 
 export function encryptPayload(payload: Record<string, unknown>, purpose: PayloadPurpose): string {

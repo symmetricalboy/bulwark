@@ -71,8 +71,17 @@ export function useGoogleMail() {
         void loadMailboxes();
       }
     };
+    const handleAccountsChanged = () => {
+      void loadMailboxes();
+    };
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('google-accounts-changed', handleAccountsChanged);
+    window.addEventListener('google-services-updated', handleAccountsChanged);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('google-accounts-changed', handleAccountsChanged);
+      window.removeEventListener('google-services-updated', handleAccountsChanged);
+    };
   }, [loadMailboxes]);
 
   // Group mailboxes by Google account

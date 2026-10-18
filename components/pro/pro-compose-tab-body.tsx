@@ -13,6 +13,7 @@ import { useProTabStore, registerProTabCloseInterceptor, type ProComposeTabData 
 import { debug } from "@/lib/debug";
 import { threadKeyFor } from "@/lib/thread-utils";
 import { sendGoogleEmail, isGoogleSender } from "@/lib/google/google-mail-client";
+import { sendMicrosoftEmailClient, isMicrosoftSender } from "@/lib/microsoft/microsoft-mail-client";
 
 interface ProComposeTabBodyProps {
   tabId: string;
@@ -115,6 +116,61 @@ export function ProComposeTabBody({ tabId, data }: ProComposeTabBodyProps) {
         return;
       } catch (err) {
         debug.error('Failed to send email via Google:', err);
+        toast.error(t('notifications.error_sending'));
+        throw err;
+      }
+    }
+
+    if (isMicrosoftSender(sendData.fromEmail, sendData.localAccountId, sendData.identityId)) {
+      try {
+        let microsoftAttachments: Array<{ filename: string; contentType: string; contentBase64: string }> | undefined;
+        if (sendData.attachments && sendData.attachments.length > 0) {
+          microsoftAttachments = [];
+          for (const att of sendData.attachments) {
+            if (att.blobId && client) {
+              try {
+                const buffer = await client.fetchBlobArrayBuffer(att.blobId, att.name, att.type);
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                  binary += String.fromCharCode(bytes[i]);
+                }
+                microsoftAttachments.push({
+                  filename: att.name,
+                  contentType: att.type || 'application/octet-stream',
+                  contentBase64: btoa(binary),
+                });
+              } catch (err) {
+                debug.error('Failed to fetch blob for Microsoft email send:', err);
+              }
+            }
+          }
+        }
+
+        const microsoftAccountId = sendData.localAccountId?.startsWith('microsoft:')
+          ? sendData.localAccountId.replace(/^microsoft:/, '')
+          : sendData.fromEmail || '';
+
+        await sendMicrosoftEmailClient({
+          accountEmail: microsoftAccountId,
+          fromName: sendData.fromName,
+          to: sendData.to.map((email) => ({ email })),
+          cc: sendData.cc?.map((email) => ({ email })),
+          bcc: sendData.bcc?.map((email) => ({ email })),
+          subject: sendData.subject,
+          textBody: sendData.body,
+          htmlBody: sendData.htmlBody,
+          attachments: microsoftAttachments,
+        });
+
+        if (sendData.draftId && client) {
+          client.deleteEmail(sendData.draftId).catch(() => {});
+        }
+        toast.success(t('notifications.email_sent'));
+        closeTab(tabIdRef.current);
+        return;
+      } catch (err) {
+        debug.error('Failed to send email via Microsoft:', err);
         toast.error(t('notifications.error_sending'));
         throw err;
       }

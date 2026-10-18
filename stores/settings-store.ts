@@ -133,10 +133,36 @@ function localTemplatesAhead(serverSettings: Record<string, unknown> | null): bo
 
 async function syncSettingsJob(job: SettingsSyncJob, retries = 1): Promise<void> {
   syncLog('Syncing settings to server for', job.username);
+  let payload: SettingsSyncJob = job;
+  try {
+    const { useAccountStore } = await import('./account-store');
+    const accounts = useAccountStore.getState().accounts.filter((a) => !a.awaitingSignIn && (a.authMode === 'oauth' || a.rememberMe));
+    if (accounts.length > 0) {
+      payload = {
+        ...job,
+        settings: {
+          ...job.settings,
+          linkedJmapAccounts: accounts.map((a) => ({
+            id: a.id,
+            label: a.label,
+            serverUrl: a.serverUrl,
+            username: a.username,
+            authMode: a.authMode,
+            cookieSlot: a.cookieSlot,
+            displayName: a.displayName,
+            email: a.email,
+            did: a.did,
+          })),
+        },
+      };
+    }
+  } catch {
+    // Fallback to raw job if account-store cannot be imported
+  }
   const res = await apiFetch('/api/settings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(job),
+    body: JSON.stringify(payload),
   });
   if (res.status === 404) {
     syncWarn('Settings sync endpoint returned 404, disabling sync');
@@ -1590,7 +1616,7 @@ export const useSettingsStore = create<SettingsState>()(
             syncLog('Settings fetch failed:', body.error || `status ${res.status}`);
             return failWithoutForeignState();
           }
-          const { settings } = await res.json();
+          const { settings, linkedJmapAccounts, disconnectedJmapAccountIds } = await res.json();
           // With several logins on this device, the views spanning them stay
           // as the device has them (see CROSS_ACCOUNT_VIEW_KEYS).
           const { useAccountStore } = await import('./account-store');
@@ -1619,6 +1645,68 @@ export const useSettingsStore = create<SettingsState>()(
             isLoadingFromServer = false;
             writeSettingsOwner(accountId);
             pushTemplatesAfterLoad = localTemplatesAhead(settings);
+
+            if (Array.isArray(disconnectedJmapAccountIds) && disconnectedJmapAccountIds.length > 0) {
+              const accountState = useAccountStore.getState();
+              for (const removedId of disconnectedJmapAccountIds) {
+                if (typeof removedId === 'string' && removedId !== accountId && accountState.getAccountById(removedId)) {
+                  accountState.removeAccount(removedId);
+                }
+              }
+            }
+
+            if (Array.isArray(linkedJmapAccounts) && linkedJmapAccounts.length > 0) {
+              const accountState = useAccountStore.getState();
+              let addedOrUpdatedAny = false;
+              for (const entry of linkedJmapAccounts) {
+                if (!entry || typeof entry.username !== 'string' || typeof entry.serverUrl !== 'string') continue;
+                const entryId = entry.id || generateAccountId(entry.username, entry.serverUrl);
+                if (entryId === accountId) continue;
+                const existing = accountState.getAccountById(entryId);
+                if (!existing) {
+                  try {
+                    const newId = accountState.addAccount({
+                      label: entry.label || entry.username,
+                      serverUrl: entry.serverUrl,
+                      username: entry.username,
+                      authMode: entry.authMode || 'basic',
+                      rememberMe: true,
+                      displayName: entry.displayName || entry.username,
+                      email: entry.email || entry.username,
+                      did: entry.did,
+                      lastLoginAt: Date.now(),
+                      isConnected: false,
+                      hasError: false,
+                      isDefault: false,
+                    });
+                    if (typeof entry.cookieSlot === 'number') {
+                      accountState.updateAccount(newId, { cookieSlot: entry.cookieSlot, awaitingSignIn: undefined });
+                    }
+                    addedOrUpdatedAny = true;
+                  } catch {
+                    // Maximum accounts reached or validation error
+                  }
+                } else if (existing.awaitingSignIn || (typeof entry.cookieSlot === 'number' && existing.cookieSlot !== entry.cookieSlot)) {
+                  accountState.updateAccount(entryId, {
+                    cookieSlot: typeof entry.cookieSlot === 'number' ? entry.cookieSlot : existing.cookieSlot,
+                    rememberMe: true,
+                    awaitingSignIn: undefined,
+                  });
+                  addedOrUpdatedAny = true;
+                }
+              }
+              if (addedOrUpdatedAny) {
+                import('./auth-store').then(({ useAuthStore }) => {
+                  void useAuthStore.getState().restoreHydratedAccounts?.();
+                }).catch(() => {});
+              }
+            }
+
+            if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+              window.dispatchEvent(new CustomEvent('google-accounts-changed'));
+              window.dispatchEvent(new CustomEvent('microsoft-accounts-changed'));
+            }
+
             syncLog('Settings loaded from server successfully');
             // The per-account preferred sender identity (#507) is re-applied by
             // applyPreferredIdentity() in auth-store, invoked from the

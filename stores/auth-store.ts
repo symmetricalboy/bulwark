@@ -113,6 +113,7 @@ interface AuthState {
   removeAccount: (accountId: string) => void;
   switchAccount: (accountId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
+  restoreHydratedAccounts: () => Promise<void>;
   clearError: () => void;
   syncIdentities: () => void;
   /**
@@ -3065,6 +3066,83 @@ export const useAuthStore = create<AuthState>()(
         }
 
         set({ isLoading: false });
+      },
+
+      restoreHydratedAccounts: async () => {
+        const accountStore = useAccountStore.getState();
+        const unConnected = accountStore.accounts.filter(
+          (account) =>
+            !clients.has(account.id) &&
+            !account.awaitingSignIn &&
+            (account.authMode === 'oauth' || account.rememberMe || IS_LITE),
+        );
+        if (unConnected.length === 0) return;
+
+        set({ restoringAccounts: true });
+        const restoreSingle = async (account: AccountEntry) => {
+          if (clients.has(account.id) || account.awaitingSignIn) return;
+          try {
+            if (account.authMode === 'oauth') {
+              const res = await fetchSlotAccessToken(account.cookieSlot);
+              if (res.ok) {
+                const { access_token, expires_in } = await res.json();
+                const effectiveServerUrl = await resolveAuthoritativeServerUrl(account.serverUrl);
+                const refreshFn = get().refreshAccessToken;
+                const client = JMAPClient.withBearer(effectiveServerUrl, access_token, account.username, () => refreshFn());
+                bindClientStatusHandlers(client, set, get, account.id);
+                const contextSync = syncStalwartAuthContext(effectiveServerUrl, account.username, client.getAuthHeader(), account.cookieSlot);
+                await client.connect();
+                clients.set(account.id, client);
+                scheduleRefresh(expires_in, get().refreshAccessToken, account.id);
+                await contextSync;
+                accountStore.updateAccount(account.id, {
+                  isConnected: true,
+                  hasError: false,
+                  awaitingSignIn: undefined,
+                  serverUrl: effectiveServerUrl,
+                });
+                void syncAccountDisplayName(account.id, client);
+              }
+            } else {
+              const res = await fetchSlotSession(account.cookieSlot);
+              if (res.ok) {
+                const session: RememberedSession = await res.json();
+                const { did } = session;
+                const effectiveServerUrl = await resolveAuthoritativeServerUrl(session.serverUrl);
+                const client = clientForSession({ ...session, serverUrl: effectiveServerUrl });
+                bindClientStatusHandlers(client, set, get, account.id);
+                const contextSync = syncStalwartAuthContext(effectiveServerUrl, session.username, client.getAuthHeader(), account.cookieSlot);
+                await client.connect();
+                clients.set(account.id, client);
+                await contextSync;
+                accountStore.updateAccount(account.id, {
+                  isConnected: true,
+                  hasError: false,
+                  awaitingSignIn: undefined,
+                  serverUrl: effectiveServerUrl,
+                  ...(typeof did === 'string' ? { did } : {}),
+                });
+                void syncAccountDisplayName(account.id, client);
+              }
+            }
+          } catch (err) {
+            debug.error(`Failed to restore hydrated account ${account.id}:`, err);
+          }
+        };
+
+        const queue = [...unConnected];
+        const worker = async () => {
+          for (let next = queue.shift(); next; next = queue.shift()) {
+            await restoreSingle(next);
+          }
+        };
+        await Promise.allSettled(
+          Array.from({ length: Math.min(RESTORE_CONCURRENCY, queue.length) }, worker),
+        );
+        set((state) => ({
+          connectedAccountsRevision: state.connectedAccountsRevision + 1,
+          restoringAccounts: false,
+        }));
       },
 
       clearError: () => set({ error: null }),

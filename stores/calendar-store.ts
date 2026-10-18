@@ -729,7 +729,7 @@ export const useCalendarStore = create<CalendarStore>()(
           // calendars stay out of the event grid.
           const defaultSelected = calendars.filter(c => !c.isTasksOnly && !c.spaceConsentRequired).map(c => c.id);
           const selectedIds = get().selectedCalendarIds.filter((id) => !calendars.some((calendar) => calendar.id === id && calendar.spaceConsentRequired));
-          const existingExternalCals = get().calendars.filter(c => c.id.startsWith('google:'));
+          const existingExternalCals = get().calendars.filter(c => c.id.startsWith('google:') || c.id.startsWith('microsoft:'));
           const mergedCalendars = applyPreferredDefault([...calendars, ...existingExternalCals]);
           set({
             calendars: mergedCalendars,
@@ -780,7 +780,8 @@ export const useCalendarStore = create<CalendarStore>()(
           if (droppedEvents > 0) {
             debug.warn('calendar', 'Calendar fetchEvents dropped malformed events without a start field', { droppedEvents });
           }
-          set({ events, isLoadingEvents: false, dateRange: { start, end } });
+          const existingExternalEvents = get().events.filter(e => e.id.startsWith('google:') || e.id.startsWith('microsoft:'));
+          set({ events: [...events, ...existingExternalEvents], isLoadingEvents: false, dateRange: { start, end } });
         } catch (error) {
           const authorizationUrl = error instanceof SpaceCalendarError ? error.authorizationUrl : undefined;
           debug.error('Failed to fetch events:', error);
@@ -809,7 +810,7 @@ export const useCalendarStore = create<CalendarStore>()(
             }),
           );
           const calendars = results.flat();
-          const existingExternalCals = get().calendars.filter(c => c.id.startsWith('google:'));
+          const existingExternalCals = get().calendars.filter(c => c.id.startsWith('google:') || c.id.startsWith('microsoft:'));
           const mergedCalendars = applyPreferredDefault([...calendars, ...existingExternalCals]);
           set({
             calendars: mergedCalendars,
@@ -848,7 +849,8 @@ export const useCalendarStore = create<CalendarStore>()(
               }
             }),
           );
-          set({ events: results.flat(), isLoadingEvents: false, dateRange: { start, end } });
+          const existingExternalEvents = get().events.filter(e => e.id.startsWith('google:') || e.id.startsWith('microsoft:'));
+          set({ events: [...results.flat(), ...existingExternalEvents], isLoadingEvents: false, dateRange: { start, end } });
         } catch (error) {
           const authorizationUrl = error instanceof SpaceCalendarError ? error.authorizationUrl : undefined;
           debug.error('Failed to fetch all-account events:', error);
@@ -860,6 +862,18 @@ export const useCalendarStore = create<CalendarStore>()(
         set({ error: null });
         try {
           const requestedCalendarIds = Object.entries(event.calendarIds ?? {}).filter(([, included]) => included).map(([id]) => id);
+          if (requestedCalendarIds[0]?.startsWith('google:')) {
+            const { createGoogleEvent } = await import('@/lib/google/google-calendar-client');
+            const created = await createGoogleEvent(requestedCalendarIds[0], event);
+            set((state) => ({ events: [...state.events, created] }));
+            return created;
+          }
+          if (requestedCalendarIds[0]?.startsWith('microsoft:')) {
+            const { microsoftCalendarClient } = await import('@/lib/microsoft/microsoft-calendar-client');
+            const created = await microsoftCalendarClient.createEvent(requestedCalendarIds[0], event);
+            set((state) => ({ events: [...state.events, created] }));
+            return created;
+          }
           const selectedCalendars = requestedCalendarIds.map(id => get().calendars.find(c => c.id === id));
           const spaceCalendar = selectedCalendars.find(c => c?.source === 'atproto-space');
           if (spaceCalendar) {
@@ -980,6 +994,26 @@ export const useCalendarStore = create<CalendarStore>()(
       updateEvent: async (client, id, updates, sendSchedulingMessages) => {
         set({ error: null });
         try {
+          if (id.startsWith('google:')) {
+            const { updateGoogleEvent } = await import('@/lib/google/google-calendar-client');
+            const existing = get().events.find(e => e.id === id);
+            const calId = Object.keys(updates.calendarIds || existing?.calendarIds || {})[0] || '';
+            const updated = await updateGoogleEvent(calId, id, updates);
+            set((state) => ({
+              events: state.events.map(e => (e.id === id ? { ...e, ...updated } : e)),
+            }));
+            return;
+          }
+          if (id.startsWith('microsoft:')) {
+            const { microsoftCalendarClient } = await import('@/lib/microsoft/microsoft-calendar-client');
+            const existing = get().events.find(e => e.id === id);
+            const calId = Object.keys(updates.calendarIds || existing?.calendarIds || {})[0] || '';
+            const updated = await microsoftCalendarClient.updateEvent(calId, id, updates);
+            set((state) => ({
+              events: state.events.map(e => (e.id === id ? { ...e, ...updated } : e)),
+            }));
+            return;
+          }
           // Resolve shared event IDs and client-side expanded occurrence IDs
           const target = resolveMutationTarget(get().events, id, 'occurrence');
           const { storeEvent, realId, targetAccountId } = target;
@@ -1374,6 +1408,28 @@ export const useCalendarStore = create<CalendarStore>()(
       deleteEvent: async (client, id, sendSchedulingMessages) => {
         set({ error: null });
         try {
+          if (id.startsWith('google:')) {
+            const { deleteGoogleEvent } = await import('@/lib/google/google-calendar-client');
+            const existing = get().events.find(e => e.id === id);
+            const calId = Object.keys(existing?.calendarIds || {})[0] || '';
+            await deleteGoogleEvent(calId, id);
+            set((state) => ({
+              events: state.events.filter(e => e.id !== id),
+              selectedEventId: state.selectedEventId === id ? null : state.selectedEventId,
+            }));
+            return;
+          }
+          if (id.startsWith('microsoft:')) {
+            const { microsoftCalendarClient } = await import('@/lib/microsoft/microsoft-calendar-client');
+            const existing = get().events.find(e => e.id === id);
+            const calId = Object.keys(existing?.calendarIds || {})[0] || '';
+            await microsoftCalendarClient.deleteEvent(calId, id);
+            set((state) => ({
+              events: state.events.filter(e => e.id !== id),
+              selectedEventId: state.selectedEventId === id ? null : state.selectedEventId,
+            }));
+            return;
+          }
           // Resolve shared event IDs and client-side expanded occurrence IDs
           const target = resolveMutationTarget(get().events, id, 'occurrence');
           const { storeEvent, realId, targetAccountId } = target;
@@ -1450,6 +1506,17 @@ export const useCalendarStore = create<CalendarStore>()(
             return;
           }
 
+          if (calendarId.startsWith('microsoft:') || cal?.localAccountId?.startsWith('microsoft:')) {
+            const { microsoftCalendarClient } = await import('@/lib/microsoft/microsoft-calendar-client');
+            await microsoftCalendarClient.updateCalendar(calendarId, updates);
+            set((state) => ({
+              calendars: state.calendars.map(c =>
+                c.id === calendarId ? { ...c, ...updates } : c
+              ),
+            }));
+            return;
+          }
+
           const realId = cal?.originalId || stripLocalAccountPrefix(calendarId, cal?.localAccountId);
           const targetAccountId = cal?.accountId;
           const resolvedClient = resolveOptionalAccountClient(client, cal?.localAccountId);
@@ -1474,7 +1541,8 @@ export const useCalendarStore = create<CalendarStore>()(
           if (cal?.source === 'atproto-space') throw new SpaceCalendarError('Space calendars cannot be set as the JMAP default', 'unsupported_operation', 501);
 
           const isGoogle = calendarId.startsWith('google:') || cal?.localAccountId?.startsWith('google:');
-          if (!isGoogle) {
+          const isMicrosoft = calendarId.startsWith('microsoft:') || cal?.localAccountId?.startsWith('microsoft:');
+          if (!isGoogle && !isMicrosoft) {
             const realId = cal?.originalId || stripLocalAccountPrefix(calendarId, cal?.localAccountId);
             const targetAccountId = cal?.accountId;
             const resolvedClient = resolveOptionalAccountClient(client, cal?.localAccountId);

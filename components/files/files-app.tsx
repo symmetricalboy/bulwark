@@ -30,10 +30,12 @@ import { FilePreviewModal } from "@/components/files/file-preview-modal";
 import { WopiEditor } from "@/components/files/wopi-editor";
 import { useWopiStatus, canWopiOpen } from "@/hooks/use-wopi-status";
 import { AppTopBannerSlot } from "@/components/plugins/app-top-banner-slot";
-import { AlertTriangle, Loader2, GoogleDriveIcon, HardDrive, ChevronDown, Check, Plus } from "@/components/icons";
+import { AlertTriangle, Loader2, GoogleDriveIcon, OneDriveIcon, HardDrive, ChevronDown, Check, Plus } from "@/components/icons";
 import { Avatar } from "@/components/ui/avatar";
 import { GoogleDriveBrowser } from "@/components/files/google-drive-browser";
+import { OneDriveBrowser } from "@/components/files/onedrive-browser";
 import { getGoogleStatus, type GoogleAccountStatus } from "@/lib/google/google-drive-client";
+import type { MicrosoftAccountStatusResponse } from "@/lib/microsoft/types";
 import { isFilePreviewable } from "@/lib/file-preview";
 import { isImageFile } from "@/components/files/file-icons";
 import { appPath, buildFilesPath, parseFilesPath, type FilesDeepLink } from "@/lib/deep-links";
@@ -136,9 +138,11 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const [editFile, setEditFile] = useState<string | null>(null);
   const wopiStatus = useWopiStatus(filesEnabled);
   const isOfficeEditable = useCallback((name: string) => canWopiOpen(wopiStatus, name), [wopiStatus]);
-  const [storageSource, setStorageSource] = useState<'jmap' | 'google-drive'>('jmap');
+  const [storageSource, setStorageSource] = useState<'jmap' | 'google-drive' | 'onedrive'>('jmap');
   const [googleStatus, setGoogleStatus] = useState<GoogleAccountStatus | null>(null);
   const [selectedGoogleAccountId, setSelectedGoogleAccountId] = useState<string | null>(null);
+  const [microsoftStatus, setMicrosoftStatus] = useState<MicrosoftAccountStatusResponse | null>(null);
+  const [selectedMicrosoftAccountEmail, setSelectedMicrosoftAccountEmail] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -187,6 +191,18 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
           setStorageSource('google-drive');
         }
       });
+
+      fetch('/api/auth/microsoft/status')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((ms: MicrosoftAccountStatusResponse | null) => {
+          if (ms) {
+            setMicrosoftStatus(ms);
+            if (!selectedMicrosoftAccountEmail && ms.accounts && ms.accounts.length > 0) {
+              setSelectedMicrosoftAccountEmail(ms.accounts[0].email);
+            }
+          }
+        })
+        .catch(() => {});
     };
     checkStatus();
 
@@ -194,10 +210,16 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
       checkStatus();
     };
     window.addEventListener('google-services-updated', handleServicesUpdated);
+    window.addEventListener('google-accounts-changed', handleServicesUpdated);
+    window.addEventListener('microsoft-services-updated', handleServicesUpdated);
+    window.addEventListener('microsoft-accounts-changed', handleServicesUpdated);
     return () => {
       window.removeEventListener('google-services-updated', handleServicesUpdated);
+      window.removeEventListener('google-accounts-changed', handleServicesUpdated);
+      window.removeEventListener('microsoft-services-updated', handleServicesUpdated);
+      window.removeEventListener('microsoft-accounts-changed', handleServicesUpdated);
     };
-  }, []);
+  }, [selectedMicrosoftAccountEmail]);
 
   // Check auth on mount – skip when already authenticated so that navigating
   // between routes doesn't retrigger checkAuth's transient `{ client: null,
@@ -658,8 +680,16 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
         avatarColor: '#4285F4',
       });
     }
+    if (microsoftStatus?.connected) {
+      list.push({
+        accountId: '__onedrive__',
+        label: 'OneDrive',
+        email: microsoftStatus.email || 'OneDrive',
+        avatarColor: '#0078D4',
+      });
+    }
     return list;
-  }, [accountFolders, googleStatus]);
+  }, [accountFolders, googleStatus, microsoftStatus]);
 
   const isAccountPicker = isEmbedded && currentFilesAccountId === null;
   const currentAccountLabel = isEmbedded && currentFilesAccountId
@@ -675,6 +705,10 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
   const handleSelectAccount = useCallback((accountId: string) => {
     if (accountId === '__google_drive__') {
       setStorageSource('google-drive');
+      return;
+    }
+    if (accountId === '__onedrive__') {
+      setStorageSource('onedrive');
       return;
     }
     setStorageSource('jmap');
@@ -707,6 +741,17 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                 <div className="flex flex-col min-w-0 text-start ms-1">
                   <span className="font-semibold tracking-tight truncate">
                     {selectedGoogleAccountEmail || googleStatus?.email || 'Google Drive'}
+                  </span>
+                </div>
+              </>
+            ) : storageSource === 'onedrive' ? (
+              <>
+                <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                  <OneDriveIcon className="w-3.5 h-3.5 shrink-0" />
+                </span>
+                <div className="flex flex-col min-w-0 text-start ms-1">
+                  <span className="font-semibold tracking-tight truncate">
+                    {selectedMicrosoftAccountEmail || microsoftStatus?.email || 'OneDrive'}
                   </span>
                 </div>
               </>
@@ -874,6 +919,76 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                 )}
               </div>
             </div>
+
+            {/* Microsoft OneDrive Section */}
+            <div className="mt-1 pt-1.5 border-t border-border/50">
+              <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Microsoft OneDrive
+              </div>
+              <div className="px-1 space-y-0.5">
+                {microsoftStatus?.connected ? (
+                  <>
+                    {(microsoftStatus.accounts && microsoftStatus.accounts.length > 0
+                      ? microsoftStatus.accounts
+                      : (microsoftStatus.email ? [{ id: microsoftStatus.email, email: microsoftStatus.email, enabledApps: { drive: true } }] : [])
+                    )
+                      .filter((acc: { id: string; email: string; enabledApps?: { drive?: boolean } }) => (acc.enabledApps ? Boolean(acc.enabledApps.drive) : true))
+                      .map((acc) => {
+                        const isSelected =
+                          storageSource === 'onedrive' &&
+                          (selectedMicrosoftAccountEmail === acc.email || (!selectedMicrosoftAccountEmail && microsoftStatus.email === acc.email));
+                        return (
+                          <button
+                            key={acc.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMicrosoftAccountEmail(acc.email);
+                              setStorageSource('onedrive');
+                              setPickerOpen(false);
+                            }}
+                            className={cn(
+                              "flex items-center justify-between w-full px-2.5 py-2 rounded-lg text-start transition-colors cursor-pointer",
+                              isSelected ? "bg-accent text-accent-foreground font-medium" : "hover:bg-muted text-foreground"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <OneDriveIcon className="w-5 h-5 shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-foreground">
+                                  {acc.email}
+                                </p>
+                                <p className="truncate text-[11px] text-muted-foreground">
+                                  Microsoft OneDrive
+                                </p>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-primary shrink-0 ms-2" />}
+                          </button>
+                        );
+                      })}
+                    <a
+                      href="/api/auth/microsoft/start?returnTo=/files"
+                      className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5 shrink-0" />
+                      <span>Add another Microsoft Account</span>
+                    </a>
+                  </>
+                ) : (
+                  <a
+                    href="/api/auth/microsoft/start?returnTo=/files"
+                    className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  >
+                    <OneDriveIcon className="w-5 h-5 shrink-0 opacity-70" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-medium">Connect OneDrive</p>
+                      <p className="truncate text-[11px] text-muted-foreground">Add Microsoft storage</p>
+                    </div>
+                    <Plus className="w-4 h-4 text-muted-foreground shrink-0 ms-2" />
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -925,6 +1040,23 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
                   onBackToBulwarkFiles={() => setStorageSource('jmap')}
                   selectedAccountId={selectedGoogleAccountId}
                   onSelectAccountId={setSelectedGoogleAccountId}
+                />
+              </div>
+            </div>
+          ) : storageSource === 'onedrive' ? (
+            <div className="flex flex-1 min-h-0">
+              <AppSidebar>
+                <AppSidebarHeader
+                  icon={HardDrive}
+                  title={t("title")}
+                />
+                {storagePickerElement}
+              </AppSidebar>
+              <div className="flex-1 min-w-0 flex flex-col">
+                <OneDriveBrowser
+                  onBackToBulwarkFiles={() => setStorageSource('jmap')}
+                  selectedAccountEmail={selectedMicrosoftAccountEmail}
+                  onSelectAccountEmail={setSelectedMicrosoftAccountEmail}
                 />
               </div>
             </div>

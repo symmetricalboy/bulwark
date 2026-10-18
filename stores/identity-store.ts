@@ -115,12 +115,15 @@ export const useIdentityStore = create<IdentityStore>()(
       })),
 
       setGoogleDefaultIdentities: (googleDefaultIdentities) => set((state) => {
-        const nonGoogle = state.identities.filter(
-          i => !i.id.startsWith('google') && !googleDefaultIdentities.some(g => g.email.toLowerCase() === i.email.toLowerCase())
+        const nonExternal = state.identities.filter(
+          i =>
+            !i.id.startsWith('google') &&
+            !i.id.startsWith('microsoft') &&
+            !googleDefaultIdentities.some(g => g.email.toLowerCase() === i.email.toLowerCase())
         );
         return {
           googleDefaultIdentities,
-          identities: [...nonGoogle, ...googleDefaultIdentities],
+          identities: [...nonExternal, ...googleDefaultIdentities],
         };
       }),
 
@@ -230,19 +233,24 @@ export const useIdentityStore = create<IdentityStore>()(
 export async function syncGoogleIdentities(): Promise<Identity[]> {
   try {
     const { getGoogleStatus } = await import('@/lib/google/google-calendar-client');
-    const status = await getGoogleStatus().catch(() => ({ connected: false, accounts: [] }));
-    if (!status?.accounts?.length) {
-      return [];
-    }
-    const store = useIdentityStore.getState();
-    const existingGoogle = store.googleDefaultIdentities || [];
-    const nextGoogle: Identity[] = [];
+    const [status, msStatus] = await Promise.all([
+      getGoogleStatus().catch(() => ({ connected: false, accounts: [] })),
+      fetch('/api/auth/microsoft/status')
+        .then((r) => (r.ok ? r.json() : { accounts: [] }))
+        .catch(() => ({ accounts: [] })),
+    ]);
 
-    for (const acc of status.accounts) {
+    const store = useIdentityStore.getState();
+    const existingExternal = store.googleDefaultIdentities || [];
+    const nextExternal: Identity[] = [];
+
+    for (const acc of status?.accounts || []) {
       if (!acc.email) continue;
       const id = `google-default:${acc.id || acc.email}`;
-      const existing = existingGoogle.find(g => g.id === id || g.email.toLowerCase() === acc.email.toLowerCase());
-      nextGoogle.push({
+      const existing = existingExternal.find(
+        (g) => g.id === id || g.email.toLowerCase() === acc.email.toLowerCase()
+      );
+      nextExternal.push({
         id,
         name: existing?.name || acc.name || acc.email,
         email: acc.email,
@@ -256,9 +264,33 @@ export async function syncGoogleIdentities(): Promise<Identity[]> {
       });
     }
 
-    store.setGoogleDefaultIdentities(nextGoogle);
-    return nextGoogle;
+    for (const acc of msStatus?.accounts || []) {
+      if (!acc.email) continue;
+      const id = `microsoft-default:${acc.id || acc.email}`;
+      const existing = existingExternal.find(
+        (g) => g.id === id || g.email.toLowerCase() === acc.email.toLowerCase()
+      );
+      nextExternal.push({
+        id,
+        name: existing?.name || acc.name || acc.email,
+        email: acc.email,
+        replyTo: existing?.replyTo || undefined,
+        bcc: existing?.bcc || undefined,
+        textSignature: existing?.textSignature || '',
+        htmlSignature: existing?.htmlSignature || '',
+        mayDelete: false,
+        localAccountId: `microsoft:${acc.id || acc.email}`,
+        accountName: acc.name ? `${acc.name} (Microsoft)` : `Microsoft (${acc.email})`,
+      });
+    }
+
+    if (nextExternal.length > 0 || existingExternal.length > 0) {
+      store.setGoogleDefaultIdentities(nextExternal);
+    }
+    return nextExternal;
   } catch {
     return [];
   }
 }
+
+export const syncMicrosoftIdentities = syncGoogleIdentities;

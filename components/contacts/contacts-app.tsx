@@ -46,6 +46,7 @@ import { useProInterfaceActive } from "@/components/pro/pro-interface-redirect";
 import { useLiteLinkSegments } from "@/hooks/use-lite-link-segments";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useGoogleContacts } from "@/hooks/use-google-contacts";
+import { useMicrosoftContacts } from "@/hooks/use-microsoft-contacts";
 import { MvTopBar } from "@/components/layout/mv-top-bar";
 import { useMountainViewShell } from "@/hooks/use-mountain-view-shell";
 
@@ -179,8 +180,11 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
   // outside the embedded shell.
   const { enabled: multiAccountEnabled, accountClients } = useProMultiAccountContacts();
 
-  // Load and sync Google contacts when Google account is connected
+  // Load and sync Google and Microsoft contacts when connected
   const googleContacts = useGoogleContacts();
+  const microsoftContacts = useMicrosoftContacts();
+  void googleContacts;
+  void microsoftContacts;
 
   useEffect(() => {
     if (isEmbedded) return;

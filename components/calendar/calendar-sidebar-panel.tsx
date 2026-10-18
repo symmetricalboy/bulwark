@@ -21,6 +21,8 @@ import type { IJMAPClient } from '@/lib/jmap/client-interface';
 import { displayNow } from "@/lib/timezone";
 import { GoogleCalendarSection } from "./google-calendar-section";
 import { useGoogleCalendar } from "@/hooks/use-google-calendar";
+import { MicrosoftCalendarSection } from "./microsoft-calendar-section";
+import { useMicrosoftCalendar } from "@/hooks/use-microsoft-calendar";
 import { readableTextOn } from "@/lib/color-transform";
 
 /**
@@ -160,12 +162,15 @@ export function CalendarSidebarPanel({
   const activeLocalAccountId = useAccountStore((s) => s.activeAccountId);
 
   const googleCalendar = useGoogleCalendar();
+  const microsoftCalendar = useMicrosoftCalendar();
 
   const allCombinedCalendars = useMemo(() => {
     const existingIds = new Set(calendars.map(c => c.id));
     const extraGoogle = (googleCalendar.status.connected ? googleCalendar.calendars : []).filter(gc => !existingIds.has(gc.id));
-    return [...calendars, ...extraGoogle];
-  }, [calendars, googleCalendar.calendars, googleCalendar.status.connected]);
+    for (const gc of extraGoogle) existingIds.add(gc.id);
+    const extraMicrosoft = (microsoftCalendar.status.connected ? microsoftCalendar.calendars : []).filter(mc => !existingIds.has(mc.id));
+    return [...calendars, ...extraGoogle, ...extraMicrosoft];
+  }, [calendars, googleCalendar.calendars, googleCalendar.status.connected, microsoftCalendar.calendars, microsoftCalendar.status.connected]);
 
   // Tasks-only calendars (VTODO, no events) are kept in the store for the tasks
   // view but hidden from the event calendar list here.
@@ -174,8 +179,11 @@ export function CalendarSidebarPanel({
   const isGoogleCalendar = (cal: Calendar) =>
     cal.id.startsWith('google:') || (cal.localAccountId?.startsWith('google:') ?? false);
 
+  const isMicrosoftCalendar = (cal: Calendar) =>
+    cal.id.startsWith('microsoft:') || (cal.localAccountId?.startsWith('microsoft:') ?? false);
+
   const comailEventCalendars = useMemo(
-    () => eventCalendars.filter(c => !isGoogleCalendar(c)),
+    () => eventCalendars.filter(c => !isGoogleCalendar(c) && !isMicrosoftCalendar(c)),
     [eventCalendars],
   );
   const comailPersonalCalendars = useMemo(
@@ -296,7 +304,7 @@ export function CalendarSidebarPanel({
   const activeAccountEmail = activeAccount?.email || activeAccount?.username || (client ? client.getUsername() : '');
 
   const getCalendarDisplayName = (cal: Calendar) => {
-    if (!isGoogleCalendar(cal)) {
+    if (!isGoogleCalendar(cal) && !isMicrosoftCalendar(cal)) {
       if (cal.name === 'Stalwart Calendar' || (cal.isDefault && (!cal.name || cal.name === 'Stalwart Calendar' || cal.name === 'Default'))) {
         const matchedAccount = localAccounts.find(a => a.id === cal.localAccountId || a.id === activeLocalAccountId);
         return cal.accountName || matchedAccount?.email || matchedAccount?.username || activeAccountEmail || cal.name;
@@ -416,15 +424,16 @@ export function CalendarSidebarPanel({
     }
 
     const isBirthday = cal.id === BIRTHDAY_CALENDAR_ID || cal.id.endsWith('::#birthdays') || cal.name.toLowerCase() === 'birthdays';
+    const isExternal = isGoogleCalendar(cal) || isMicrosoftCalendar(cal);
     const canCreate = onCreateEvent && !isBirthday && cal.myRights?.mayWriteOwn !== false;
-    const canShare = onShareCalendar && cal.myRights?.mayShare && !cal.isShared && !isGoogleCalendar(cal);
+    const canShare = onShareCalendar && cal.myRights?.mayShare && !cal.isShared && !isExternal;
     const canSetDefault = !isBirthday && !cal.spaceConsentRequired && !cal.isShared && !cal.isDefault;
     const canEdit = !isBirthday && !cal.spaceConsentRequired && !cal.isShared;
     const canChangeColor = !!onColorChange;
     const hasColorOverride = !!cal.isShared && !!sharedCalendarColors[sharedCalendarColorKey(cal)];
     const canResetColor = !!onResetColor && hasColorOverride;
-    const canClear = onClearCalendar && !isBirthday && cal.myRights?.mayDelete !== false && !isGoogleCalendar(cal);
-    const canDelete = onDeleteCalendar && !isBirthday && !cal.spaceConsentRequired && !cal.isDefault && !cal.isShared && !isGoogleCalendar(cal);
+    const canClear = onClearCalendar && !isBirthday && cal.myRights?.mayDelete !== false && !isExternal;
+    const canDelete = onDeleteCalendar && !isBirthday && !cal.spaceConsentRequired && !cal.isDefault && !cal.isShared && !isExternal;
     const showSeparator = (canCreate || canShare || canSetDefault || canEdit || canChangeColor || canResetColor) && (canClear || canDelete);
     const color = cal.color || "#3b82f6";
 
@@ -715,6 +724,16 @@ export function CalendarSidebarPanel({
         selectedCalendarIds={selectedCalendarIds}
         isExpanded={!collapsedSections['google']}
         onToggleExpand={() => toggleSection('google')}
+        onContextMenu={(e, cal) => openContextMenu(e, cal)}
+      />
+
+      {/* ── MICROSOFT Section ────────────────────────────────── */}
+      <MicrosoftCalendarSection
+        microsoftCalendar={microsoftCalendar}
+        onToggleVisibility={onToggleVisibility}
+        selectedCalendarIds={selectedCalendarIds}
+        isExpanded={!collapsedSections['microsoft']}
+        onToggleExpand={() => toggleSection('microsoft')}
         onContextMenu={(e, cal) => openContextMenu(e, cal)}
       />
 

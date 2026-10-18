@@ -12,6 +12,7 @@ import {
   RefreshCw,
   CheckSquare,
   GoogleTasksIcon,
+  MicrosoftToDoIcon,
   ChevronDown,
   ChevronRight,
 } from '@/components/icons';
@@ -36,8 +37,11 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
   const filter = useTasksAppStore((s) => s.filter);
   const isGoogleConnected = useTasksAppStore((s) => s.isGoogleConnected);
   const connectedGoogleAccounts = useTasksAppStore((s) => s.connectedGoogleAccounts);
+  const isMicrosoftConnected = useTasksAppStore((s) => s.isMicrosoftConnected);
+  const connectedMicrosoftAccounts = useTasksAppStore((s) => s.connectedMicrosoftAccounts);
   const isSyncing = useTasksAppStore((s) => s.isSyncing);
   const googleEmail = useTasksAppStore((s) => s.googleEmail);
+  const microsoftEmail = useTasksAppStore((s) => s.microsoftEmail);
 
   const setActiveListId = useTasksAppStore((s) => s.setActiveListId);
   const setFilter = useTasksAppStore((s) => s.setFilter);
@@ -45,12 +49,13 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
   const updateList = useTasksAppStore((s) => s.updateList);
   const deleteList = useTasksAppStore((s) => s.deleteList);
   const syncGoogle = useTasksAppStore((s) => s.syncGoogle);
+  const syncMicrosoft = useTasksAppStore((s) => s.syncMicrosoft);
 
   const activeAccount = useAccountStore((s) => s.getActiveAccount());
   const accountLabel = activeAccount?.email || activeAccount?.username || activeAccount?.displayName || activeAccount?.label;
 
   const [creatingListTarget, setCreatingListTarget] = useState<{
-    source: 'comail' | 'google';
+    source: 'comail' | 'google' | 'microsoft';
     accountEmail?: string;
   } | null>(null);
   const [newListTitle, setNewListTitle] = useState('');
@@ -127,8 +132,9 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
     }
   }).length;
 
-  const comailLists = lists.filter((l) => l.source !== 'google');
+  const comailLists = lists.filter((l) => l.source !== 'google' && l.source !== 'microsoft');
   const googleLists = lists.filter((l) => l.source === 'google');
+  const microsoftLists = lists.filter((l) => l.source === 'microsoft');
 
   const googleAccountGroups = useMemo(() => {
     const map = new Map<string, { email: string; name?: string; lists: TaskList[] }>();
@@ -149,6 +155,26 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
 
     return Array.from(map.values());
   }, [connectedGoogleAccounts, googleLists, googleEmail]);
+
+  const microsoftAccountGroups = useMemo(() => {
+    const map = new Map<string, { email: string; name?: string; lists: TaskList[] }>();
+
+    for (const acc of connectedMicrosoftAccounts) {
+      if (acc.email && !map.has(acc.email)) {
+        map.set(acc.email, { email: acc.email, name: acc.name, lists: [] });
+      }
+    }
+
+    for (const list of microsoftLists) {
+      const email = list.accountEmail || microsoftEmail || 'Microsoft Account';
+      if (!map.has(email)) {
+        map.set(email, { email, lists: [] });
+      }
+      map.get(email)!.lists.push(list);
+    }
+
+    return Array.from(map.values());
+  }, [connectedMicrosoftAccounts, microsoftLists, microsoftEmail]);
 
   const renderListItem = (l: TaskList) => {
     const count = tasks.filter((t) => t.listId === l.id && t.status !== 'completed').length;
@@ -205,7 +231,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
               <Pencil className="w-3 h-3 text-muted-foreground" />
               <span>Rename</span>
             </button>
-            {(l.source === 'google' || comailLists.length > 1) && (
+            {(l.source === 'google' || l.source === 'microsoft' || comailLists.length > 1) && (
               <button
                 type="button"
                 onClick={() => handleDeleteList(l.id, l.title)}
@@ -464,33 +490,148 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
             })}
           </div>
         )}
+
+        {/* Microsoft Lists separated by Account */}
+        {isMicrosoftConnected && microsoftAccountGroups.length > 0 && (
+          <div className="space-y-2 pt-2">
+            {microsoftAccountGroups.map((group) => {
+              const collapseKey = `ms:${group.email}`;
+              const isCollapsed = !!collapsedAccounts[collapseKey];
+              const isAddingToThisGroup =
+                creatingListTarget?.source === 'microsoft' &&
+                creatingListTarget?.accountEmail === group.email;
+
+              return (
+                <div key={collapseKey}>
+                  <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleAccountCollapse(collapseKey)}
+                      className="flex items-center gap-1.5 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none flex-1"
+                      title={group.email}
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                      )}
+                      <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                        <MicrosoftToDoIcon className="w-3.5 h-3.5 shrink-0" />
+                      </span>
+                      <span className="truncate text-xs font-semibold text-foreground tracking-tight ms-1">
+                        {group.email}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreatingListTarget({ source: 'microsoft', accountEmail: group.email });
+                        if (isCollapsed) toggleAccountCollapse(collapseKey);
+                      }}
+                      className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
+                      title={`New list in ${group.email}`}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {!isCollapsed && (
+                    <div className="space-y-0.5">
+                      {isAddingToThisGroup && (
+                        <form onSubmit={handleCreateList} className="mx-2 w-[calc(100%-16px)] py-1 space-y-1">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={newListTitle}
+                            onChange={(e) => setNewListTitle(e.target.value)}
+                            placeholder={`New list in ${group.email}`}
+                            className="w-full text-xs px-2.5 py-1.5 bg-background text-foreground border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setCreatingListTarget(null)}
+                              className="h-6 text-[11px] px-2"
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit" size="sm" className="h-6 text-[11px] px-2">
+                              Create
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+
+                      {group.lists.length === 0 && !isAddingToThisGroup ? (
+                        <div className="mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 text-xs text-muted-foreground italic">
+                          No lists found
+                        </div>
+                      ) : (
+                        group.lists.map(renderListItem)
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Google Account Status & Sync (only shown if Google is connected) */}
-      {isGoogleConnected && (
-        <div className="p-3 border-t border-border/60 shrink-0 bg-secondary">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
-                <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
-                Google Tasks
-              </p>
-              <p className="text-[11px] text-muted-foreground truncate">
-                {connectedGoogleAccounts.length > 1
-                  ? `${connectedGoogleAccounts.length} accounts connected`
-                  : googleEmail || 'Connected'}
-              </p>
+      {/* Connected Account Status & Sync */}
+      {(isGoogleConnected || isMicrosoftConnected) && (
+        <div className="p-3 border-t border-border/60 shrink-0 bg-secondary space-y-2">
+          {isGoogleConnected && (
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
+                  <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
+                  Google Tasks
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {connectedGoogleAccounts.length > 1
+                    ? `${connectedGoogleAccounts.length} accounts connected`
+                    : googleEmail || 'Connected'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void syncGoogle()}
+                disabled={isSyncing}
+                className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Sync Google Tasks now"
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5', isSyncing && 'animate-spin')} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => void syncGoogle()}
-              disabled={isSyncing}
-              className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Sync now"
-            >
-              <RefreshCw className={cn('w-3.5 h-3.5', isSyncing && 'animate-spin')} />
-            </button>
-          </div>
+          )}
+
+          {isMicrosoftConnected && (
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
+                  <MicrosoftToDoIcon className="w-3.5 h-3.5 shrink-0" />
+                  Microsoft To Do
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {connectedMicrosoftAccounts.length > 1
+                    ? `${connectedMicrosoftAccounts.length} accounts connected`
+                    : microsoftEmail || 'Connected'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void syncMicrosoft()}
+                disabled={isSyncing}
+                className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Sync Microsoft To Do now"
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5', isSyncing && 'animate-spin')} />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

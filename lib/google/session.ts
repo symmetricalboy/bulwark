@@ -8,6 +8,10 @@ import {
 } from './auth';
 import type { GoogleTokens, GoogleSessionData, LinkedGoogleAccount, GoogleAccountAppToggles } from './types';
 import { isAppEnabled } from './types';
+import {
+  syncGoogleSessionWithStorage,
+  saveGoogleSessionToStorage,
+} from '@/lib/linked-accounts-sync';
 import { logger } from '@/lib/logger';
 
 export interface GoogleSessionResult {
@@ -32,6 +36,42 @@ export interface GoogleSessionOptions {
   comailAccountEmail?: string;
 }
 
+export function matchesComailOwner(
+  account: Pick<LinkedGoogleAccount, 'comailAccountId' | 'comailAccountEmail'>,
+  requestedComailId?: string,
+  requestedComailEmail?: string
+): boolean {
+  if (!requestedComailId && !requestedComailEmail) return true;
+  if (!account.comailAccountId && !account.comailAccountEmail) return true;
+
+  if (
+    requestedComailEmail &&
+    account.comailAccountEmail &&
+    account.comailAccountEmail.toLowerCase() === requestedComailEmail.toLowerCase()
+  ) {
+    return true;
+  }
+
+  if (
+    requestedComailId &&
+    account.comailAccountId &&
+    account.comailAccountId.toLowerCase() === requestedComailId.toLowerCase()
+  ) {
+    return true;
+  }
+
+  // Match across origins (e.g. localhost vs production domain) when the Comail username matches
+  const reqUser = (requestedComailEmail || requestedComailId || '').split('@')[0]?.toLowerCase();
+  const accUser = (account.comailAccountEmail || account.comailAccountId || '')
+    .split('@')[0]
+    ?.toLowerCase();
+  if (reqUser && accUser && reqUser === accUser) {
+    return true;
+  }
+
+  return false;
+}
+
 function resolveCandidateAccounts(
   sessionData: GoogleSessionData,
   request: NextRequest,
@@ -51,19 +91,9 @@ function resolveCandidateAccounts(
 
   let candidateAccounts = sessionData.accounts;
   if (requestedComailId || requestedComailEmail) {
-    candidateAccounts = sessionData.accounts.filter((a) => {
-      if (requestedComailId && a.comailAccountId) {
-        return a.comailAccountId === requestedComailId;
-      }
-      if (requestedComailEmail && a.comailAccountEmail) {
-        return a.comailAccountEmail.toLowerCase() === requestedComailEmail.toLowerCase();
-      }
-      // Allow legacy accounts without tagged owner
-      if (!a.comailAccountId && !a.comailAccountEmail) {
-        return true;
-      }
-      return false;
-    });
+    candidateAccounts = sessionData.accounts.filter((a) =>
+      matchesComailOwner(a, requestedComailId, requestedComailEmail)
+    );
   }
 
   return candidateAccounts;
@@ -74,9 +104,13 @@ export async function getAllGoogleSessions(
   options?: GoogleSessionOptions
 ): Promise<AllGoogleSessionsResult | null> {
   const cookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
-  if (!cookie) return null;
+  const cookieSession = cookie ? decryptGoogleSessionData(cookie) : null;
 
-  const sessionData = decryptGoogleSessionData(cookie);
+  const { sessionData, cookieChanged } = await syncGoogleSessionWithStorage(
+    request,
+    cookieSession,
+    options
+  );
   if (!sessionData || sessionData.accounts.length === 0) return null;
 
   let candidateAccounts = resolveCandidateAccounts(sessionData, request, options);
@@ -103,6 +137,7 @@ export async function getAllGoogleSessions(
 
       if (refreshed) {
         account.tokens = refreshed;
+        account.updatedAt = Date.now();
         anyRefreshed = true;
       }
 
@@ -123,10 +158,14 @@ export async function getAllGoogleSessions(
 
   if (sessions.length === 0) return null;
 
+  if (anyRefreshed) {
+    await saveGoogleSessionToStorage(request, sessionData, options);
+  }
+
   return {
     sessions,
     sessionData,
-    refreshedSessionData: anyRefreshed ? { ...sessionData } : undefined,
+    refreshedSessionData: anyRefreshed || cookieChanged ? { ...sessionData } : undefined,
   };
 }
 
@@ -135,9 +174,13 @@ export async function getGoogleSession(
   options?: GoogleSessionOptions
 ): Promise<GoogleSessionResult | null> {
   const cookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
-  if (!cookie) return null;
+  const cookieSession = cookie ? decryptGoogleSessionData(cookie) : null;
 
-  const sessionData = decryptGoogleSessionData(cookie);
+  const { sessionData, cookieChanged } = await syncGoogleSessionWithStorage(
+    request,
+    cookieSession,
+    options
+  );
   if (!sessionData || sessionData.accounts.length === 0) return null;
 
   const candidateAccounts = resolveCandidateAccounts(sessionData, request, options);
@@ -194,13 +237,27 @@ export async function getGoogleSession(
     let refreshedSessionData: GoogleSessionData | undefined;
     if (refreshed) {
       account.tokens = refreshed;
+      account.updatedAt = Date.now();
+      refreshedSessionData = { ...sessionData };
+      await saveGoogleSessionToStorage(request, sessionData, options);
+    } else if (cookieChanged) {
       refreshedSessionData = { ...sessionData };
     }
 
+    const effectiveTokens = refreshed || account.tokens;
+    let refreshedTokensForCookie: (GoogleTokens & { _sessionData?: GoogleSessionData }) | undefined;
+    if (refreshed || cookieChanged) {
+      refreshedTokensForCookie = { ...effectiveTokens };
+      Object.defineProperty(refreshedTokensForCookie, '_sessionData', {
+        value: sessionData,
+        enumerable: false,
+      });
+    }
+
     return {
-      tokens: refreshed || account.tokens,
+      tokens: effectiveTokens,
       accessToken,
-      refreshedTokens: refreshed,
+      refreshedTokens: refreshedTokensForCookie,
       refreshedSessionData,
       account,
       sessionData,
@@ -213,12 +270,18 @@ export async function getGoogleSession(
 
 export function attachRefreshedTokens(
   response: NextResponse,
-  refreshed?: GoogleTokens | GoogleSessionData | GoogleSessionResult | AllGoogleSessionsResult
+  refreshed?:
+    | (GoogleTokens & { _sessionData?: GoogleSessionData })
+    | GoogleSessionData
+    | GoogleSessionResult
+    | AllGoogleSessionsResult
 ): void {
   if (!refreshed) return;
 
   let cookieVal: string;
-  if ('refreshedSessionData' in refreshed && refreshed.refreshedSessionData) {
+  if ('_sessionData' in refreshed && refreshed._sessionData) {
+    cookieVal = encryptGoogleSessionData(refreshed._sessionData);
+  } else if ('refreshedSessionData' in refreshed && refreshed.refreshedSessionData) {
     cookieVal = encryptGoogleSessionData(refreshed.refreshedSessionData);
   } else if ('accounts' in refreshed && Array.isArray((refreshed as GoogleSessionData).accounts)) {
     cookieVal = encryptGoogleSessionData(refreshed as GoogleSessionData);
@@ -238,4 +301,5 @@ export function attachRefreshedTokens(
     maxAge: 60 * 60 * 24 * 30,
   });
 }
+
 

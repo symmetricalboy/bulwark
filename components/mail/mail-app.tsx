@@ -44,6 +44,7 @@ import { CalendarEventNotificationToaster } from "@/components/layout/calendar-e
 import { useAuthStore, redirectToLogin, saveRedirectAfterLogin } from '@/stores/auth-store';
 import { useSettingsStore } from "@/stores/settings-store";
 import { sendGoogleEmail, isGoogleSender } from "@/lib/google/google-mail-client";
+import { sendMicrosoftEmailClient, isMicrosoftSender } from "@/lib/microsoft/microsoft-mail-client";
 import { syncGoogleIdentities } from "@/stores/identity-store";
 import { useEffectiveMailLayout } from "@/hooks/use-effective-mail-layout";
 import { useContactStore } from "@/stores/contact-store";
@@ -1969,6 +1970,79 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       }
     }
 
+    if (isMicrosoftSender(data.fromEmail, data.localAccountId, data.identityId)) {
+      try {
+        const effectiveMode = pendingDraft?.mode ?? composerMode;
+        const originalEmailId = selectedEmail?.id;
+        let microsoftAttachments: Array<{ filename: string; contentType: string; contentBase64: string }> | undefined;
+
+        if (data.attachments && data.attachments.length > 0 && sendClient) {
+          microsoftAttachments = [];
+          for (const att of data.attachments) {
+            try {
+              const downloadUrl = sendClient.getBlobDownloadUrl(att.blobId, att.name, att.type);
+              const res = await fetch(downloadUrl);
+              if (res.ok) {
+                const buffer = await res.arrayBuffer();
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                  binary += String.fromCharCode(bytes[i]);
+                }
+                const base64 = btoa(binary);
+                microsoftAttachments.push({
+                  filename: att.name,
+                  contentType: att.type || 'application/octet-stream',
+                  contentBase64: base64,
+                });
+              }
+            } catch (err) {
+              debug.error('Failed to convert attachment for Microsoft send:', err);
+            }
+          }
+        }
+
+        const microsoftAccountId = data.localAccountId?.startsWith('microsoft:')
+          ? data.localAccountId.replace(/^microsoft:/, '')
+          : data.fromEmail || '';
+
+        await sendMicrosoftEmailClient({
+          accountEmail: microsoftAccountId,
+          fromName: data.fromName,
+          to: data.to.map((email) => ({ email })),
+          cc: data.cc?.map((email) => ({ email })),
+          bcc: data.bcc?.map((email) => ({ email })),
+          subject: data.subject,
+          textBody: data.body,
+          htmlBody: data.htmlBody,
+          attachments: microsoftAttachments,
+        });
+
+        submitted = true;
+        setShowComposer(false);
+        if (selectedEmail && (selectedEmail.id === data.draftId || selectedEmail.id === pendingDraft?.draftId)) {
+          selectEmail(null);
+        }
+        setPendingDraft(null);
+
+        if (originalEmailId && (effectiveMode === 'reply' || effectiveMode === 'replyAll' || effectiveMode === 'forward')) {
+          const keyword = effectiveMode === 'forward' ? '$forwarded' : '$answered';
+          try {
+            await useEmailStore.getState().markEmailKeyword(client, originalEmailId, keyword);
+          } catch (e) {
+            debug.error(`Failed to set ${keyword} keyword:`, e);
+          }
+        }
+
+        toast.success(t('notifications.email_sent'));
+        return;
+      } catch (err) {
+        debug.error('Failed to send email via Microsoft:', err);
+        toast.error(t('notifications.error_sending'));
+        throw err;
+      }
+    }
+
     try {
       const effectiveMode = pendingDraft?.mode ?? composerMode;
       const originalEmailId = selectedEmail?.id;
@@ -2944,7 +3018,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
       setTabletListVisible(true);
     }
 
-    if (mailboxId.startsWith('google:')) {
+    if (mailboxId.startsWith('google:') || mailboxId.startsWith('microsoft:')) {
       await fetchEmails(client!, mailboxId);
       return;
     }
@@ -3670,7 +3744,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     let cancelled = false;
     const ref = mvConversationRef;
 
-    if (ref.id.startsWith('google:')) {
+    if (ref.id.startsWith('google:') || ref.id.startsWith('microsoft:')) {
       const matching = activeEmails
         .filter((e) => e.threadId && e.threadId === ref.threadId)
         .sort((a, b) => a.receivedAt.localeCompare(b.receivedAt));
@@ -3807,6 +3881,15 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
         return;
       }
 
+      if (email.id.startsWith('microsoft:')) {
+        const { fetchMicrosoftEmailDetailClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        const fullEmail = await fetchMicrosoftEmailDetailClient(email.id);
+        if (fullEmail) {
+          selectEmail(fullEmail);
+        }
+        return;
+      }
+
       const { client: fetchClient, accountId } = resolveEmailBlobContext(listEmail ?? null, client);
       if (!fetchClient) {
         console.warn('[mail-app] No connected client for email source');
@@ -3889,7 +3972,7 @@ export function MailApp({ linkSegments: routeSegments }: MailAppProps = {}) {
     }
 
     try {
-      if (thread.emails?.[0]?.id.startsWith('google:')) {
+      if (thread.emails?.[0]?.id.startsWith('google:') || thread.emails?.[0]?.id.startsWith('microsoft:')) {
         setConversationEmails(thread.emails);
         setIsLoadingConversation(false);
         return;

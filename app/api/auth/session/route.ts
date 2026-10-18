@@ -7,13 +7,15 @@ import { getCookieOptions } from '@/lib/oauth/cookie-config';
 import { JmapAuthVerificationError, verifyJmapIdentity } from '@/lib/auth/verify-jmap-auth';
 import {
   clearStalwartAuthContextInStore,
+  readStalwartAuthContextFromStore,
   setStalwartAuthContextInStore,
+  stalwartAuthContextCookieName,
 } from '@/lib/stalwart/auth-context';
 import { configManager } from '@/lib/admin/config-manager';
 import { isPublicHttpUrl } from '@/lib/security/url-guard';
 import { recordLogin } from '@/lib/telemetry/login-tracker';
 import { parseJmapServers, resolveTrustedJmapUrl } from '@/lib/admin/jmap-servers';
-import { MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
+import { generateAccountId, generateAvatarColor, MAX_ACCOUNT_SLOTS } from '@/lib/account-utils';
 import { backfillSessionIdentity } from '@/lib/access-approval/relay-bridge';
 import { rejectCrossOriginRequest } from '@/lib/security/same-origin';
 import { insecureCookieHint, verificationFailureBody } from '@/lib/auth/verification-failure';
@@ -22,6 +24,10 @@ import { revokeImpersonationCredential } from '@/lib/impersonation/app-password'
 import { IMPERSONATION_GRANT_COOKIE, openImpersonationGrant } from '@/lib/impersonation/grant-cookie';
 import { revokeWopiTokens } from '@/lib/wopi/revocation';
 import { clearPairReauthInStore } from '@/lib/auth/pair-reauth';
+import {
+  removeJmapAccountsFromStorage,
+  syncJmapSlotLoginToStorage,
+} from '@/lib/linked-accounts-sync';
 
 function sessionCookieOptions() {
   return {
@@ -143,6 +149,23 @@ export async function POST(request: NextRequest) {
       serverUrl: normalizedServerUrl,
       username,
       authHeader,
+    });
+
+    await syncJmapSlotLoginToStorage(cookieStore, {
+      id: generateAccountId(username, normalizedServerUrl),
+      username,
+      serverUrl: normalizedServerUrl,
+      label: username,
+      displayName: username,
+      email: username,
+      avatarColor: generateAvatarColor(username),
+      authMode: accessToken ? 'token' : 'basic',
+      rememberMe: true,
+      createdAt: Date.now(),
+      lastLoginAt: Date.now(),
+      sessionToken: token,
+      stalwartContextToken: cookieStore.get(stalwartAuthContextCookieName(slot))?.value,
+      updatedAt: Date.now(),
     });
 
     void recordLogin(username, normalizedServerUrl);
@@ -284,10 +307,24 @@ export async function DELETE(request: NextRequest) {
       clearPairReauthInStore(cookieStore);
     } else {
       const slot = getSlot(request);
+      const existingSessionToken = cookieStore.get(sessionCookieName(slot))?.value;
+      const existingSession = existingSessionToken ? decryptSession(existingSessionToken) : null;
+      const existingCtx = readStalwartAuthContextFromStore(cookieStore, slot);
+      const removedUsername = existingSession?.username || existingCtx?.username;
+      const removedServerUrl = existingSession?.serverUrl || existingCtx?.serverUrl;
+      const removedAccountId =
+        removedUsername && removedServerUrl
+          ? generateAccountId(removedUsername, removedServerUrl)
+          : null;
+
       cookieStore.delete(sessionCookieName(slot));
       clearStalwartAuthContextInStore(cookieStore, slot);
       if (slot === 0) await revokeImpersonationGrant(cookieStore);
       clearPairReauthInStore(cookieStore, slot);
+
+      if (removedAccountId) {
+        await removeJmapAccountsFromStorage(cookieStore, [removedAccountId]);
+      }
     }
 
     return NextResponse.json({ ok: true });

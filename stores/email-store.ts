@@ -2252,6 +2252,27 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return;
       }
 
+      if (targetMailboxId && targetMailboxId.startsWith('microsoft:')) {
+        const { fetchMicrosoftMessagesClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        const { emails, total, nextPageToken } = await fetchMicrosoftMessagesClient({
+          mailboxId: targetMailboxId,
+          maxResults: 50,
+        });
+        if (!isCurrentView()) return;
+        set({
+          emails,
+          googleNextPageToken: nextPageToken || null,
+          hasMoreEmails: Boolean(nextPageToken),
+          totalEmails: total ?? emails.length,
+          isLoading: false,
+          error: null,
+          emailListSync: null,
+          threadEmailsCache: new Map(),
+          threadEmailCounts: new Map(),
+        });
+        return;
+      }
+
       // Unified / cross-account views use client-only virtual mailbox ids
       // (`__cross_*`, `__unified_*`) that no JMAP server accepts as `inMailbox`.
       // Route them through the fan-out loaders (mirrors loadMoreEmails /
@@ -2470,6 +2491,42 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
           googleAccountId: parsed?.accountEmail,
           pageToken: googleNextPageToken,
           query: searchQuery || undefined,
+          maxResults: 50,
+        });
+        if (!isCurrentView()) return;
+        const existingIds = new Set(currentEmails.map((e) => e.id));
+        const filteredNew = newEmails.filter((e) => !existingIds.has(e.id));
+        const combined = [...currentEmails, ...filteredNew];
+        set({
+          emails: combined,
+          googleNextPageToken: nextPageToken || null,
+          hasMoreEmails: Boolean(nextPageToken),
+          totalEmails: total ?? combined.length,
+          isLoadingMore: false,
+        });
+      } catch (error) {
+        if (!isCurrentView()) return;
+        set({
+          error: error instanceof Error ? error.message : "Failed to load more emails",
+          isLoadingMore: false,
+        });
+      }
+      return;
+    }
+
+    if (selectedMailbox && selectedMailbox.startsWith('microsoft:')) {
+      const { googleNextPageToken, emails: currentEmails, searchQuery } = get();
+      if (!googleNextPageToken) {
+        set({ isLoadingMore: false, hasMoreEmails: false });
+        return;
+      }
+      set({ isLoadingMore: true, error: null });
+      try {
+        const { fetchMicrosoftMessagesClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        const { emails: newEmails, total, nextPageToken } = await fetchMicrosoftMessagesClient({
+          mailboxId: selectedMailbox,
+          pageToken: googleNextPageToken,
+          q: searchQuery || undefined,
           maxResults: 50,
         });
         if (!isCurrentView()) return;
@@ -2827,6 +2884,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return;
       }
 
+      if (emailId.startsWith('microsoft:')) {
+        const { deleteMicrosoftEmailClient, updateMicrosoftEmailClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        if (forceDelete) {
+          await deleteMicrosoftEmailClient(emailId, true);
+        } else {
+          await updateMicrosoftEmailClient(emailId, { trash: true });
+        }
+        set((state) => ({
+          emails: state.emails.filter(e => e.id !== emailId),
+          selectedEmail: state.selectedEmail?.id === emailId ? null : state.selectedEmail,
+          totalEmails: Math.max(0, state.totalEmails - 1),
+        }));
+        return;
+      }
+
       // Get the email to check if it's unread and which mailboxes it belongs to
       const email = get().emails.find(e => e.id === emailId);
       if (!email) return;
@@ -2947,6 +3019,21 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       if (emailId.startsWith('google:')) {
         const { updateGoogleEmail } = await import('@/lib/google/google-mail-client');
         await updateGoogleEmail(emailId, { read });
+        set((state) => ({
+          emails: state.emails.map((e) =>
+            e.id === emailId ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
+          ),
+          selectedEmail:
+            state.selectedEmail?.id === emailId
+              ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $seen: read } }
+              : state.selectedEmail,
+        }));
+        return;
+      }
+
+      if (emailId.startsWith('microsoft:')) {
+        const { updateMicrosoftEmailClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        await updateMicrosoftEmailClient(emailId, { markRead: read });
         set((state) => ({
           emails: state.emails.map((e) =>
             e.id === emailId ? { ...e, keywords: { ...e.keywords, $seen: read } } : e
@@ -3534,6 +3621,24 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         return;
       }
 
+      if (targetMailboxId && targetMailboxId.startsWith('microsoft:')) {
+        const { fetchMicrosoftMessagesClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        const { emails, total, nextPageToken } = await fetchMicrosoftMessagesClient({
+          mailboxId: targetMailboxId,
+          q: query,
+          maxResults: 50,
+        });
+        set({
+          emails,
+          googleNextPageToken: nextPageToken || null,
+          hasMoreEmails: Boolean(nextPageToken),
+          totalEmails: total ?? emails.length,
+          isLoading: false,
+          error: null,
+        });
+        return;
+      }
+
       const { isUnifiedView, unifiedRole, crossView, searchMailboxId, searchFilters, selectedKeyword } = get();
       const emailsPerPage = useSettingsStore.getState().emailsPerPage;
 
@@ -3794,6 +3899,22 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
         const isFlagged = email?.keywords?.$flagged || false;
         const { updateGoogleEmail } = await import('@/lib/google/google-mail-client');
         await updateGoogleEmail(emailId, { starred: !isFlagged });
+        set((state) => ({
+          emails: state.emails.map(e =>
+            e.id === emailId ? { ...e, keywords: { ...e.keywords, $flagged: !isFlagged } } : e
+          ),
+          selectedEmail: state.selectedEmail?.id === emailId
+            ? { ...state.selectedEmail, keywords: { ...state.selectedEmail.keywords, $flagged: !isFlagged } }
+            : state.selectedEmail,
+        }));
+        return;
+      }
+
+      if (emailId.startsWith('microsoft:')) {
+        const email = get().emails.find(e => e.id === emailId);
+        const isFlagged = email?.keywords?.$flagged || false;
+        const { updateMicrosoftEmailClient } = await import('@/lib/microsoft/microsoft-mail-client');
+        await updateMicrosoftEmailClient(emailId, { flagged: !isFlagged });
         set((state) => ({
           emails: state.emails.map(e =>
             e.id === emailId ? { ...e, keywords: { ...e.keywords, $flagged: !isFlagged } } : e
@@ -4763,6 +4884,16 @@ export const useEmailStore = create<EmailStore>((set, get) => ({
       const { emails, total } = await fetchGoogleEmails({
         mailboxId: selectedMailbox,
         googleAccountId: parsed?.accountEmail,
+      });
+      if (!isCurrentView()) return;
+      set({ emails, totalEmails: total ?? emails.length });
+      return;
+    }
+
+    if (!selectedKeyword && selectedMailbox?.startsWith('microsoft:')) {
+      const { fetchMicrosoftMessagesClient } = await import('@/lib/microsoft/microsoft-mail-client');
+      const { emails, total } = await fetchMicrosoftMessagesClient({
+        mailboxId: selectedMailbox,
       });
       if (!isCurrentView()) return;
       set({ emails, totalEmails: total ?? emails.length });

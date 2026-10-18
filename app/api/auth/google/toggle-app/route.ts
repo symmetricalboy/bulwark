@@ -4,8 +4,13 @@ import {
   encryptGoogleSessionData,
   GOOGLE_SESSION_COOKIE,
 } from '@/lib/google/auth';
+import { matchesComailOwner } from '@/lib/google/session';
 import type { GoogleAccountAppToggles, GoogleAppMode } from '@/lib/google/types';
 import { DEFAULT_GOOGLE_APP_TOGGLES, normalizeAppMode } from '@/lib/google/types';
+import {
+  syncGoogleSessionWithStorage,
+  saveGoogleSessionToStorage,
+} from '@/lib/linked-accounts-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,6 +40,7 @@ export async function POST(request: NextRequest) {
 
   const { accountId, app, enabled, settings } = body;
   const comailAccountId = body.comailAccountId || request.headers.get('x-comail-account-id') || undefined;
+  const comailAccountEmail = body.comailAccountEmail || request.headers.get('x-comail-account-email') || undefined;
   if (!accountId || (!app && !settings)) {
     return NextResponse.json(
       { error: 'Missing accountId, or missing app / settings' },
@@ -50,11 +56,12 @@ export async function POST(request: NextRequest) {
   }
 
   const cookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
-  if (!cookie) {
-    return NextResponse.json({ error: 'No active Google session' }, { status: 401 });
-  }
+  const cookieSession = cookie ? decryptGoogleSessionData(cookie) : null;
+  const { sessionData } = await syncGoogleSessionWithStorage(request, cookieSession, {
+    comailAccountId,
+    comailAccountEmail,
+  });
 
-  const sessionData = decryptGoogleSessionData(cookie);
   if (!sessionData || sessionData.accounts.length === 0) {
     return NextResponse.json({ error: 'No connected Google accounts' }, { status: 404 });
   }
@@ -62,7 +69,7 @@ export async function POST(request: NextRequest) {
   const account = sessionData.accounts.find(
     (a) =>
       (a.id === accountId || a.email.toLowerCase() === accountId.toLowerCase()) &&
-      (!comailAccountId || !a.comailAccountId || a.comailAccountId === comailAccountId)
+      matchesComailOwner(a, comailAccountId, comailAccountEmail)
   );
 
   if (!account) {
@@ -86,6 +93,12 @@ export async function POST(request: NextRequest) {
       account.enabledApps[app] = normalizeAppMode(enabled);
     }
   }
+  account.updatedAt = Date.now();
+
+  await saveGoogleSessionToStorage(request, sessionData, {
+    comailAccountId,
+    comailAccountEmail,
+  });
 
   const response = NextResponse.json({
     ok: true,
@@ -108,3 +121,4 @@ export async function POST(request: NextRequest) {
 
   return response;
 }
+

@@ -7,6 +7,10 @@ import {
 } from '@/lib/google/auth';
 import type { GoogleSessionData, LinkedGoogleAccount } from '@/lib/google/types';
 import { DEFAULT_GOOGLE_APP_TOGGLES } from '@/lib/google/types';
+import {
+  syncGoogleSessionWithStorage,
+  saveGoogleSessionToStorage,
+} from '@/lib/linked-accounts-sync';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -86,11 +90,15 @@ export async function GET(request: NextRequest) {
   try {
     const tokens = await exchangeGoogleCode(code);
 
-    // Retrieve existing session accounts if any
+    // Retrieve existing session accounts (merged with Comail settings storage)
     const existingCookie = request.cookies.get(GOOGLE_SESSION_COOKIE)?.value;
-    const sessionData: GoogleSessionData = (existingCookie
+    const cookieSession: GoogleSessionData | null = existingCookie
       ? decryptGoogleSessionData(existingCookie)
-      : null) || { accounts: [] };
+      : null;
+    const { sessionData } = await syncGoogleSessionWithStorage(request, cookieSession, {
+      comailAccountId,
+      comailAccountEmail,
+    });
 
     const email = tokens.email || '';
     const baseId = email || tokens.accessToken.slice(-8);
@@ -110,6 +118,7 @@ export async function GET(request: NextRequest) {
         (existingIdx >= 0 ? sessionData.accounts[existingIdx].tokens.refreshToken : undefined),
     };
 
+    const now = Date.now();
     const linkedAccount: LinkedGoogleAccount = {
       id: accountId,
       email,
@@ -121,7 +130,8 @@ export async function GET(request: NextRequest) {
         existingIdx >= 0
           ? sessionData.accounts[existingIdx].enabledApps
           : { ...DEFAULT_GOOGLE_APP_TOGGLES },
-      connectedAt: existingIdx >= 0 ? sessionData.accounts[existingIdx].connectedAt : Date.now(),
+      connectedAt: now,
+      updatedAt: now,
       comailAccountId:
         comailAccountId || (existingIdx >= 0 ? sessionData.accounts[existingIdx].comailAccountId : undefined),
       comailAccountEmail:
@@ -135,6 +145,12 @@ export async function GET(request: NextRequest) {
       sessionData.accounts.push(linkedAccount);
     }
     sessionData.activeAccountId = linkedAccount.id;
+
+    await saveGoogleSessionToStorage(request, sessionData, {
+      comailAccountId,
+      comailAccountEmail,
+      clearTombstoneKeys: [accountId, baseId, email].filter(Boolean),
+    });
 
     const encrypted = encryptGoogleSessionData(sessionData);
 
@@ -159,3 +175,4 @@ export async function GET(request: NextRequest) {
     return createRedirectResponse(returnTo, 'google_error', 'token_exchange_failed');
   }
 }
+

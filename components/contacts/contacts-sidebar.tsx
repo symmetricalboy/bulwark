@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef, type DragEvent } from "react";
 import { useTranslations } from "next-intl";
-import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star, GoogleContactsIcon } from "@/components/icons";
+import { BookUser, User, Users, Plus, Share2, Book, BookPlus, ChevronRight, ChevronDown, UserPlus, UsersRound, Upload, Tag, Pencil, Trash2, Settings, Mail, Star, GoogleContactsIcon, MicrosoftPeopleIcon } from "@/components/icons";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, ContextMenuSubMenu } from "@/components/ui/context-menu";
@@ -155,9 +155,9 @@ export function ContactsSidebar({
 
   const isAllActive = activeCategory === "all";
 
-  // Group address books: personal vs shared accounts (excluding Google address books which have their own sections)
+  // Group address books: personal vs shared accounts (excluding Google and Microsoft address books which have their own sections)
   const personalBooks = useMemo(() =>
-    addressBooks.filter(b => !b.isShared && !b.id.startsWith('google:') && !b.localAccountId?.startsWith('google:')),
+    addressBooks.filter(b => !b.isShared && !b.id.startsWith('google:') && !b.localAccountId?.startsWith('google:') && !b.id.startsWith('microsoft:') && !b.localAccountId?.startsWith('microsoft:')),
   [addressBooks]);
 
   const googleAccountGroups = useMemo(() => {
@@ -168,6 +168,22 @@ export function ContactsSidebar({
       const email = book.accountName ||
         (book.localAccountId ? book.localAccountId.replace(/^google:/, '') : null) ||
         (book.id.includes('::') ? book.id.split('::')[0].replace(/^google:/, '') : 'Google Contacts');
+      if (!map.has(email)) {
+        map.set(email, { email, books: [] });
+      }
+      map.get(email)!.books.push(book);
+    }
+    return Array.from(map.values());
+  }, [addressBooks]);
+
+  const microsoftAccountGroups = useMemo(() => {
+    const map = new Map<string, { email: string; books: AddressBook[] }>();
+    for (const book of addressBooks) {
+      const isMicrosoft = book.id.startsWith('microsoft:') || book.localAccountId?.startsWith('microsoft:');
+      if (!isMicrosoft) continue;
+      const email = book.accountName ||
+        (book.localAccountId ? book.localAccountId.replace(/^microsoft:/, '') : null) ||
+        (book.id.includes('::') ? book.id.split('::')[0].replace(/^microsoft:/, '') : 'Microsoft Contacts');
       if (!map.has(email)) {
         map.set(email, { email, books: [] });
       }
@@ -202,7 +218,7 @@ export function ContactsSidebar({
     if (!multiAccountMode) return [];
     const byAccount = new Map<string, AddressBook[]>();
     for (const book of addressBooks) {
-      if (book.id.startsWith('google:') || book.localAccountId?.startsWith('google:')) continue;
+      if (book.id.startsWith('google:') || book.localAccountId?.startsWith('google:') || book.id.startsWith('microsoft:') || book.localAccountId?.startsWith('microsoft:')) continue;
       const key = book.localAccountId || '__other__';
       const list = byAccount.get(key) ?? [];
       list.push(book);
@@ -525,6 +541,65 @@ export function ContactsSidebar({
                   )}
                   <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
                     <GoogleContactsIcon className="w-3.5 h-3.5 shrink-0" />
+                  </span>
+                  <span className="text-xs font-semibold text-foreground tracking-tight truncate ms-1">
+                    {group.email}
+                  </span>
+                </button>
+                {onCreateContactInBook && group.books[0] && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCreateContactInBook(group.books[0]);
+                    }}
+                    className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    title={`New contact in ${group.email}`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              {!isCollapsed && (
+                <div className="space-y-0.5">
+                  {group.books.map((book) => (
+                    <AddressBookItem
+                      key={book.id}
+                      book={book}
+                      isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
+                      contactCount={contactCountByBook[book.id] || 0}
+                      onSelect={() => onSelectCategory({ addressBookId: book.id })}
+                      onDropContacts={onDropContacts}
+                      onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Microsoft Accounts with Address Books */}
+        {microsoftAccountGroups.map((group) => {
+          const sectionKey = `microsoft-${group.email}`;
+          const isCollapsed = !!collapsed[sectionKey];
+
+          return (
+            <div key={sectionKey} className="pt-3 pb-0.5">
+              <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
+                <button
+                  type="button"
+                  onClick={() => toggleSection(sectionKey)}
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
+                  title={group.email}
+                >
+                  {isCollapsed ? (
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  )}
+                  <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                    <MicrosoftPeopleIcon className="w-3.5 h-3.5 shrink-0" />
                   </span>
                   <span className="text-xs font-semibold text-foreground tracking-tight truncate ms-1">
                     {group.email}
@@ -996,6 +1071,8 @@ function AddressBookItem({
     >
       {book.id.startsWith('google:') ? (
         <GoogleContactsIcon className="w-4 h-4 flex-shrink-0" />
+      ) : book.id.startsWith('microsoft:') ? (
+        <MicrosoftPeopleIcon className="w-4 h-4 flex-shrink-0" />
       ) : (
         <Book className="w-4 h-4 flex-shrink-0" />
       )}

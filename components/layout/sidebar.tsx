@@ -42,6 +42,7 @@ import {
   Layers,
   MessageSquare,
   GoogleIcon,
+  MicrosoftIcon,
 } from "@/components/icons";
 import { cn, buildMailboxTree, MailboxNode, applyCustomOrder, filterVisibleMailboxTree, formatCountBadge } from "@/lib/utils";
 import { localizeMailboxName } from "@/lib/mailbox-label";
@@ -68,6 +69,7 @@ import { useTagDrop } from "@/hooks/use-tag-drop";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import { useGoogleMail } from "@/hooks/use-google-mail";
+import { useMicrosoftMail } from "@/hooks/use-microsoft-mail";
 import { GoogleMailSidebarSection } from "@/components/mail/google-mail-sidebar-section";
 import {
   isGoogleCategoryLabel,
@@ -560,7 +562,7 @@ function SidebarSectionHeader({
   icon?: ReactNode;
   sub?: boolean;
   isAccount?: boolean;
-  accountType?: 'comail' | 'google';
+  accountType?: 'comail' | 'google' | 'microsoft';
   testId?: string;
   onContextMenu?: (event: React.MouseEvent) => void;
   /** A short note after the label, e.g. how many accounts have loaded. */
@@ -1127,6 +1129,7 @@ export function Sidebar({
   const isCollapsed = mvShell ? (sidebarCollapsed && !hoverExpanded) : false;
   const { primaryIdentity, activeAccountId } = useAuthStore();
   const googleMail = useGoogleMail();
+  const microsoftMail = useMicrosoftMail();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
   const [showAllTags, setShowAllTags] = useState(false);
@@ -1655,7 +1658,16 @@ export function Sidebar({
     id: string;
     label: string;
     icon: ReactNode;
-    type: 'folders' | 'tags' | 'shared' | 'google_folders' | 'google_categories' | 'google_labels' | 'google_stars';
+    type:
+      | 'folders'
+      | 'tags'
+      | 'shared'
+      | 'google_folders'
+      | 'google_categories'
+      | 'google_labels'
+      | 'google_stars'
+      | 'microsoft_folders'
+      | 'microsoft_labels';
     settingsAction?: () => void;
     itemsCount?: number;
   }
@@ -1663,7 +1675,7 @@ export function Sidebar({
   interface SidebarAccountItem {
     id: string;
     email: string;
-    type: 'comail' | 'google';
+    type: 'comail' | 'google' | 'microsoft';
     icon: ReactNode;
     unreadTotal: number;
     subcategories: SidebarSubcategory[];
@@ -1695,8 +1707,11 @@ export function Sidebar({
       const ib = g.mailboxes.find((m) => m.role === 'inbox');
       return sum + (ib?.unreadEmails ?? g.unreadTotal ?? 0);
     }, 0);
-    return comailInboxUnread + secondaryInboxesUnread + googleInboxesUnread;
-  }, [mailboxes, accountMailboxes, googleMail.accountsData]);
+    const microsoftInboxesUnread = microsoftMail.mailboxes
+      .filter((m) => m.role === 'inbox')
+      .reduce((sum, m) => sum + (m.unreadEmails || 0), 0);
+    return comailInboxUnread + secondaryInboxesUnread + googleInboxesUnread + microsoftInboxesUnread;
+  }, [mailboxes, accountMailboxes, googleMail.accountsData, microsoftMail.mailboxes]);
 
   const isAllInboxesSelected = !selectedKeyword && selectedMailbox === UNIFIED_MAILBOX_IDS.inbox;
 
@@ -1844,6 +1859,49 @@ export function Sidebar({
       });
     }
 
+    // Microsoft accounts
+    if (microsoftMail.accounts.length > 0) {
+      microsoftMail.accounts.forEach((acc) => {
+        const prefix = `microsoft:${acc.email}::`;
+        const msMailboxes = microsoftMail.mailboxes.filter((m) => m.id.startsWith(prefix));
+        const sysFolders = msMailboxes.filter((m) => Boolean(m.role));
+        const customFolders = msMailboxes.filter((m) => !m.role);
+        const unreadTotal =
+          msMailboxes.find((m) => m.role === 'inbox')?.unreadEmails ||
+          msMailboxes.reduce((sum, m) => sum + (m.unreadEmails || 0), 0);
+
+        const msSubcats: SidebarSubcategory[] = [
+          {
+            id: 'folders',
+            label: t('folders'),
+            icon: <Folder className="w-4 h-4 text-foreground/75" />,
+            type: 'microsoft_folders',
+            itemsCount: sysFolders.length,
+          },
+        ];
+
+        if (customFolders.length > 0) {
+          msSubcats.push({
+            id: 'labels',
+            label: t('labels'),
+            icon: <Tag className="w-4 h-4 text-foreground/75" />,
+            type: 'microsoft_labels',
+            itemsCount: customFolders.length,
+          });
+        }
+
+        list.push({
+          id: `microsoft:${acc.email}`,
+          email: acc.email,
+          type: 'microsoft',
+          icon: <MicrosoftIcon className="w-3.5 h-3.5 flex-shrink-0" />,
+          unreadTotal,
+          subcategories: msSubcats,
+          settingsAction: () => openFolderSettings(`microsoft:${acc.email}`),
+        });
+      });
+    }
+
     return list;
   }, [
     comailEmail,
@@ -1855,6 +1913,8 @@ export function Sidebar({
     accountMailboxes,
     googleMail.hasGmailAccounts,
     googleMail.accountsData,
+    microsoftMail.accounts,
+    microsoftMail.mailboxes,
     openFolderSettings,
     googleStarsSubmenuEnabled,
     googleHiddenStarIds,
@@ -2893,6 +2953,82 @@ export function Sidebar({
                                       />
                                     );
                                   });
+                                })()}
+
+                                {/* Microsoft System Folders */}
+                                {subcat.type === 'microsoft_folders' && (() => {
+                                  const prefix = `microsoft:${account.email}::`;
+                                  const msFolders = microsoftMail.mailboxes.filter(
+                                    (m) => m.id.startsWith(prefix) && Boolean(m.role)
+                                  );
+                                  const visible = msFolders.filter(
+                                    (m) => !isNodeHidden(m.id) || m.id === selectedMailbox
+                                  );
+                                  const sorted = [...visible].sort(
+                                    (a, b) => (a.sortOrder ?? 10) - (b.sortOrder ?? 10)
+                                  );
+                                  const parentKey = `microsoft:${account.email}:folders`;
+                                  const orderedFolders = applyCustomOrder(
+                                    sorted,
+                                    customOrder.items[parentKey],
+                                    (m) => m.id
+                                  );
+
+                                  return orderedFolders.length === 0 ? (
+                                    <div className="px-6 py-1.5 text-xs text-muted-foreground italic">
+                                      {!isCollapsed && t("loading_mailboxes")}
+                                    </div>
+                                  ) : (
+                                    orderedFolders.map((mb) => {
+                                      const isSelected = !selectedKeyword && selectedMailbox === mb.id;
+                                      const roleKey = resolveRoleKey(mb.role, mb.name);
+                                      const Icon = getIconForMailbox(mb.role, mb.name, false, false, false, mb.id);
+
+                                      return (
+                                        <SidebarRow
+                                          key={mb.id}
+                                          icon={<Icon className={getIconClass(isSelected, false, colorfulSidebarIcons, roleKey)} />}
+                                          label={mb.name}
+                                          testRole={mb.role}
+                                          testName={mb.name}
+                                          testMailboxId={mb.id}
+                                          depth={0}
+                                          isSelected={isSelected}
+                                          unread={mb.unreadEmails}
+                                          total={mb.totalEmails}
+                                          isGoogle={true}
+                                          onClick={() => onMailboxSelect?.(mb.id)}
+                                          isCollapsed={isCollapsed}
+                                        />
+                                      );
+                                    })
+                                  );
+                                })()}
+
+                                {/* Microsoft Custom Folders */}
+                                {subcat.type === 'microsoft_labels' && (() => {
+                                  const prefix = `microsoft:${account.email}::`;
+                                  const customFolders = microsoftMail.mailboxes.filter(
+                                    (m) => m.id.startsWith(prefix) && !m.role
+                                  );
+                                  const tree = buildMailboxTree(customFolders);
+                                  const visibleTree = filterVisibleMailboxTree(tree, isNodeHidden, selectedMailbox);
+
+                                  return visibleTree.map((node) => (
+                                    <MailboxTreeItem
+                                      key={node.id}
+                                      node={node}
+                                      selectedMailbox={selectedKeyword ? "" : selectedMailbox}
+                                      expandedFolders={expandedFolders}
+                                      onMailboxSelect={onMailboxSelect}
+                                      onToggleExpand={handleToggleExpand}
+                                      isCollapsed={isCollapsed}
+                                      colorful={colorfulSidebarIcons}
+                                      depthOffset={0}
+                                      dragAccountId={`microsoft:${account.email}`}
+                                      isGoogle={true}
+                                    />
+                                  ));
                                 })()}
                               </>
                             )}

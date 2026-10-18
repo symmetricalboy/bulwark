@@ -17,11 +17,17 @@ import {
   GOOGLE_TASKS_CALENDAR_ID,
   COMAIL_TASKS_CALENDAR_ID,
 } from '@/lib/google/tasks-mapper';
+import {
+  microsoftTaskToCalendarTask,
+  MICROSOFT_TASKS_CALENDAR_ID,
+} from '@/lib/microsoft/tasks-mapper';
+import { microsoftTasksClient } from '@/lib/microsoft/microsoft-tasks-client';
 import { useTaskStore } from '@/stores/task-store';
 import { useAccountStore } from '@/stores/account-store';
 import type { CalendarTask } from '@/lib/jmap/types';
 
 import type { LinkedGoogleAccountPublic } from '@/lib/google/types';
+import type { LinkedMicrosoftAccountPublic } from '@/lib/microsoft/types';
 import { normalizeAppMode } from '@/lib/google/types';
 import { reconcileTasks } from '@/lib/google/sync-engine';
 
@@ -30,7 +36,7 @@ export interface TaskList {
   title: string;
   updated?: string;
   isDefault?: boolean;
-  source?: 'comail' | 'google';
+  source?: 'comail' | 'google' | 'microsoft';
   comailAccountId?: string;
   accountEmail?: string;
   localAccountId?: string;
@@ -49,7 +55,7 @@ export interface TaskItem {
   starred?: boolean;
   updated?: string;
   isLocal?: boolean;
-  source?: 'comail' | 'google';
+  source?: 'comail' | 'google' | 'microsoft';
   comailAccountId?: string;
   accountEmail?: string;
   localAccountId?: string;
@@ -68,10 +74,13 @@ interface TasksAppState {
   sortBy: TaskSortBy;
   isGoogleConnected: boolean;
   connectedGoogleAccounts: LinkedGoogleAccountPublic[];
+  isMicrosoftConnected: boolean;
+  connectedMicrosoftAccounts: LinkedMicrosoftAccountPublic[];
   isSyncing: boolean;
   googleEmail?: string;
   googleName?: string;
   googlePicture?: string;
+  microsoftEmail?: string;
   isInitialized: boolean;
   error: string | null;
   currentAccountId: string | null;
@@ -84,7 +93,7 @@ interface TasksAppState {
   setSortBy: (sort: TaskSortBy) => void;
   setSearchQuery: (query: string) => void;
 
-  createList: (title: string, source?: 'comail' | 'google', googleAccountId?: string) => Promise<TaskList>;
+  createList: (title: string, source?: 'comail' | 'google' | 'microsoft', googleAccountId?: string) => Promise<TaskList>;
   updateList: (listId: string, title: string) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
 
@@ -101,6 +110,7 @@ interface TasksAppState {
   deleteTask: (taskId: string) => Promise<void>;
   clearCompleted: (listId?: string) => Promise<void>;
   syncGoogle: () => Promise<void>;
+  syncMicrosoft: () => Promise<void>;
 }
 
 const LEGACY_STORAGE_LISTS_KEY = 'bulwark_tasks_lists';
@@ -186,8 +196,8 @@ function getLocalStoredTasks(accountId: string): TaskItem[] {
 function saveLocalData(accountId: string, lists: TaskList[], tasks: TaskItem[]) {
   if (typeof window === 'undefined') return;
   try {
-    const comailLists = lists.filter((l) => l.source !== 'google');
-    const comailTasks = tasks.filter((t) => t.source !== 'google');
+    const comailLists = lists.filter((l) => l.source !== 'google' && l.source !== 'microsoft');
+    const comailTasks = tasks.filter((t) => t.source !== 'google' && t.source !== 'microsoft');
     localStorage.setItem(getListsKey(accountId), JSON.stringify(comailLists));
     localStorage.setItem(getTasksKey(accountId), JSON.stringify(comailTasks));
   } catch (err) {
@@ -215,6 +225,9 @@ function syncTasksToCalendarStore(tasks: TaskItem[]) {
             t.listId
           );
         }
+        if (t.source === 'microsoft') {
+          return microsoftTaskToCalendarTask(t);
+        }
         return nativeTaskToCalendarTask(t, t.listId);
       });
 
@@ -223,6 +236,7 @@ function syncTasksToCalendarStore(tasks: TaskItem[]) {
       const nonAppTasks = state.tasks.filter(
         (task) =>
           !task.calendarIds?.[GOOGLE_TASKS_CALENDAR_ID] &&
+          !task.calendarIds?.[MICROSOFT_TASKS_CALENDAR_ID] &&
           !task.calendarIds?.[COMAIL_TASKS_CALENDAR_ID]
       );
       return {
@@ -246,6 +260,8 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
   sortBy: 'myOrder',
   isGoogleConnected: false,
   connectedGoogleAccounts: [],
+  isMicrosoftConnected: false,
+  connectedMicrosoftAccounts: [],
   isSyncing: false,
   isInitialized: false,
   error: null,
@@ -394,6 +410,9 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
     } catch {
       set({ isGoogleConnected: false, connectedGoogleAccounts: [] });
     }
+
+    // Step 3: In background, check if optional Microsoft account is connected
+    void get().syncMicrosoft();
   },
 
   setActiveListId: (id: string) => set({ activeListId: id, selectedTaskId: null }),
@@ -402,7 +421,7 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
   setSortBy: (sortBy: TaskSortBy) => set({ sortBy }),
   setSearchQuery: (searchQuery: string) => set({ searchQuery }),
 
-  createList: async (title: string, source: 'comail' | 'google' = 'comail', googleAccountId?: string) => {
+  createList: async (title: string, source: 'comail' | 'google' | 'microsoft' = 'comail', googleAccountId?: string) => {
     const trimmed = title.trim();
     if (!trimmed) throw new Error('List title is required');
     const accountId = get().currentAccountId || useAccountStore.getState().getActiveAccount()?.id || 'default';
@@ -423,6 +442,25 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
         return newList;
       } catch (err) {
         console.error('Failed to create Google task list:', err);
+      }
+    }
+
+    if (source === 'microsoft' && get().isMicrosoftConnected) {
+      try {
+        const created = await microsoftTasksClient.createList(trimmed, googleAccountId);
+        const newList: TaskList = {
+          id: created.id,
+          title: created.title,
+          updated: created.updated,
+          source: 'microsoft',
+          accountEmail: created.accountEmail || googleAccountId,
+          localAccountId: created.localAccountId,
+        };
+        const nextLists = [...get().lists, newList];
+        set({ lists: nextLists, activeListId: newList.id });
+        return newList;
+      } catch (err) {
+        console.error('Failed to create Microsoft To Do list:', err);
       }
     }
 
@@ -452,11 +490,17 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
       } catch (err) {
         console.error('Failed to update Google task list:', err);
       }
+    } else if (target?.source === 'microsoft' && get().isMicrosoftConnected) {
+      try {
+        await microsoftTasksClient.updateList(listId, trimmed);
+      } catch (err) {
+        console.error('Failed to update Microsoft To Do list:', err);
+      }
     }
 
     const nextLists = get().lists.map((l) => (l.id === listId ? { ...l, title: trimmed } : l));
     set({ lists: nextLists });
-    if (target?.source !== 'google') {
+    if (target?.source !== 'google' && target?.source !== 'microsoft') {
       saveLocalData(accountId, nextLists, get().tasks);
     }
   },
@@ -466,15 +510,21 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
     if (!list) return;
 
     const accountId = get().currentAccountId || useAccountStore.getState().getActiveAccount()?.id || 'default';
-    const nativeLists = get().lists.filter((l) => l.source !== 'google');
+    const nativeLists = get().lists.filter((l) => l.source !== 'google' && l.source !== 'microsoft');
 
-    if (list.source !== 'google' && nativeLists.length <= 1) return; // Keep at least one native list
+    if (list.source !== 'google' && list.source !== 'microsoft' && nativeLists.length <= 1) return; // Keep at least one native list
 
     if (list.source === 'google' && get().isGoogleConnected) {
       try {
         await deleteGoogleTaskList(listId);
       } catch (err) {
         console.error('Failed to delete Google task list:', err);
+      }
+    } else if (list.source === 'microsoft' && get().isMicrosoftConnected) {
+      try {
+        await microsoftTasksClient.deleteList(listId);
+      } catch (err) {
+        console.error('Failed to delete Microsoft To Do list:', err);
       }
     }
 
@@ -489,7 +539,7 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
       selectedTaskId: null,
     });
 
-    if (list.source !== 'google') {
+    if (list.source !== 'google' && list.source !== 'microsoft') {
       saveLocalData(accountId, nextLists, nextTasks);
     }
     syncTasksToCalendarStore(nextTasks);
@@ -502,6 +552,7 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
     const listId = data.listId || get().activeListId;
     const currentList = get().lists.find((l) => l.id === listId);
     const isGoogle = currentList?.source === 'google';
+    const isMicrosoft = currentList?.source === 'microsoft';
     const accountId = get().currentAccountId || useAccountStore.getState().getActiveAccount()?.id || 'default';
 
     if (isGoogle && get().isGoogleConnected) {
@@ -541,6 +592,31 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
         return newTask;
       } catch (err) {
         console.error('Failed to create Google task, saving as native Comail task:', err);
+      }
+    }
+
+    if (isMicrosoft && get().isMicrosoftConnected) {
+      try {
+        const created = await microsoftTasksClient.createTask(listId, {
+          title,
+          notes: data.notes,
+          due: data.due,
+        });
+
+        const newTask: TaskItem = {
+          ...created,
+          listId,
+          source: 'microsoft',
+          accountEmail: created.accountEmail || currentList?.accountEmail,
+          localAccountId: created.localAccountId || currentList?.localAccountId,
+        };
+
+        const nextTasks = [newTask, ...get().tasks];
+        set({ tasks: nextTasks, selectedTaskId: newTask.id });
+        syncTasksToCalendarStore(nextTasks);
+        return newTask;
+      } catch (err) {
+        console.error('Failed to create Microsoft To Do task, saving as native Comail task:', err);
       }
     }
 
@@ -594,6 +670,12 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
       } catch (err) {
         console.error('Failed to update Google task:', err);
       }
+    } else if (task.source === 'microsoft' && get().isMicrosoftConnected) {
+      try {
+        await microsoftTasksClient.updateTask(task.listId, taskId, updates);
+      } catch (err) {
+        console.error('Failed to update Microsoft To Do task:', err);
+      }
     } else {
       saveLocalData(accountId, get().lists, nextTasks);
     }
@@ -637,6 +719,12 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
       } catch (err) {
         console.error('Failed to delete Google task:', err);
       }
+    } else if (task.source === 'microsoft' && get().isMicrosoftConnected) {
+      try {
+        await microsoftTasksClient.deleteTask(task.listId, taskId);
+      } catch (err) {
+        console.error('Failed to delete Microsoft To Do task:', err);
+      }
     } else {
       saveLocalData(accountId, get().lists, nextTasks);
     }
@@ -657,6 +745,12 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
         await clearCompletedGoogleTasks(targetListId);
       } catch (err) {
         console.error('Failed to clear completed Google tasks:', err);
+      }
+    } else if (targetList?.source === 'microsoft' && get().isMicrosoftConnected) {
+      try {
+        await microsoftTasksClient.clearCompleted(targetListId);
+      } catch (err) {
+        console.error('Failed to clear completed Microsoft To Do tasks:', err);
       }
     } else {
       saveLocalData(accountId, get().lists, nextTasks);
@@ -751,11 +845,89 @@ export const useTasksAppStore = create<TasksAppState>((set, get) => ({
       set({ isSyncing: false, error: 'Failed to sync with Google Tasks' });
     }
   },
+
+  syncMicrosoft: async () => {
+    set({ isSyncing: true, error: null });
+    try {
+      const status = await microsoftTasksClient.getStatus();
+      if (!status.connected) {
+        const nonMsLists = get().lists.filter((l) => l.source !== 'microsoft');
+        const nonMsTasks = get().tasks.filter((t) => t.source !== 'microsoft');
+        set({
+          isMicrosoftConnected: false,
+          connectedMicrosoftAccounts: [],
+          lists: nonMsLists.length > 0 ? nonMsLists : [getDefaultList(get().currentAccountId || 'default')],
+          tasks: nonMsTasks,
+          isSyncing: false,
+        });
+        syncTasksToCalendarStore(nonMsTasks);
+        return;
+      }
+
+      set({
+        isMicrosoftConnected: true,
+        connectedMicrosoftAccounts: status.accounts || [],
+        microsoftEmail: status.email,
+      });
+
+      const groups = await microsoftTasksClient.getTaskListGroups();
+      const msLists: TaskList[] = [];
+      const msTasks: TaskItem[] = [];
+
+      groups.forEach((group) => {
+        (group.lists || []).forEach((l) => {
+          msLists.push({
+            ...l,
+            source: 'microsoft',
+            accountEmail: l.accountEmail || group.accountEmail,
+          });
+        });
+        (group.tasks || []).forEach((t) => {
+          msTasks.push({
+            ...t,
+            source: 'microsoft',
+            accountEmail: t.accountEmail || group.accountEmail,
+          });
+        });
+      });
+
+      const nonMsLists = get().lists.filter((l) => l.source !== 'microsoft');
+      const nonMsTasks = get().tasks.filter((t) => t.source !== 'microsoft');
+
+      const combinedLists = [...nonMsLists, ...msLists];
+      const combinedTasks = [...nonMsTasks, ...msTasks];
+
+      const activeListId = combinedLists.some((l) => l.id === get().activeListId)
+        ? get().activeListId
+        : combinedLists[0]?.id;
+
+      set({
+        lists: combinedLists,
+        activeListId,
+        tasks: combinedTasks,
+        isSyncing: false,
+      });
+
+      syncTasksToCalendarStore(combinedTasks);
+    } catch (err) {
+      console.error('Error syncing Microsoft To Do tasks:', err);
+      set({ isSyncing: false, error: 'Failed to sync with Microsoft To Do' });
+    }
+  },
 }));
 
 if (typeof window !== 'undefined') {
   window.addEventListener('google-services-updated', () => {
     void useTasksAppStore.getState().syncGoogle();
+  });
+  window.addEventListener('google-accounts-changed', () => {
+    void useTasksAppStore.getState().syncGoogle();
+  });
+  window.addEventListener('microsoft-services-updated', () => {
+    void useTasksAppStore.getState().syncMicrosoft();
+  });
+  window.addEventListener('microsoft-accounts-changed', () => {
+    void useTasksAppStore.getState().syncMicrosoft();
   });
 }
 
