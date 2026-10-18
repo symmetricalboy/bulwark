@@ -1029,6 +1029,7 @@
       "templates": "Modelli",
       "folders": "Cartelle",
       "keywords": "Etichette",
+      "folders_and_tags": "Cartelle ed etichette",
       "security": "Sicurezza",
       "encryption": "Cifratura",
       "files": "File",

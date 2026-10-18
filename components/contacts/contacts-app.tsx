@@ -945,13 +945,13 @@ function ContactsAppContent({ linkSegments: routeSegments }: ContactsAppProps = 
                 <div
                   className={cn(
                     "border-e border-border flex flex-col flex-shrink-0 bg-secondary",
-                    isNarrow && cn(
-                      "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+                    isNarrow ? cn(
+                      "absolute inset-y-0 start-0 z-50 w-[300px] pt-[env(safe-area-inset-top)]",
                       "transform transition-transform duration-300 ease-in-out",
-                      !narrowSidebarOpen && "-translate-x-full"
-                    )
+                      !narrowSidebarOpen && "-translate-x-full rtl:translate-x-full"
+                    ) : "w-[300px]"
                   )}
-                  style={isNarrow ? undefined : { width: "272px" }}
+                  style={isNarrow ? undefined : { width: "300px" }}
                 >
                     <ContactsSidebar
                       groups={groups}

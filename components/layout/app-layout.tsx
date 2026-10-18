@@ -104,7 +104,7 @@ export interface AppSidebarProps {
 }
 
 /**
- * Standardized desktop sidebar column (w-[272px], full-height, border-e, bg-secondary).
+ * Standardized desktop sidebar column (w-[300px], full-height, border-e, bg-secondary).
  */
 export const AppSidebar = forwardRef<HTMLDivElement, AppSidebarProps>(
   function AppSidebar({ children, header, className, id }, ref) {
@@ -113,7 +113,7 @@ export const AppSidebar = forwardRef<HTMLDivElement, AppSidebarProps>(
         id={id}
         ref={ref}
         className={cn(
-          "w-[272px] flex flex-col flex-shrink-0 h-full bg-secondary border-e border-border",
+          "w-[300px] flex flex-col flex-shrink-0 h-full bg-secondary border-e border-border",
           className
         )}
       >
@@ -164,7 +164,7 @@ export interface AppLayoutProps {
 }
 
 /**
- * Reusable full-app desktop layout with Navigation Rail (w-16) and Sidebar (w-[272px])
+ * Reusable full-app desktop layout with Navigation Rail (w-16) and Sidebar (w-[300px])
  * matching the Mail application specification.
  */
 export function AppLayout({
@@ -219,7 +219,7 @@ export function AppLayout({
         />
       ) : (
         <>
-          {/* Desktop App Sidebar (w-[272px]) */}
+          {/* Desktop App Sidebar (w-[300px]) */}
           {!hideSidebar && sidebar && (
             <AppSidebar
               className={sidebarClassName}
@@ -246,3 +246,4 @@ export function AppLayout({
     </div>
   );
 }
+

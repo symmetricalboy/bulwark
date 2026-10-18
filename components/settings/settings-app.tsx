@@ -57,8 +57,6 @@ import { FilterSettings } from '@/components/settings/filter-settings';
 import { TemplateSettings } from '@/components/settings/template-settings';
 import { AboutDataSettings } from '@/components/settings/about-data-settings';
 import { DebugSettings } from '@/components/settings/debug-settings';
-import { FolderSettings } from '@/components/settings/folder-settings';
-import { KeywordSettings } from '@/components/settings/keyword-settings';
 import { FoldersAndTagsSettings } from '@/components/settings/folders-and-tags-settings';
 import { AccountSecuritySettings } from '@/components/settings/account-security-settings';
 import { FilesSettingsComponent } from '@/components/settings/files-settings';
@@ -592,7 +590,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
     ...(supportsVacation ? [{ id: 'vacation' as Tab, label: t('tabs.vacation'), icon: tabIcons.vacation, group: 'mail' as TabGroup }] : []),
     ...(supportsSieve ? [{ id: 'filters' as Tab, label: t('tabs.filters'), icon: tabIcons.filters, group: 'mail' as TabGroup }] : []),
     ...(isFeatureEnabled('templatesEnabled') ? [{ id: 'templates' as Tab, label: t('tabs.templates'), icon: tabIcons.templates, group: 'mail' as TabGroup }] : []),
-    { id: 'folders', label: t('tabs.folders_and_tags', { defaultValue: 'Folders & Tags' }) || 'Folders & Tags', icon: tabIcons.folders, group: 'mail' },
+    { id: 'folders', label: t('tabs.folders_and_tags'), icon: tabIcons.folders, group: 'mail' },
     ...(byomcEnabled ? [{ id: 'byomc' as Tab, label: t('tabs.byomc'), icon: tabIcons.byomc, group: 'mail' as TabGroup }] : []),
 
     // Privacy & Security
@@ -944,17 +942,17 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
       <>
       <div
         className={cn(
-          "w-[272px] flex flex-col flex-shrink-0 h-full bg-secondary border-e border-border"
+          "w-[300px] flex flex-col flex-shrink-0 h-full bg-secondary border-e border-border"
         )}
-        style={{ width: "272px" }}
+        style={{ width: "300px" }}
       >
         <AppSidebarHeader
           icon={SettingsIcon}
           title={t('title') || 'Settings'}
         />
 
-        <div className="flex-1 overflow-y-auto py-2" data-tour="settings-tabs">
-          <div className="px-3 pt-1 pb-1">
+        <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] py-2" data-tour="settings-tabs">
+          <div className="px-2 pt-0.5 pb-1.5">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <Input
@@ -977,17 +975,17 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
               )}
             </div>
           </div>
-          <div className="px-2 space-y-0.5">
+          <div className="space-y-0.5">
             {filteredGroupedTabs.length === 0 && (
               <div className="px-3 py-6 text-sm text-muted-foreground text-center">
                 {t('search_no_results')}
               </div>
             )}
             {filteredGroupedTabs.map((group, groupIndex) => (
-              <div key={group.group}>
-                {groupIndex > 0 && <div className="mx-1 my-2 border-t border-border" />}
-                <div className="px-3 pt-2.5 pb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div key={group.group} className="space-y-0.5">
+                {groupIndex > 0 && <div className="mx-2 my-2 border-t border-border/50" />}
+                <div className="mx-2 w-[calc(100%-16px)] px-2 pt-2 pb-0.5">
+                  <span className="text-[13px] font-bold tracking-tight text-foreground/90">
                     {group.label}
                   </span>
                 </div>
@@ -999,11 +997,12 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                       <button
                         data-testid={`settings-tab-${tab.id}`}
                         onClick={() => handleTabSelect(tab.id)}
+                        style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
                         className={cn(
-                          'mx-2 w-[calc(100%-16px)] text-start px-2.5 py-2 rounded-md text-sm transition-colors duration-150 flex items-center gap-2.5',
+                          'mx-2 w-[calc(100%-16px)] text-start px-2.5 rounded-md text-sm transition-colors duration-150 flex items-center gap-2',
                           effectiveActiveTab === tab.id
                             ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
-                            : 'hover:bg-muted text-foreground/80'
+                            : 'hover:bg-muted/50 text-foreground/80'
                         )}
                       >
                         <Icon className={cn(
@@ -1016,7 +1015,7 @@ export function SettingsApp({ linkSegments: routeSegments }: SettingsAppProps = 
                         <button
                           key={`${tab.id}:${sub.label}`}
                           onClick={() => handleSubResultSelect(tab.id, sub)}
-                          className="w-full text-start ps-9 pe-3 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors duration-150"
+                          className="mx-2 w-[calc(100%-16px)] text-start ps-8 pe-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors duration-150"
                         >
                           <span className="truncate block">{sub.label}</span>
                         </button>

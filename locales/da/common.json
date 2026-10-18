@@ -1032,6 +1032,7 @@
       "templates": "Skabeloner",
       "folders": "Mapper",
       "keywords": "Tags",
+      "folders_and_tags": "Mapper og tags",
       "security": "Sikkerhed",
       "files": "Filer",
       "contacts": "Kontakter",

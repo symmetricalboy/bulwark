@@ -1032,6 +1032,7 @@
       "templates": "Maler",
       "folders": "Mapper",
       "keywords": "Etiketter",
+      "folders_and_tags": "Mapper og etiketter",
       "security": "Sikkerhet",
       "files": "Filer",
       "contacts": "Kontakter",

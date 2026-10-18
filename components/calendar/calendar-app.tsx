@@ -1859,20 +1859,20 @@ export function CalendarApp({ linkSegments: routeSegments }: CalendarAppProps = 
         <div
           className={cn(
             "border-e border-border bg-secondary flex flex-col overflow-hidden flex-shrink-0",
-            isNarrow && cn(
-              "absolute inset-y-0 left-0 z-50 w-72 pt-[env(safe-area-inset-top)]",
+            isNarrow ? cn(
+              "absolute inset-y-0 start-0 z-50 w-[300px] pt-[env(safe-area-inset-top)]",
               "transform transition-transform duration-300 ease-in-out",
-              !narrowSidebarOpen && "-translate-x-full"
-            )
+              !narrowSidebarOpen && "-translate-x-full rtl:translate-x-full"
+            ) : "w-[300px]"
           )}
-          style={isNarrow ? undefined : { width: "272px" }}
+          style={isNarrow ? undefined : { width: "300px" }}
         >
             <CalendarSidebarHeader
               onCreateEvent={() => { setNarrowSidebarOpen(false); openCreateModal(); }}
               tourTarget={!isNarrow}
             />
-            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">
-            <div className="px-3">
+            <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] overflow-x-hidden py-2">
+            <div className="px-2.5 pt-1 pb-2">
             <MiniCalendar
               selectedDate={selectedDate}
               displayMonth={miniMonth}

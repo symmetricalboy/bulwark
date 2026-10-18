@@ -17,6 +17,7 @@ import {
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { withBasePath } from '@/lib/browser-navigation';
 import { useTasksAppStore, type TaskViewFilter, type TaskList } from '@/stores/tasks-app-store';
 import { useAccountStore } from '@/stores/account-store';
 import { useConfirmDialog } from '@/hooks/use-confirm-dialog';
@@ -46,14 +47,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
   const syncGoogle = useTasksAppStore((s) => s.syncGoogle);
 
   const activeAccount = useAccountStore((s) => s.getActiveAccount());
-  const accountLabel = activeAccount?.displayName || activeAccount?.label || activeAccount?.username;
-  const subtitle = accountLabel
-    ? isGoogleConnected
-      ? `${accountLabel} • Google Synced`
-      : accountLabel
-    : isGoogleConnected
-    ? 'Synced with Google'
-    : 'Comail Tasks';
+  const accountLabel = activeAccount?.email || activeAccount?.username || activeAccount?.displayName || activeAccount?.label;
 
   const [creatingListTarget, setCreatingListTarget] = useState<{
     source: 'comail' | 'google';
@@ -172,17 +166,18 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
               handleSelectList(l.id);
             }
           }}
+          style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
           className={cn(
-            'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium text-start transition-colors duration-150 cursor-pointer',
+            'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 rounded-md text-sm text-start transition-colors duration-150 cursor-pointer',
             isActive
               ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
-              : 'text-foreground/80 hover:bg-muted'
+              : 'text-foreground/80 hover:bg-muted/50'
           )}
         >
           <span className="truncate flex-1 pe-2">{l.title}</span>
           <div className="flex items-center gap-1 shrink-0">
             {count > 0 && (
-              <span className={cn("text-[11px] tabular-nums font-normal", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
+              <span className={cn("text-xs tabular-nums", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
                 {count}
               </span>
             )}
@@ -201,7 +196,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
 
         {/* List Context Menu */}
         {menuListId === l.id && (
-          <div className="absolute right-0 top-full mt-0.5 w-32 bg-popover text-popover-foreground border border-border rounded-md shadow-lg py-1 z-30 text-xs">
+          <div className="absolute right-2 top-full mt-0.5 w-32 bg-popover text-popover-foreground border border-border rounded-md shadow-lg py-1 z-30 text-xs">
             <button
               type="button"
               onClick={() => handleRenameList(l.id, l.title)}
@@ -229,7 +224,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
   return (
     <aside
       className={cn(
-        'w-[272px] flex flex-col h-full bg-secondary border-e border-border text-foreground select-none shrink-0',
+        'w-[300px] flex flex-col h-full bg-secondary border-e border-border text-foreground select-none shrink-0',
         className
       )}
     >
@@ -240,24 +235,25 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
       />
 
       {/* Navigation & Lists */}
-      <div className="flex-1 overflow-y-auto p-2.5 space-y-4">
+      <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] pt-2 pb-2">
         {/* Quick Views */}
-        <div className="space-y-0.5">
+        <div className="space-y-0.5 pb-1">
           <button
             type="button"
             onClick={() => handleSelectFilter('all')}
+            style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
             className={cn(
-              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
+              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 rounded-md text-sm transition-colors duration-150',
               filter === 'all' && activeListId
                 ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
-                : 'text-foreground/80 hover:bg-muted'
+                : 'text-foreground/80 hover:bg-muted/50'
             )}
           >
-            <div className="flex items-center gap-2.5">
-              <ListTodo className="w-4 h-4" />
-              <span>All Tasks</span>
+            <div className="flex items-center gap-2">
+              <ListTodo className="w-4 h-4 shrink-0" />
+              <span className="truncate">All Tasks</span>
             </div>
-            <span className={cn("text-[11px] tabular-nums font-normal", filter === 'all' && activeListId ? "text-white/90 font-medium" : "text-muted-foreground")}>
+            <span className={cn("text-xs tabular-nums", filter === 'all' && activeListId ? "text-white/90 font-medium" : "text-muted-foreground")}>
               {tasks.filter((t) => t.status !== 'completed').length}
             </span>
           </button>
@@ -265,19 +261,20 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
           <button
             type="button"
             onClick={() => handleSelectFilter('starred')}
+            style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
             className={cn(
-              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
+              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 rounded-md text-sm transition-colors duration-150',
               filter === 'starred'
                 ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
-                : 'text-foreground/80 hover:bg-muted'
+                : 'text-foreground/80 hover:bg-muted/50'
             )}
           >
-            <div className="flex items-center gap-2.5">
-              <Star className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-              <span>Starred</span>
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500/20 shrink-0" />
+              <span className="truncate">Starred</span>
             </div>
             {starredCount > 0 && (
-              <span className={cn("text-[11px] tabular-nums font-normal", filter === 'starred' ? "text-white/90 font-medium" : "text-muted-foreground")}>
+              <span className={cn("text-xs tabular-nums", filter === 'starred' ? "text-white/90 font-medium" : "text-muted-foreground")}>
                 {starredCount}
               </span>
             )}
@@ -286,76 +283,104 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
           <button
             type="button"
             onClick={() => handleSelectFilter('today')}
+            style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
             className={cn(
-              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors duration-150',
+              'flex items-center justify-between mx-2 w-[calc(100%-16px)] px-2.5 rounded-md text-sm transition-colors duration-150',
               filter === 'today'
                 ? 'bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]'
-                : 'text-foreground/80 hover:bg-muted'
+                : 'text-foreground/80 hover:bg-muted/50'
             )}
           >
-            <div className="flex items-center gap-2.5">
-              <CalendarIcon className="w-4 h-4 text-primary" />
-              <span>Due Today</span>
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-4 h-4 text-primary shrink-0" />
+              <span className="truncate">Due Today</span>
             </div>
             {todayCount > 0 && (
-              <span className={cn("text-[11px] tabular-nums", filter === 'today' ? "text-white/90 font-medium" : "text-primary font-semibold")}>
+              <span className={cn("text-xs tabular-nums", filter === 'today' ? "text-white/90 font-medium" : "text-primary font-semibold")}>
                 {todayCount}
               </span>
             )}
           </button>
         </div>
 
-        {/* Task Lists Section */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-            <span>{isGoogleConnected ? 'Comail Lists' : 'Lists'}</span>
+        {/* Comail Task Lists Section */}
+        <div className="pt-3 pb-1">
+          <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
             <button
               type="button"
-              onClick={() => setCreatingListTarget({ source: 'comail' })}
-              className="p-0.5 rounded hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+              onClick={() => toggleAccountCollapse('__comail__')}
+              className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
+            >
+              {collapsedAccounts['__comail__'] ? (
+                <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+              )}
+              <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                <img
+                  src={withBasePath('/branding/comail/cammie-mark.png')}
+                  alt=""
+                  className="w-3.5 h-3.5 object-contain shrink-0"
+                />
+              </span>
+              <span className="text-xs font-semibold text-foreground tracking-tight truncate ms-1">
+                {accountLabel || 'Comail Tasks'}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCreatingListTarget({ source: 'comail' });
+                if (collapsedAccounts['__comail__']) toggleAccountCollapse('__comail__');
+              }}
+              className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
               title="New Comail list"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* New list form for Comail */}
-          {creatingListTarget?.source === 'comail' && (
-            <form onSubmit={handleCreateList} className="px-2 py-1 space-y-1">
-              <input
-                type="text"
-                autoFocus
-                value={newListTitle}
-                onChange={(e) => setNewListTitle(e.target.value)}
-                placeholder="List name"
-                className="w-full text-xs px-2 py-1 bg-background text-foreground border border-sidebar-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <div className="flex items-center justify-end gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCreatingListTarget(null)}
-                  className="h-6 text-[11px] px-2"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" className="h-6 text-[11px] px-2">
-                  Create
-                </Button>
-              </div>
-            </form>
-          )}
+          {!collapsedAccounts['__comail__'] && (
+            <>
+              {/* New list form for Comail */}
+              {creatingListTarget?.source === 'comail' && (
+                <form onSubmit={handleCreateList} className="mx-2 w-[calc(100%-16px)] py-1 space-y-1">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newListTitle}
+                    onChange={(e) => setNewListTitle(e.target.value)}
+                    placeholder="List name"
+                    className="w-full text-xs px-2.5 py-1.5 bg-background text-foreground border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCreatingListTarget(null)}
+                      className="h-6 text-[11px] px-2"
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" size="sm" className="h-6 text-[11px] px-2">
+                      Create
+                    </Button>
+                  </div>
+                </form>
+              )}
 
-          {/* Native Comail Lists */}
-          <div className="space-y-0.5">
-            {comailLists.map(renderListItem)}
-          </div>
+              {/* Native Comail Lists */}
+              <div className="space-y-0.5">
+                {comailLists.map(renderListItem)}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Google Lists separated by Account */}
         {isGoogleConnected && googleAccountGroups.length > 0 && (
-          <div className="space-y-3 pt-2 border-t border-sidebar-border/40">
+          <div className="space-y-2 pt-2">
             {googleAccountGroups.map((group) => {
               const isCollapsed = !!collapsedAccounts[group.email];
               const isAddingToThisGroup =
@@ -363,12 +388,12 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                 creatingListTarget?.accountEmail === group.email;
 
               return (
-                <div key={group.email} className="space-y-1">
-                  <div className="flex items-center justify-between px-2.5 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider group/acc">
+                <div key={group.email}>
+                  <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
                     <button
                       type="button"
                       onClick={() => toggleAccountCollapse(group.email)}
-                      className="flex items-center gap-1.5 min-w-0 text-start hover:text-sidebar-foreground transition-colors flex-1"
+                      className="flex items-center gap-1.5 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none flex-1"
                       title={group.email}
                     >
                       {isCollapsed ? (
@@ -376,8 +401,10 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                       ) : (
                         <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                       )}
-                      <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="truncate lowercase font-medium text-[11px] text-foreground">
+                      <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                        <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
+                      </span>
+                      <span className="truncate text-xs font-semibold text-foreground tracking-tight ms-1">
                         {group.email}
                       </span>
                     </button>
@@ -387,7 +414,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                         setCreatingListTarget({ source: 'google', accountEmail: group.email });
                         if (isCollapsed) toggleAccountCollapse(group.email);
                       }}
-                      className="p-0.5 rounded hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors shrink-0"
+                      className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0"
                       title={`New list in ${group.email}`}
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -395,16 +422,16 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                   </div>
 
                   {!isCollapsed && (
-                    <div className="space-y-0.5 ps-1">
+                    <div className="space-y-0.5">
                       {isAddingToThisGroup && (
-                        <form onSubmit={handleCreateList} className="px-2 py-1 space-y-1">
+                        <form onSubmit={handleCreateList} className="mx-2 w-[calc(100%-16px)] py-1 space-y-1">
                           <input
                             type="text"
                             autoFocus
                             value={newListTitle}
                             onChange={(e) => setNewListTitle(e.target.value)}
                             placeholder={`New list in ${group.email}`}
-                            className="w-full text-xs px-2 py-1 bg-background text-foreground border border-sidebar-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full text-xs px-2.5 py-1.5 bg-background text-foreground border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                           />
                           <div className="flex items-center justify-end gap-1">
                             <Button
@@ -424,7 +451,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
                       )}
 
                       {group.lists.length === 0 && !isAddingToThisGroup ? (
-                        <div className="px-2.5 py-1 text-[11px] text-muted-foreground italic">
+                        <div className="mx-2 w-[calc(100%-16px)] px-2.5 py-1.5 text-xs text-muted-foreground italic">
                           No lists found
                         </div>
                       ) : (
@@ -441,14 +468,14 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
 
       {/* Google Account Status & Sync (only shown if Google is connected) */}
       {isGoogleConnected && (
-        <div className="p-3 border-t border-sidebar-border/60 shrink-0 bg-sidebar/50">
+        <div className="p-3 border-t border-border/60 shrink-0 bg-secondary">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold text-sidebar-foreground truncate flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
                 <GoogleTasksIcon className="w-3.5 h-3.5 shrink-0" />
                 Google Tasks
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
+              <p className="text-[11px] text-muted-foreground truncate">
                 {connectedGoogleAccounts.length > 1
                   ? `${connectedGoogleAccounts.length} accounts connected`
                   : googleEmail || 'Connected'}
@@ -458,7 +485,7 @@ export function TasksSidebar({ className, onCloseMobile }: TasksSidebarProps) {
               type="button"
               onClick={() => void syncGoogle()}
               disabled={isSyncing}
-              className="p-1.5 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-sidebar-foreground transition-colors"
+              className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title="Sync now"
             >
               <RefreshCw className={cn('w-3.5 h-3.5', isSyncing && 'animate-spin')} />

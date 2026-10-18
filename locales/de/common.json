@@ -1029,6 +1029,7 @@
       "templates": "Vorlagen",
       "folders": "Ordner",
       "keywords": "Labels",
+      "folders_and_tags": "Ordner & Labels",
       "security": "Sicherheit",
       "encryption": "Verschlüsselung",
       "files": "Dateien",

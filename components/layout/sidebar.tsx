@@ -76,7 +76,6 @@ import {
   isGoogleMailboxId,
 } from "@/lib/google/gmail-mapper";
 import { isGmailStarLabel, registerKnownMailboxes, GMAIL_STARS, type GmailStarId } from "@/lib/google/gmail-stars";
-import { GoogleAccountSettingsModal } from "@/components/settings/google-account-settings-modal";
 import { unifiedLoadProgress } from "@/lib/unified-mailbox";
 import { useVacationStore } from "@/stores/vacation-store";
 import { useSettingsStore, getKeywordVisibility, isMailboxHidden } from "@/stores/settings-store";
@@ -1478,8 +1477,12 @@ export function Sidebar({
   // The tab now travels in the URL (#733) rather than through sessionStorage,
   // so a gear click is a link the user can also bookmark or share. It still
   // steers only this one open - the persisted default is written on tab click.
-  const openFolderSettings = useCallback(() => { router.push(buildSettingsPath('folders')); }, [router]);
-  const openKeywordSettings = useCallback(() => { router.push(buildSettingsPath('keywords')); }, [router]);
+  const openFolderSettings = useCallback((accountId = 'comail:primary') => {
+    try {
+      sessionStorage.setItem('settings-deep-link-account', accountId);
+    } catch { /* */ }
+    router.push(buildSettingsPath('folders'));
+  }, [router]);
 
   const {
     contextMenu: mailboxContextMenu,
@@ -1524,7 +1527,6 @@ export function Sidebar({
   const setSidebarCustomOrder = useSettingsStore((s) => s.setSidebarCustomOrder);
   const [dragReorderSource, setDragReorderSource] = useState<ReorderPayload | null>(null);
   const [dragReorderTarget, setDragReorderTarget] = useState<ReorderPayload | null>(null);
-  const [googleSettingsAccount, setGoogleSettingsAccount] = useState<string | null>(null);
   const googleStarsSubmenuEnabled = useSettingsStore((s) => s.googleStarsSubmenuEnabled);
   const googleHiddenStarIds = useSettingsStore((s) => s.googleHiddenStarIds);
 
@@ -1742,7 +1744,7 @@ export function Sidebar({
       subcategories: comailSubcats,
       isActive: true,
       comailAccountId: null,
-      settingsAction: openFolderSettings,
+      settingsAction: () => openFolderSettings('comail:primary'),
     });
 
     // If multi-account mode, add secondary Comail accounts
@@ -1837,7 +1839,7 @@ export function Sidebar({
           icon: <GoogleIcon className="w-3.5 h-3.5 flex-shrink-0" />,
           unreadTotal,
           subcategories: googleSubcats,
-          settingsAction: () => setGoogleSettingsAccount(account.email),
+          settingsAction: () => openFolderSettings(`google:${account.email}`),
         });
       });
     }
@@ -2201,7 +2203,7 @@ export function Sidebar({
                   onMailboxSelect?.(mbId);
                 }}
                 onAccountSettings={(email) => {
-                  setGoogleSettingsAccount(email);
+                  openFolderSettings(`google:${email}`);
                 }}
                 isCollapsed={isCollapsed}
               />
@@ -2926,18 +2928,6 @@ export function Sidebar({
         onShareFolder={onShareFolder}
         onImportEmail={onImportEmail}
         onRefresh={onRefreshMailboxes}
-      />
-
-      <GoogleAccountSettingsModal
-        isOpen={Boolean(googleSettingsAccount)}
-        onClose={() => setGoogleSettingsAccount(null)}
-        accountEmail={googleSettingsAccount || ""}
-        mailboxes={
-          googleMail.accountsData.find((g) => g.account.email === googleSettingsAccount)?.mailboxes || []
-        }
-        onMailboxesUpdated={() => {
-          void googleMail.refreshMailboxes();
-        }}
       />
     </div>
   );

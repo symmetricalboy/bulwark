@@ -324,7 +324,7 @@ export function CalendarSidebarPanel({
           data-visible={isVisible}
           className={cn(
             "mx-2 w-[calc(100%-16px)] rounded-md flex items-center gap-2 ps-3.5 pe-3 text-sm text-foreground/80 transition-colors duration-150",
-            "hover:bg-muted",
+            "hover:bg-muted/50",
             hasMenu && "pe-9"
           )}
           style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
@@ -366,7 +366,7 @@ export function CalendarSidebarPanel({
             type="button"
             onClick={(e) => openContextMenu(e, cal)}
             className={cn(
-              "absolute end-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
+              "absolute end-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity",
               "opacity-0 group-hover/cal:opacity-100 focus-visible:opacity-100",
               contextMenu.isOpen && contextMenu.data?.id === cal.id && "opacity-100"
             )}
@@ -502,9 +502,10 @@ export function CalendarSidebarPanel({
       <div className="relative">
         <div
           className={cn(
-            "flex items-center justify-between gap-1 w-full px-1.5 py-1 rounded-md text-sm transition-colors duration-150",
-            "hover:bg-muted group"
+            "mx-2 w-[calc(100%-16px)] rounded-md flex items-center justify-between gap-2 ps-3.5 pe-3 text-sm text-foreground/80 transition-colors duration-150",
+            "hover:bg-muted/50 group"
           )}
+          style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
         >
           <button
             type="button"
@@ -514,18 +515,21 @@ export function CalendarSidebarPanel({
           >
             <span
               className={cn(
-                "w-3 h-3 rounded-sm border-2 flex-shrink-0 transition-colors",
-                showTasksOnCalendar ? "border-transparent bg-[#4285F4]" : "border-muted-foreground/40 bg-transparent"
+                "w-3.5 h-3.5 rounded-sm border-2 flex-shrink-0 flex items-center justify-center transition-colors",
+                showTasksOnCalendar ? "border-transparent bg-[#4285F4] text-white" : "border-muted-foreground/40 bg-transparent"
               )}
               style={showTasksOnCalendar ? { backgroundColor: '#4285F4', borderColor: '#4285F4' } : undefined}
-            />
-            <span className={cn("truncate text-xs font-medium", !showTasksOnCalendar && "text-muted-foreground")}>
+              aria-hidden="true"
+            >
+              {showTasksOnCalendar && <Check className="w-2.5 h-2.5" stroke={3.5} />}
+            </span>
+            <span className={cn("truncate", !showTasksOnCalendar && "text-muted-foreground")}>
               {t('tasks.label')}
             </span>
           </button>
           <div className="flex items-center gap-1.5 shrink-0">
             {pendingTaskCount > 0 && (
-              <span className="text-[11px] text-muted-foreground font-normal">{pendingTaskCount}</span>
+              <span className="text-xs text-muted-foreground tabular-nums font-normal">{pendingTaskCount}</span>
             )}
             {overdueTaskCount > 0 && (
               <span className="text-[10px] text-destructive font-semibold">
@@ -546,13 +550,14 @@ export function CalendarSidebarPanel({
   };
 
   return (
-    <div className="mt-4">
+    <div className="pt-2">
       {/* ── ALL Section ──────────────────────────────────────── */}
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1 px-1">
+      <div className="pb-1">
+        <div className="group flex items-center py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2 mb-0.5">
           <button
+            type="button"
             onClick={() => toggleSection('all')}
-            className="flex items-center gap-1.5 flex-1 min-w-0 text-start py-0.5 text-muted-foreground hover:text-foreground transition-colors group"
+            className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
             title={!collapsedSections['all'] ? "Collapse All Calendars" : "Expand All Calendars"}
           >
             {!collapsedSections['all'] ? (
@@ -560,8 +565,8 @@ export function CalendarSidebarPanel({
             ) : (
               <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
             )}
-            <CalendarIcon className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-            <span className="text-xs font-medium uppercase tracking-wider truncate">
+            <CalendarIcon className="w-4 h-4 shrink-0 text-foreground/80" />
+            <span className="text-[13px] font-bold text-foreground/90 tracking-tight truncate ms-1">
               All Calendars
             </span>
           </button>
@@ -576,11 +581,12 @@ export function CalendarSidebarPanel({
       </div>
 
       {/* ── COMAIL Section ───────────────────────────────────── */}
-      <div className="mb-3 pt-3 border-t border-border/40">
-        <div className="flex items-center justify-between mb-1 px-1 group">
+      <div className="pt-3 pb-1">
+        <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
           <button
+            type="button"
             onClick={() => toggleSection('comail')}
-            className="flex items-center gap-1.5 flex-1 min-w-0 text-start py-0.5 text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
             title={!collapsedSections['comail'] ? "Collapse Comail" : "Expand Comail"}
           >
             {!collapsedSections['comail'] ? (
@@ -588,20 +594,23 @@ export function CalendarSidebarPanel({
             ) : (
               <ChevronRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
             )}
-            <img
-              src={withBasePath("/branding/comail/cammie-mark.png")}
-              alt=""
-              className="w-3.5 h-3.5 object-contain shrink-0"
-            />
-            <span className="text-xs font-medium uppercase tracking-wider truncate">
-              Comail
+            <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+              <img
+                src={withBasePath("/branding/comail/cammie-mark.png")}
+                alt=""
+                className="w-3.5 h-3.5 object-contain shrink-0"
+              />
+            </span>
+            <span className="text-xs font-semibold text-foreground tracking-tight truncate ms-1">
+              {activeAccountEmail || "Comail"}
             </span>
           </button>
 
           {onCreateCalendar && (
             <button
+              type="button"
               onClick={onCreateCalendar}
-              className="p-0.5 rounded text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-foreground hover:bg-muted transition-all"
+              className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
               title={tMgmt('add_calendar')}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -620,7 +629,7 @@ export function CalendarSidebarPanel({
                   <div key={group.key} className={cn(idx === 0 ? "" : "mt-2")}>
                     <button
                       onClick={() => toggleAccountGroup(group.key)}
-                      className="group w-full flex items-center gap-1.5 px-1 py-1 rounded-sm hover:bg-muted/40 transition-colors"
+                      className="group flex items-center gap-1.5 mx-2 w-[calc(100%-16px)] px-2 py-1 rounded-md hover:bg-muted/40 transition-colors"
                     >
                       {expanded ? (
                         <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -628,7 +637,7 @@ export function CalendarSidebarPanel({
                         <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                       )}
                       <User className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                      <span className="text-xs font-semibold text-foreground/90 truncate">
+                      <span className="text-xs font-semibold text-foreground/90 truncate ms-1">
                         {group.label}
                       </span>
                       {isActive && onCreateCalendar && (
@@ -651,7 +660,7 @@ export function CalendarSidebarPanel({
                       )}
                     </button>
                     {expanded && (
-                      <div className="mt-1 ps-3">
+                      <div className="mt-0.5">
                         {owned.length > 0 && (
                           <div className="space-y-0.5">
                             {owned.map(renderCalendarItem)}
@@ -659,7 +668,7 @@ export function CalendarSidebarPanel({
                         )}
                         {sharedGroups.map((sg) => (
                           <div key={`${group.key}-shared-${sg.label}`} className="mt-2">
-                            <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                            <div className="mx-2 w-[calc(100%-16px)] px-2 mb-0.5 text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
                               <Share2 className="w-3 h-3" />
                               {sg.label}
                             </div>
@@ -678,7 +687,7 @@ export function CalendarSidebarPanel({
                 {comailPersonalCalendars.map(renderCalendarItem)}
                 {comailSharedAccountGroups.map((group) => (
                   <div key={group.accountName} className="mt-2">
-                    <div className="px-1 mb-1 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                    <div className="mx-2 w-[calc(100%-16px)] px-2 mb-0.5 text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
                       <Share2 className="w-3 h-3" />
                       {group.accountName}
                     </div>
@@ -691,7 +700,7 @@ export function CalendarSidebarPanel({
               </div>
             )}
             {multiAccountMode && localAccountGroups.length > 0 && !googleCalendar.status.connected && (
-              <div className="mt-1 ps-1">
+              <div className="mt-0.5">
                 {renderTasksItem()}
               </div>
             )}

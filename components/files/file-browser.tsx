@@ -994,7 +994,7 @@ export function FileBrowser({
       {sidebar && (isNarrow ? (
         <div
           className={cn(
-            "absolute inset-y-0 start-0 z-50 w-[272px] border-e border-border bg-secondary",
+            "absolute inset-y-0 start-0 z-50 w-[300px] border-e border-border bg-secondary",
             "transform transition-transform duration-300 ease-in-out",
             !narrowSidebarOpen && "-translate-x-full rtl:translate-x-full",
           )}
@@ -1003,7 +1003,7 @@ export function FileBrowser({
           {sidebar}
         </div>
       ) : (
-        <div className="w-[272px] border-e border-border flex-shrink-0 bg-secondary">
+        <div className="w-[300px] border-e border-border flex-shrink-0 bg-secondary">
           {sidebar}
         </div>
       ))}

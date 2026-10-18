@@ -31,12 +31,12 @@ const ROW_STYLE = { paddingBlock: "var(--density-sidebar-py, 4px)", minHeight: "
 
 function rowClass(active: boolean, dropTarget: boolean) {
   return cn(
-    "group flex items-center gap-2 pe-3 text-sm transition-colors text-start mx-2 w-[calc(100%-16px)] rounded-md px-2.5",
+    "group flex items-center gap-2 pe-3 text-sm transition-colors duration-150 text-start mx-2 w-[calc(100%-16px)] rounded-md px-2.5",
     active
       ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
       : dropTarget
         ? "bg-primary/10 text-foreground ring-1 ring-inset ring-primary/40"
-        : "text-foreground/80 hover:bg-muted",
+        : "text-foreground/80 hover:bg-muted/50",
   );
 }
 
@@ -229,14 +229,14 @@ export function FilesSidebar({
     <button
       type="button"
       onClick={() => toggleSection(key)}
-      className="flex items-center gap-1 px-3 py-1 w-full text-start"
+      className="group flex items-center gap-1.5 py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2 text-start mb-0.5"
       aria-expanded={!collapsed[key]}
     >
       {collapsed[key]
-        ? <ChevronRight className="w-3 h-3 text-muted-foreground rtl:rotate-180" />
-        : <ChevronDown className="w-3 h-3 text-muted-foreground" />}
-      {icon}
-      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">{label}</span>
+        ? <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 rtl:rotate-180" />
+        : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />}
+      {icon && <span className="flex-shrink-0 text-foreground/80">{icon}</span>}
+      <span className="text-[13px] font-bold text-foreground/90 tracking-tight truncate ms-1">{label}</span>
     </button>
   );
 
@@ -290,7 +290,7 @@ export function FilesSidebar({
 
       {storagePickerSlot}
 
-      <nav className="flex-1 overflow-y-auto py-1" aria-label={t("folders")}>
+      <nav className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] pt-1 pb-2" aria-label={t("folders")}>
         <div role="tree" aria-label={t("my_files")}>
           <div
             className={rowClass(currentPath === "/" && currentParentId === null, dropTarget === "__root__")}
@@ -323,7 +323,7 @@ export function FilesSidebar({
         </div>
 
         {favorites.length > 0 && (
-          <div className="mt-3">
+          <div className="pt-2.5">
             {sectionHeader("starred", t("favorites"), null)}
             {!collapsed.starred && favorites.map((path) => (
               <button
@@ -343,7 +343,7 @@ export function FilesSidebar({
         )}
 
         {recent.length > 0 && (
-          <div className="mt-3">
+          <div className="pt-2.5">
             {sectionHeader("recent", t("recent"), null)}
             {!collapsed.recent && recent.map((entry) => (
               <button
@@ -365,8 +365,8 @@ export function FilesSidebar({
         )}
 
         {sharedFolders.length > 0 && (
-          <div className="mt-3" role="tree" aria-label={t("shared_with_me")}>
-            {sectionHeader("shared", t("shared_with_me"), <Share2 className="w-3 h-3 text-muted-foreground" />)}
+          <div className="pt-2.5" role="tree" aria-label={t("shared_with_me")}>
+            {sectionHeader("shared", t("shared_with_me"), <Share2 className="w-3.5 h-3.5 text-muted-foreground" />)}
             {!collapsed.shared && sharedFolders.map((folder) => renderFolder(folder, "/", 1))}
           </div>
         )}

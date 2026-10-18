@@ -689,35 +689,35 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
 
   if (!isAuthenticated || !filesEnabled) return null;
   const storagePickerElement = (
-    <div className="p-2 border-b border-border/50">
+    <div className="px-2 pt-2 pb-1">
       <div className="relative" ref={pickerRef}>
         <button
           type="button"
           onClick={() => setPickerOpen((prev) => !prev)}
-          className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg border border-border/70 bg-background/80 hover:bg-accent/60 text-foreground text-xs font-medium shadow-xs transition-colors cursor-pointer select-none"
+          className="group flex items-center justify-between w-full py-1.5 px-2.5 select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 text-xs font-medium cursor-pointer"
           aria-expanded={pickerOpen}
           aria-haspopup="true"
         >
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {storageSource === 'google-drive' ? (
               <>
-                <GoogleDriveIcon className="w-4 h-4 shrink-0" />
-                <div className="flex flex-col min-w-0 text-start">
-                  <span className="font-semibold truncate">Google Drive</span>
-                  <span className="text-[10px] text-muted-foreground truncate">
-                    {selectedGoogleAccountEmail || googleStatus?.email || 'External'}
+                <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                  <GoogleDriveIcon className="w-3.5 h-3.5 shrink-0" />
+                </span>
+                <div className="flex flex-col min-w-0 text-start ms-1">
+                  <span className="font-semibold tracking-tight truncate">
+                    {selectedGoogleAccountEmail || googleStatus?.email || 'Google Drive'}
                   </span>
                 </div>
               </>
             ) : (
               <>
-                <HardDrive className="w-4 h-4 text-primary shrink-0" />
-                <div className="flex flex-col min-w-0 text-start">
-                  <span className="font-semibold truncate">
-                    {activeAccount?.displayName || activeAccount?.label || activeAccount?.username || 'Comail Files'}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground truncate">
-                    (Comail Files)
+                <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                  <HardDrive className="w-3.5 h-3.5 text-primary shrink-0" />
+                </span>
+                <div className="flex flex-col min-w-0 text-start ms-1">
+                  <span className="font-semibold tracking-tight truncate">
+                    {activeAccount?.email || activeAccount?.username || activeAccount?.displayName || activeAccount?.label || 'Comail Files'}
                   </span>
                 </div>
               </>
@@ -727,7 +727,7 @@ export function FilesApp({ linkSegments: routeSegments }: FilesAppProps = {}) {
         </button>
 
         {pickerOpen && (
-          <div className="absolute left-0 top-full mt-1.5 w-72 bg-popover text-popover-foreground border border-border rounded-xl shadow-xl py-1.5 z-50 text-xs animate-in fade-in-0 zoom-in-95">
+          <div className="absolute left-0 top-full mt-1.5 w-full bg-popover text-popover-foreground border border-border rounded-xl shadow-xl py-1.5 z-50 text-xs animate-in fade-in-0 zoom-in-95">
             {/* Comail Files Section */}
             <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
               Comail Files

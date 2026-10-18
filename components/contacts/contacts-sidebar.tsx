@@ -361,24 +361,26 @@ export function ContactsSidebar({
       />
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-1">
+      <div className="flex-1 overflow-y-scroll [scrollbar-gutter:stable] pt-2 pb-2">
         {/* All contacts */}
-        <button
-          onClick={() => onSelectCategory("all")}
-          className={cn(
-            "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
-            isAllActive
-              ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
-              : "text-foreground/80 hover:bg-muted"
-          )}
-          style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
-        >
-          <BookUser className="w-4 h-4 flex-shrink-0" />
-          <span className="truncate">{t("tabs.all")}</span>
-          <span className={cn("ms-auto text-xs tabular-nums", isAllActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
-            {individuals.length}
-          </span>
-        </button>
+        <div className="pb-1">
+          <button
+            onClick={() => onSelectCategory("all")}
+            className={cn(
+              "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
+              isAllActive
+                ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
+                : "text-foreground/80 hover:bg-muted/50"
+            )}
+            style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
+          >
+            <BookUser className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">{t("tabs.all")}</span>
+            <span className={cn("ms-auto text-xs tabular-nums", isAllActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
+              {individuals.length}
+            </span>
+          </button>
+        </div>
 
         {/* Address Books: per-account groups in multi-account Pro mode, else the
             classic "My Address Books" section. */}
@@ -388,28 +390,31 @@ export function ContactsSidebar({
             const expanded = !collapsed[sectionKey];
             const { owned, sharedGroups } = group.split;
             return (
-              <div key={group.key} className="mt-2">
-                <div className="flex items-center px-3 py-1 group">
+              <div key={group.key} className="pt-3 pb-1">
+                <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
                   <button
+                    type="button"
                     onClick={() => toggleSection(sectionKey)}
-                    className="flex items-center gap-1 flex-1 min-w-0 text-start"
+                    className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
                   >
                     {expanded ? (
-                      <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     ) : (
-                      <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     )}
-                    <User className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-foreground/90 uppercase tracking-wider truncate">
+                    <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                      <User className="w-3.5 h-3.5 text-foreground/80" />
+                    </span>
+                    <span className="text-xs font-semibold text-foreground tracking-tight truncate ms-1">
                       {group.label}
                     </span>
                   </button>
                 </div>
                 {expanded && (
-                  <div className="ps-2">
+                  <div className="space-y-0.5">
                     {owned.length > 0 && (
-                      <div className="mt-1">
-                        <div className="px-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider">
+                      <div>
+                        <div className="mx-2 w-[calc(100%-16px)] px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                           {t("address_books.title")}
                         </div>
                         {owned.map((book) => (
@@ -426,8 +431,8 @@ export function ContactsSidebar({
                       </div>
                     )}
                     {sharedGroups.map((sg) => (
-                      <div key={`${group.key}-shared-${sg.label}`} className="mt-1">
-                        <div className="px-3 py-0.5 text-[10px] font-medium text-muted-foreground/80 uppercase tracking-wider flex items-center gap-1">
+                      <div key={`${group.key}-shared-${sg.label}`} className="pt-1">
+                        <div className="mx-2 w-[calc(100%-16px)] px-2 py-0.5 text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
                           <Share2 className="w-3 h-3" />
                           {sg.label}
                         </div>
@@ -451,44 +456,50 @@ export function ContactsSidebar({
           })
         ) : (
           personalBooks.length > 0 && (
-            <div className="mt-2">
-              <div className="flex items-center px-3 py-1 group">
+            <div className="pt-2.5">
+              <div className="group flex items-center py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2 mb-0.5">
                 <button
+                  type="button"
                   onClick={() => toggleSection("addressBooks")}
-                  className="flex items-center gap-1 flex-1 text-start"
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
                 >
                   {collapsed.addressBooks ? (
-                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   )}
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <span className="text-[13px] font-bold text-foreground/90 tracking-tight truncate ms-1">
                     {t("address_books.title")}
                   </span>
                 </button>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     try { localStorage.setItem('settings-active-tab', 'contacts'); } catch { /* ignore */ }
                     router.push('/settings');
                   }}
-                  className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted"
+                  className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                   title={t("address_books.manage")}
                 >
-                  <Settings className="w-3 h-3 text-muted-foreground" />
+                  <Settings className="w-3.5 h-3.5" />
                 </button>
               </div>
-              {!collapsed.addressBooks && personalBooks.map((book) => (
-                <AddressBookItem
-                  key={book.id}
-                  book={book}
-                  isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
-                  contactCount={contactCountByBook[book.id] || 0}
-                  onSelect={() => onSelectCategory({ addressBookId: book.id })}
-                  onDropContacts={onDropContacts}
-                  onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
-                />
-              ))}
+              {!collapsed.addressBooks && (
+                <div className="space-y-0.5">
+                  {personalBooks.map((book) => (
+                    <AddressBookItem
+                      key={book.id}
+                      book={book}
+                      isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
+                      contactCount={contactCountByBook[book.id] || 0}
+                      onSelect={() => onSelectCategory({ addressBookId: book.id })}
+                      onDropContacts={onDropContacts}
+                      onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )
         )}
@@ -499,114 +510,132 @@ export function ContactsSidebar({
           const isCollapsed = !!collapsed[sectionKey];
 
           return (
-            <div key={sectionKey} className="mt-2">
-              <div className="flex items-center px-3 py-1 group">
+            <div key={sectionKey} className="pt-3 pb-0.5">
+              <div className="group flex items-center py-1.5 px-2.5 mx-2 w-[calc(100%-16px)] select-none rounded-lg border shadow-xs transition-colors bg-accent/40 hover:bg-accent/60 border-accent/40 text-foreground dark:bg-accent/25 dark:hover:bg-accent/40 dark:border-accent/35 mb-1">
                 <button
+                  type="button"
                   onClick={() => toggleSection(sectionKey)}
-                  className="flex items-center gap-1.5 flex-1 min-w-0 text-start"
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
                   title={group.email}
                 >
                   {isCollapsed ? (
-                    <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   ) : (
-                    <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   )}
-                  <GoogleContactsIcon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-xs font-semibold text-foreground/90 uppercase tracking-wider truncate">
+                  <span className="w-5 h-5 rounded-md flex items-center justify-center bg-background/60 flex-shrink-0 shadow-2xs border border-border/40">
+                    <GoogleContactsIcon className="w-3.5 h-3.5 shrink-0" />
+                  </span>
+                  <span className="text-xs font-semibold text-foreground tracking-tight truncate ms-1">
                     {group.email}
                   </span>
                 </button>
                 {onCreateContactInBook && group.books[0] && (
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       onCreateContactInBook(group.books[0]);
                     }}
-                    className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                     title={`New contact in ${group.email}`}
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
-              {!isCollapsed && group.books.map((book) => (
-                <AddressBookItem
-                  key={book.id}
-                  book={book}
-                  isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
-                  contactCount={contactCountByBook[book.id] || 0}
-                  onSelect={() => onSelectCategory({ addressBookId: book.id })}
-                  onDropContacts={onDropContacts}
-                  onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
-                />
-              ))}
+              {!isCollapsed && (
+                <div className="space-y-0.5">
+                  {group.books.map((book) => (
+                    <AddressBookItem
+                      key={book.id}
+                      book={book}
+                      isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
+                      contactCount={contactCountByBook[book.id] || 0}
+                      onSelect={() => onSelectCategory({ addressBookId: book.id })}
+                      onDropContacts={onDropContacts}
+                      onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
 
         {/* Groups section */}
         {sortedGroups.length > 0 && (
-          <div className="mt-2">
-            <button
-              onClick={() => toggleSection("groups")}
-              className="flex items-center gap-1 px-3 py-1 w-full text-start group"
-            >
-              {collapsed.groups ? (
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
-              )}
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {t("tabs.groups")}
-              </span>
-            </button>
+          <div className="pt-2.5">
+            <div className="group flex items-center py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2 mb-0.5">
+              <button
+                type="button"
+                onClick={() => toggleSection("groups")}
+                className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
+              >
+                {collapsed.groups ? (
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                )}
+                <span className="text-[13px] font-bold text-foreground/90 tracking-tight truncate ms-1">
+                  {t("tabs.groups")}
+                </span>
+              </button>
+            </div>
 
-            {!collapsed.groups && sortedGroups.map((group) => {
-              const isActive = typeof activeCategory === "object" && "groupId" in activeCategory && activeCategory.groupId === group.id;
-              const memberCount = memberCountByGroup[group.id] || 0;
+            {!collapsed.groups && (
+              <div className="space-y-0.5">
+                {sortedGroups.map((group) => {
+                  const isActive = typeof activeCategory === "object" && "groupId" in activeCategory && activeCategory.groupId === group.id;
+                  const memberCount = memberCountByGroup[group.id] || 0;
 
-              return (
-                <button
-                  key={group.id}
-                  onClick={() => onSelectCategory({ groupId: group.id })}
-                  onContextMenu={(e) => openGroupContextMenu(e, group)}
-                  className={cn(
-                    "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
-                    isActive
-                      ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
-                      : "text-foreground/80 hover:bg-muted"
-                  )}
-                  style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
-                >
-                  <Users className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">{getContactDisplayName(group)}</span>
-                  <span className={cn("ms-auto text-xs tabular-nums", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
-                    {memberCount}
-                  </span>
-                </button>
-              );
-            })}
+                  return (
+                    <button
+                      key={group.id}
+                      onClick={() => onSelectCategory({ groupId: group.id })}
+                      onContextMenu={(e) => openGroupContextMenu(e, group)}
+                      className={cn(
+                        "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
+                        isActive
+                          ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
+                          : "text-foreground/80 hover:bg-muted/50"
+                      )}
+                      style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
+                    >
+                      <Users className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{getContactDisplayName(group)}</span>
+                      <span className={cn("ms-auto text-xs tabular-nums", isActive ? "text-white/90 font-medium" : "text-muted-foreground")}>
+                        {memberCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {/* Categories section (from contact keywords) */}
-        <div className="mt-2">
-          <button
-            onClick={() => toggleSection("categories")}
-            className="flex items-center gap-1 px-3 py-1 w-full text-start group"
-          >
-            {collapsed.categories ? (
-              <ChevronRight className="w-3 h-3 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="w-3 h-3 text-muted-foreground" />
-            )}
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {t("detail.categories")}
-            </span>
-          </button>
+        <div className="pt-2.5">
+          <div className="group flex items-center py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2 mb-0.5">
+            <button
+              type="button"
+              onClick={() => toggleSection("categories")}
+              className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
+            >
+              {collapsed.categories ? (
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+              )}
+              <span className="text-[13px] font-bold text-foreground/90 tracking-tight truncate ms-1">
+                {t("detail.categories")}
+              </span>
+            </button>
+          </div>
 
           {!collapsed.categories && (
-            <>
+            <div className="space-y-0.5">
               {/* No Category item */}
               <button
                 onClick={() => onSelectCategory("uncategorized")}
@@ -614,7 +643,7 @@ export function ContactsSidebar({
                   "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
                   activeCategory === "uncategorized"
                     ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
-                    : "text-foreground/80 hover:bg-muted"
+                    : "text-foreground/80 hover:bg-muted/50"
                 )}
                 style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
               >
@@ -638,52 +667,58 @@ export function ContactsSidebar({
                   />
                 );
               })}
-            </>
+            </div>
           )}
         </div>
 
         {/* Shared accounts with address books - only when not already split
             into per-account groups above (multi-account Pro mode). */}
         {!multiAccountMode && sharedBookGroups.map((group) => (
-          <div key={group.accountId} className="mt-2">
-            <div className="flex items-center px-3 py-1 group">
+          <div key={group.accountId} className="pt-2.5">
+            <div className="group flex items-center py-1 select-none rounded-md hover:bg-muted/40 transition-colors mx-2 w-[calc(100%-16px)] px-2 mb-0.5">
               <button
+                type="button"
                 onClick={() => toggleSection(`shared-${group.accountId}`)}
-                className="flex items-center gap-1 flex-1 min-w-0 text-start"
+                className="flex items-center gap-1.5 flex-1 min-w-0 text-start bg-transparent hover:bg-transparent focus:outline-none"
               >
                 {collapsed[`shared-${group.accountId}`] ? (
-                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 ) : (
-                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 )}
-                <Share2 className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
+                <Share2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="text-[13px] font-bold text-foreground/90 tracking-tight truncate ms-1">
                   {t("address_books.shared_prefix", { name: group.accountName })}
                 </span>
               </button>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   try { localStorage.setItem('settings-active-tab', 'contacts'); } catch { /* ignore */ }
                   router.push('/settings');
                 }}
-                className="p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-muted"
+                className="ms-1 p-1 rounded text-muted-foreground/70 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                 title={t("address_books.manage")}
               >
-                <Settings className="w-3 h-3 text-muted-foreground" />
+                <Settings className="w-3.5 h-3.5" />
               </button>
             </div>
-            {!collapsed[`shared-${group.accountId}`] && group.books.map((book) => (
-              <AddressBookItem
-                key={book.id}
-                book={book}
-                isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
-                contactCount={contactCountByBook[book.id] || 0}
-                onSelect={() => onSelectCategory({ addressBookId: book.id })}
-                onDropContacts={onDropContacts}
-                onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
-              />
-            ))}
+            {!collapsed[`shared-${group.accountId}`] && (
+              <div className="space-y-0.5">
+                {group.books.map((book) => (
+                  <AddressBookItem
+                    key={book.id}
+                    book={book}
+                    isActive={typeof activeCategory === "object" && "addressBookId" in activeCategory && activeCategory.addressBookId === book.id}
+                    contactCount={contactCountByBook[book.id] || 0}
+                    onSelect={() => onSelectCategory({ addressBookId: book.id })}
+                    onDropContacts={onDropContacts}
+                    onContextMenu={hasBookMenu ? (e) => openBookContextMenu(e, book) : undefined}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -883,7 +918,7 @@ function CategoryItem({
         "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
         isActive
           ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
-          : "text-foreground/80 hover:bg-muted",
+          : "text-foreground/80 hover:bg-muted/50",
         isDragOver && "bg-primary/20 ring-2 ring-primary/50"
       )}
       style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
@@ -954,7 +989,7 @@ function AddressBookItem({
         "mx-2 w-[calc(100%-16px)] rounded-md px-2.5 flex items-center gap-2 text-sm transition-colors duration-150",
         isActive
           ? "bg-[#1a5466] text-white font-semibold hover:bg-[#20657a] dark:bg-[#2a2d33] dark:hover:bg-[#353940]"
-          : "text-foreground/80 hover:bg-muted",
+          : "text-foreground/80 hover:bg-muted/50",
         isDragOver && "bg-primary/20 ring-2 ring-primary/50"
       )}
       style={{ paddingBlock: 'var(--density-sidebar-py, 4px)', minHeight: '32px' }}
