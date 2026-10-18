@@ -119,3 +119,35 @@ export async function deleteOneDriveFileClient(namespacedFileId: string): Promis
 export function getOneDriveDownloadUrl(namespacedFileId: string): string {
   return `/api/microsoft/onedrive/files/${encodeURIComponent(namespacedFileId)}/download`;
 }
+
+export interface GraphDriveItem {
+  id: string;
+  name?: string;
+  size?: number;
+  createdDateTime?: string;
+  lastModifiedDateTime?: string;
+  webUrl?: string;
+  folder?: { childCount?: number };
+  file?: { mimeType?: string };
+  parentReference?: { id?: string };
+}
+
+export function mapGraphItemToOneDriveItem(accountEmail: string, item: GraphDriveItem): OneDriveItem {
+  const isFolder = Boolean(item.folder);
+  const now = new Date().toISOString();
+  return {
+    id: `microsoft:${accountEmail}::${item.id}`,
+    rawId: item.id,
+    accountEmail,
+    name: item.name || 'Untitled',
+    mimeType: isFolder ? 'application/vnd.microsoft.folder' : item.file?.mimeType || 'application/octet-stream',
+    size: item.size || 0,
+    createdTime: item.createdDateTime || now,
+    modifiedTime: item.lastModifiedDateTime || item.createdDateTime || now,
+    starred: false,
+    trashed: false,
+    parents: item.parentReference?.id ? [item.parentReference.id] : [],
+    webViewLink: item.webUrl,
+    isFolder,
+  };
+}

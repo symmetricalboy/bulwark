@@ -1,40 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getValidMicrosoftAccounts, setMicrosoftSessionCookie } from '@/lib/microsoft/session';
 import { MICROSOFT_GRAPH_BASE } from '@/lib/microsoft/auth';
-import type { OneDriveItem, OneDriveSection } from '@/lib/microsoft/microsoft-onedrive-client';
+import {
+  mapGraphItemToOneDriveItem,
+  type GraphDriveItem,
+  type OneDriveItem,
+  type OneDriveSection,
+} from '@/lib/microsoft/microsoft-onedrive-client';
 import { logger } from '@/lib/logger';
-
-interface GraphDriveItem {
-  id: string;
-  name?: string;
-  size?: number;
-  createdDateTime?: string;
-  lastModifiedDateTime?: string;
-  webUrl?: string;
-  folder?: { childCount?: number };
-  file?: { mimeType?: string };
-  parentReference?: { id?: string };
-}
-
-export function mapGraphItemToOneDriveItem(accountEmail: string, item: GraphDriveItem): OneDriveItem {
-  const isFolder = Boolean(item.folder);
-  const now = new Date().toISOString();
-  return {
-    id: `microsoft:${accountEmail}::${item.id}`,
-    rawId: item.id,
-    accountEmail,
-    name: item.name || 'Untitled',
-    mimeType: isFolder ? 'application/vnd.microsoft.folder' : item.file?.mimeType || 'application/octet-stream',
-    size: item.size || 0,
-    createdTime: item.createdDateTime || now,
-    modifiedTime: item.lastModifiedDateTime || item.createdDateTime || now,
-    starred: false,
-    trashed: false,
-    parents: item.parentReference?.id ? [item.parentReference.id] : [],
-    webViewLink: item.webUrl,
-    isFolder,
-  };
-}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

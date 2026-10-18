@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getValidMicrosoftAccounts, setMicrosoftSessionCookie } from '@/lib/microsoft/session';
 import { MICROSOFT_GRAPH_BASE } from '@/lib/microsoft/auth';
-import { mapGraphItemToOneDriveItem } from '../route';
+import { mapGraphItemToOneDriveItem } from '@/lib/microsoft/microsoft-onedrive-client';
 import { logger } from '@/lib/logger';
 
 function parseNamespacedFileId(rawId: string): { accountEmail: string; fileId: string } | null {

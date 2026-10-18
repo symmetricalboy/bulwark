@@ -3,7 +3,7 @@ import { mapOutlookFolderToMailbox, mapOutlookMessageToEmail } from '../outlook-
 import { mapMicrosoftToJmapCalendar, mapMicrosoftToJmapEvent } from '../calendar-mapper';
 import { buildMicrosoftAddressBook, mapMicrosoftContactToCard, mapCardToMicrosoftContact } from '../contact-mapper';
 import { mapMicrosoftToJmapTask, mapMicrosoftToJmapTaskList } from '../tasks-mapper';
-import { mapGraphItemToOneDriveItem } from '@/app/api/microsoft/onedrive/files/route';
+import { mapGraphItemToOneDriveItem } from '../microsoft-onedrive-client';
 import { resolveMicrosoftAppMode } from '../types';
 
 describe('Microsoft Graph mappers', () => {
